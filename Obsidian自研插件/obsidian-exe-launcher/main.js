@@ -71,6 +71,12 @@ var EXE_CONFIGS = [
     description: "\u540C\u6B65\u5230GitHub\u4ED3\u5E93",
     exeName: "Obsidian -\u540C\u6B65GitHub.exe",
     icon: "\u{1F680}"
+  },
+  {
+    name: "\u5907\u4EFDpython\u4EE3\u7801",
+    description: "\u5907\u4EFDPython\u4EE3\u7801\u5230GitHub",
+    exeName: "Obsidian -\u5907\u4EFDpython\u4EE3\u7801.exe",
+    icon: "\u{1F40D}"
   }
 ];
 var ExeLauncherModal = class extends import_obsidian.Modal {

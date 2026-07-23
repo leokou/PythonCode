@@ -47,6 +47,12 @@ const EXE_CONFIGS: ExeConfig[] = [
     exeName: 'Obsidian -同步GitHub.exe',
     icon: '🚀',
   },
+  {
+    name: '备份python代码',
+    description: '备份Python代码到GitHub',
+    exeName: 'Obsidian -备份python代码.exe',
+    icon: '🐍',
+  },
 ]
 
 class ExeLauncherModal extends Modal {
