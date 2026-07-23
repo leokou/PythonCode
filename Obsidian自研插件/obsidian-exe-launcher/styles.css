@@ -1,0 +1,85 @@
+/* ========== 弹窗容器 ========== */
+.exe-launcher-modal {
+  max-width: 380px !important;
+}
+
+/* ========== 头部区域 ========== */
+.exe-launcher-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.exe-launcher-logo {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.exe-launcher-header-text h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ========== 按钮列表区域 ========== */
+.exe-launcher-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ========== 按钮样式 ========== */
+.exe-launcher-btn {
+  width: 100%;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.exe-launcher-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.exe-launcher-btn:active {
+  background-color: var(--background-modifier-active-hover);
+}
+
+/* ========== 按钮图标 ========== */
+.exe-launcher-btn-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ========== 按钮标题 ========== */
+.exe-launcher-btn-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-normal);
+  flex: 1;
+  text-align: left;
+}
+
+/* ========== 箭头 ========== */
+.exe-launcher-btn-arrow {
+  font-size: 16px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.exe-launcher-btn:hover .exe-launcher-btn-arrow {
+  color: var(--interactive-accent);
+  opacity: 1;
+}

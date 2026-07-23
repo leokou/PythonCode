@@ -1,0 +1,12 @@
+{
+  "id": "obsidian-exe-launcher",
+  "name": "EXE Launcher",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "快速启动桌面工具exe",
+  "author": "leokou",
+  "authorUrl": "",
+  "fundingUrl": "",
+  "main": "main.js",
+  "styles": ["styles.css"]
+}

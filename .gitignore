@@ -1,0 +1,38 @@
+# 编译和构建目录
+build/
+dist/
+
+# 隐藏文件夹
+.mimocode/
+.obsidian/
+.claude/
+.claudian/
+.smart-env/
+.trash/
+.git/
+
+# Python编译产物
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller打包产物
+*.spec
+*.exe
+*.dll
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.bak
+
+# Node.js依赖
+node_modules/
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store

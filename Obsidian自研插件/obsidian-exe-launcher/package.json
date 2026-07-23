@@ -1,0 +1,17 @@
+{
+  "name": "obsidian-exe-launcher",
+  "version": "1.0.0",
+  "description": "快速启动桌面工具exe",
+  "main": "main.js",
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --outfile=main.js --external:obsidian --format=cjs --platform=node"
+  },
+  "keywords": ["obsidian", "plugin"],
+  "author": "leokou",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "obsidian": "^1.0.0",
+    "esbuild": "^0.20.0"
+  }
+}
