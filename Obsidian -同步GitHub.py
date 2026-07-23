@@ -125,48 +125,18 @@ def main():
     print("🚀 Obsidian GitHub 同步工具")
     print("=" * 60)
 
-    print("\n请选择要同步的仓库：")
-    print(f"  1. 全部同步（{len(REPOS)}个仓库）")
-    for i, repo in enumerate(REPOS, 2):
-        print(f"  {i}. {repo['name']}（{repo['path']}）")
-    print(f"  0. 退出")
-
-    try:
-        choice = input("\n请输入选项编号：").strip()
-    except (EOFError, KeyboardInterrupt):
-        print("\n已取消")
-        return
-
-    if choice == '0':
-        print("已退出")
-        return
-
-    if choice == '1':
-        # 同步所有仓库
-        success_count = 0
-        fail_count = 0
-        for repo in REPOS:
-            if sync_repo(repo):
-                success_count += 1
-            else:
-                fail_count += 1
-
-        print(f"\n{'='*60}")
-        print(f"🎉 同步完成！成功 {success_count} 个，失败 {fail_count} 个")
-        print(f"{'='*60}")
-
-    elif choice.isdigit():
-        idx = int(choice) - 2
-        if 0 <= idx < len(REPOS):
-            repo = REPOS[idx]
-            if sync_repo(repo):
-                print(f"\n🎉 {repo['name']} 同步成功！")
-            else:
-                print(f"\n❌ {repo['name']} 同步失败")
+    # 直接同步所有仓库，无需交互
+    success_count = 0
+    fail_count = 0
+    for repo in REPOS:
+        if sync_repo(repo):
+            success_count += 1
         else:
-            print("❌ 无效的选项")
-    else:
-        print("❌ 无效的输入")
+            fail_count += 1
+
+    print(f"\n{'='*60}")
+    print(f"🎉 同步完成！成功 {success_count} 个，失败 {fail_count} 个")
+    print(f"{'='*60}")
 
 
 if __name__ == "__main__":
