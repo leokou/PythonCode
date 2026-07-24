@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian Knowledge Organizer"
+  short_description: "Organize knowledge pages with directories, links, and index updates"
+  default_prompt: "Use $obsidian-knowledge-organizer to organize knowledge pages into the vault with proper directories, bidirectional links, and trigger $obsidian-mulu-fenlei for directory updates"

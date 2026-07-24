@@ -1,0 +1,7 @@
+interface:
+  display_name: "目录分类整理"
+  short_description: "整理/优化/重写目录文件的文件列表分类和缩进展示"
+  default_prompt: "Use $obsidian-mulu-fenlei to reorganize the file list in a 🧩 目录-xxx file with proper classification and formatting."
+
+policy:
+  allow_implicit_invocation: true

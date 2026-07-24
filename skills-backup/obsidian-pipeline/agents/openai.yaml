@@ -1,0 +1,7 @@
+interface:
+  display_name: "Capture 智能流水线"
+  short_description: "自动识别 Capture 文件夹变化，按需调用子 Skill 处理"
+  default_prompt: "Use $obsidian-pipeline to process Capture folder with intelligent change detection"
+
+policy:
+  allow_implicit_invocation: true

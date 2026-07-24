@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian Knowledge Compiler"
+  short_description: "Compile raw content into standardized Obsidian knowledge documents"
+  default_prompt: "Use $obsidian-knowledge-compiler to compile raw content into standardized knowledge documents with proper templates and formatting"

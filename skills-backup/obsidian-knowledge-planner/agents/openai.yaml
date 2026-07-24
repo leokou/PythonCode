@@ -1,0 +1,4 @@
+interface:
+  display_name: "Obsidian Knowledge Planner"
+  short_description: "Analyze capture notes and generate knowledge plans with YAML output"
+  default_prompt: "Use $obsidian-knowledge-planner to analyze capture notes in A📥 收集（Capture） and generate knowledge plans (both .md and .yaml)"

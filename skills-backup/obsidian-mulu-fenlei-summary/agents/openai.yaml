@@ -1,0 +1,7 @@
+interface:
+  display_name: "目录分类与文件摘要"
+  short_description: "整理目录文件并生成 ✍️ File Summary 文件索引摘要"
+  default_prompt: "Use $obsidian-mulu-fenlei-summary to organize directory files and generate ✍️ File Summary for each file"
+
+policy:
+  allow_implicit_invocation: true
