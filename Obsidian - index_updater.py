@@ -316,6 +316,111 @@ def aggregate_and_update_home(target_dir: Path, root_dirs: List[Path]) -> None:
         print(f"🏠 {rel_path} : 已重建 home（包含 {chip_count} 个模块）")
 
 
+def generate_directory_index(target_dir: Path) -> int:
+    """
+    在根目录生成 📖目录 索引.md 文件，结构化展示所有文件夹和文件，方便AI检索。
+    返回生成的条目数。
+    """
+    index_path = target_dir / "📖目录 索引.md"
+    lines = []
+    
+    # 标题
+    lines.append("# 📖目录 索引\n")
+    lines.append("本文档结构化展示 LeoDiary 知识库的完整目录结构，用于 AI 快速检索。\n\n")
+    lines.append("---\n\n")
+    
+    # 目录结构树
+    lines.append("## 📂 目录结构树\n\n")
+    
+    # 统计信息
+    dir_count = 0
+    file_count = 0
+    all_entries = []
+    
+    # 递归收集所有目录和文件
+    for root, dirs, files in os.walk(target_dir):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
+        root_path = Path(root)
+        try:
+            rel = root_path.relative_to(target_dir)
+            depth = len(rel.parts)
+        except ValueError:
+            depth = 0
+        
+        # 添加目录
+        if root_path != target_dir:
+            dir_count += 1
+            indent = "  " * depth
+            lines.append(f"{indent}📁 {root_path.name}\n")
+            all_entries.append(('dir', depth, root_path.name, str(rel)))
+        
+        # 添加文件（仅 .md）
+        for f in sorted(files):
+            if f.endswith(".md"):
+                file_count += 1
+                indent = "  " * (depth + 1)
+                lines.append(f"{indent}📄 [[{f[:-3]}]]\n")
+                all_entries.append(('file', depth + 1, f[:-3], str(rel)))
+    
+    lines.append("\n---\n\n")
+    
+    # 统计摘要
+    lines.append("## 📊 统计摘要\n\n")
+    lines.append(f"- **总目录数**: {dir_count}\n")
+    lines.append(f"- **总文件数**: {file_count}\n")
+    lines.append(f"- **更新时间**: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+    
+    # 按一级目录分组的文件列表
+    lines.append("---\n\n")
+    lines.append("## 📋 按领域分组\n\n")
+    
+    # 获取一级目录
+    first_level_dirs = []
+    for entry in target_dir.iterdir():
+        if entry.is_dir() and entry.name not in SKIP_DIRS and not entry.name.startswith("."):
+            first_level_dirs.append(entry)
+    
+    # 按名称排序
+    first_level_dirs.sort(key=lambda x: x.name)
+    
+    for first_dir in first_level_dirs:
+        lines.append(f"### {first_dir.name}\n\n")
+        
+        # 收集该一级目录下的所有 .md 文件
+        files_in_group = []
+        for root, dirs, files in os.walk(first_dir):
+            dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
+            root_path = Path(root)
+            for f in sorted(files):
+                if f.endswith(".md") and not f.startswith("🧩 目录-") and not f.startswith("🏠 home-"):
+                    try:
+                        rel_path = root_path.relative_to(first_dir)
+                        if rel_path == Path("."):
+                            files_in_group.append(f"[[{f[:-3]}]]")
+                        else:
+                            files_in_group.append(f"[[{rel_path / f[:-3]}]]")
+                    except ValueError:
+                        pass
+        
+        if files_in_group:
+            lines.append(f"- 共 {len(files_in_group)} 个文件\n\n")
+            for file_link in files_in_group:
+                lines.append(f"  {file_link}\n")
+        else:
+            lines.append("- 无文件\n")
+        
+        lines.append("\n")
+    
+    # 写入文件
+    try:
+        index_path.write_text(''.join(lines), encoding='utf-8')
+        print(f"📖 {index_path.name} : 已生成（{dir_count} 个目录，{file_count} 个文件）")
+        return dir_count + file_count
+    except Exception as e:
+        print(f"  错误：写入目录索引文件失败 - {e}")
+        return 0
+
+
 def process_root_and_para_dirs(target_dir: Path) -> None:
     """处理根目录和PARA文件夹：生成🧩目录文件而非home文件"""
     # PARA文件夹列表
@@ -411,6 +516,10 @@ def main():
     # 第二阶段：仅为非PARA文件夹重建 home 文件
     non_para_dirs = [d for d in root_dirs if d.name not in PARA_DIRS]
     aggregate_and_update_home(target, non_para_dirs)
+
+    print("-" * 60)
+    print("📖 生成目录索引文件（方便AI检索）...")
+    generate_directory_index(target)
 
     print("-" * 60)
     print("🎉 索引更新完成！")
