@@ -13,6 +13,7 @@ Obsidian 索引文件自动管理工具
 
 import sys
 import os
+import re
 from pathlib import Path
 from typing import Set, List
 
@@ -319,9 +320,29 @@ def aggregate_and_update_home(target_dir: Path, root_dirs: List[Path]) -> None:
 def generate_directory_index(target_dir: Path) -> int:
     """
     在根目录生成 📖目录 索引.md 文件，结构化展示所有文件夹和文件，方便AI检索。
+    保留用户在 [[xxx]] 后面手动添加的说明文字。
     返回生成的条目数。
     """
     index_path = target_dir / "📖目录 索引.md"
+    
+    # 读取旧文件，提取用户在 [[xxx]] 后面手动添加的说明文字
+    user_annotations = {}
+    if index_path.exists():
+        try:
+            old_content = index_path.read_text(encoding='utf-8')
+            for line in old_content.splitlines():
+                # 匹配 [[文件名]] 后面的文本
+                match = re.search(r'\[\[([^\]]+)\]\](.*)', line)
+                if match:
+                    link_name = match.group(1).strip()
+                    user_text = match.group(2).strip()
+                    if user_text:
+                        # 用文件名（不含路径）作为key
+                        pure_name = link_name.replace('\\', '/').split('/')[-1]
+                        user_annotations[pure_name] = user_text
+        except Exception:
+            pass
+    
     lines = []
     
     # 标题
@@ -354,13 +375,18 @@ def generate_directory_index(target_dir: Path) -> int:
             lines.append(f"{indent}📁 {root_path.name}\n")
             all_entries.append(('dir', depth, root_path.name, str(rel)))
         
-        # 添加文件（仅 .md）
+        # 添加文件（仅 .md），保留用户手动添加的说明文字
         for f in sorted(files):
             if f.endswith(".md"):
                 file_count += 1
                 indent = "  " * (depth + 1)
-                lines.append(f"{indent}📄 [[{f[:-3]}]]\n")
-                all_entries.append(('file', depth + 1, f[:-3], str(rel)))
+                file_stem = f[:-3]
+                user_text = user_annotations.get(file_stem, "")
+                if user_text:
+                    lines.append(f"{indent}📄 [[{file_stem}]] {user_text}\n")
+                else:
+                    lines.append(f"{indent}📄 [[{file_stem}]]\n")
+                all_entries.append(('file', depth + 1, file_stem, str(rel)))
     
     lines.append("\n---\n\n")
     
@@ -395,10 +421,16 @@ def generate_directory_index(target_dir: Path) -> int:
                 if f.endswith(".md") and not f.startswith("🧩 目录-") and not f.startswith("🏠 home-"):
                     try:
                         rel_path = root_path.relative_to(first_dir)
+                        file_stem = f[:-3]
+                        user_text = user_annotations.get(file_stem, "")
                         if rel_path == Path("."):
-                            files_in_group.append(f"[[{f[:-3]}]]")
+                            link = f"[[{file_stem}]]"
                         else:
-                            files_in_group.append(f"[[{rel_path / f[:-3]}]]")
+                            link = f"[[{rel_path / file_stem}]]"
+                        if user_text:
+                            files_in_group.append(f"{link} {user_text}")
+                        else:
+                            files_in_group.append(link)
                     except ValueError:
                         pass
         
