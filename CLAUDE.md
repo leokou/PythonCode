@@ -1,6 +1,6 @@
 # D:\Python - AI 速查手册
 
-> 工作区级规则。项目级规则见各 `projects/*/CLAUDE.md`。
+> 工作区级规则。项目级规则见各 `projects/*/CLAUDE.md`。·
 
 ## 1. 目录结构
 
@@ -41,8 +41,8 @@ leodiarycode/
 │   ├── health_check.py
 │   │   ├── scripts/               # CLI 入口
 │   │   │   ├── ai_index_builder_v2.py    # ⭐ AI 检索 Builder（Router/Cache/Search/Domain/Status/Rebuild/Incremental/Health）
-│   │   │   ├── batch_skill_test.py       # ⭐ 25 查询批量测试脚本
-│   │   │   ├── ai_retrieval_healthcheck.py  # ⭐ 58 项全链路健康检查
+│   │   │   ├── batch_skill_test.py       # ⭐ 30 查询批量测试脚本
+│   │   │   ├── ai_retrieval_healthcheck.py  # ⭐ 100+ 项 AI 检索层真实检测（LD-DVA Final 全链路）
 │   ├── ai_index_builder.py
 │   ├── Obsidian - index_updater.py
 │   ├── Obsidian - Home修改同步移动文件.py
@@ -110,10 +110,10 @@ python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py rebuild
 # AI 检索 - 增量更新（Pipeline Step 6 触发）
 python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py incremental
 
-# AI 检索 - 批量测试（25 查询）
+# AI 检索 - 批量测试（30 查询）
 python D:\Python\projects\leodiarycode\scripts\batch_skill_test.py
 
-# AI 检索 - 全链路健康检查（58 项）
+# AI 检索 - 全链路健康检查（100+ 项 AI 检索层真实检测）
 python D:\Python\projects\leodiarycode\scripts\ai_retrieval_healthcheck.py
 
 # 索引更新
@@ -121,6 +121,9 @@ python D:\Python\projects\leodiarycode\scripts\Obsidian\ -\ index_updater.py
 
 # Skill 一致性检查
 python D:\Python\projects\leodiarycode\src\obsidian_skill_utils.py skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"
+
+# 项目级健康检查（320+ 项：140+ Python + 100+ AI 检索真实检测 + 140+ Runtime Reality Verification + 30 查询验证 + 30 三要素验证 + 10 语义模拟）
+python D:\Python\projects\leodiarycode\src\obsidian_skill_utils.py health-check-all "D:\Obsidian\LeoDiary" "C:\Users\leokou\.claude\skills\Obsidian" "D:\Python\projects\leodiarycode"
 ```
 
 ## 8. 打包 EXE
