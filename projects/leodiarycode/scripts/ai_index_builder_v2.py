@@ -382,6 +382,42 @@ def build_domain_files(docs: list) -> Dict[str, str]:
 # ======================================================================
 # 搜索与路由
 # ======================================================================
+
+# L4 Siwei 深度思考触发词（最高优先级，必须在 L3/L2/L1 之前检测）
+# SKILL.md 规定 siwei/思维/头脑风暴 固定 L4，强制全链路（核心规则+思维框架+AIE+外部搜索）
+LEVEL_L4_KEYWORDS = [
+    "siwei",
+    "思维",
+    "深度思考",
+    "头脑风暴",
+    "brainstorm",
+    "框架分析",
+    "战略分析",
+    "商业化",
+    "系统设计",
+    "架构设计",
+    "长期规划",
+    "是否应该",
+]
+
+# Search 置信度阈值（用于可信降级）
+# score >= 30: high（强命中，标题/实体精确匹配）
+# score 15-29: medium（命中，标签/标题部分匹配）
+# score < 15: low（弱/疑似，应降级人类视图）
+SEARCH_CONFIDENCE_HIGH = 30
+SEARCH_CONFIDENCE_MEDIUM = 15
+
+
+def _score_to_confidence(score: int) -> str:
+    """Convert numeric score to confidence label."""
+    if score >= SEARCH_CONFIDENCE_HIGH:
+        return 'high'
+    elif score >= SEARCH_CONFIDENCE_MEDIUM:
+        return 'medium'
+    else:
+        return 'low'
+
+
 def load_index() -> dict:
     """Load all JSON index files."""
     data = {
@@ -618,17 +654,30 @@ def search(query: str, top_n: int = 5) -> list:
             'title': f.get('t', ''),
             'path': f.get('p', ''),
             'score': r['score'],
+            'confidence': _score_to_confidence(r['score']),
         })
-    
+
     return friendly
 
 
 def classify_query(query: str) -> dict:
-    """Classify query into L1/L2/L3 level with honest routing paths."""
+    """Classify query into L1/L2/L3/L4 level with honest routing paths.
+
+    顺序：L4 (Siwei) → L3 (复杂分析) → L2 (精确查询) → L1 (简单事实)
+    """
     q = query.strip()
+    q_lower = q.lower()
 
     # Suggest relevant domain
     suggested_domain = _suggest_domain(q)
+
+    # L4: Siwei 深度思考（最高优先级，必须先检测）
+    # SKILL.md 规定 siwei/思维/头脑风暴 触发词固定 L4，强制全链路
+    for kw in LEVEL_L4_KEYWORDS:
+        if kw.lower() in q_lower:
+            return {'level': 'L4', 'label': 'Siwei 深度思考',
+                    'path': f'domain索引({suggested_domain}) → 核心规则 → 思维框架 → 多框架分析 → 外部搜索',
+                    'tokens': '< 8000', 'domain': suggested_domain, 'mode': 'siwei'}
 
     # L3: 复杂分析（跨领域总结、对比、趋势分析、体系分析、根因分析）
     l3_patterns = ['分析', '对比', '总结', '体系', '架构', '趋势', '综合', '全面', '设计',
@@ -790,10 +839,21 @@ def cmd_search(query: str, top: int = 5):
         print("      2. 手动浏览 📖目录")
         return
 
-    print(f"\n📋 Top {len(results)} 结果:")
+    # 可信降级：top1 score < 15 时提示低可信度
+    top1_score = results[0].get('score', 0) if results else 0
+    top1_confidence = results[0].get('confidence', 'low') if results else 'low'
+    if top1_score < SEARCH_CONFIDENCE_MEDIUM:
+        print(f"\n   ⚠️  低可信度: top1 score={top1_score} (confidence={top1_confidence})")
+        print(f"   ⚠️  未找到高相关知识，建议:")
+        print(f"      1. 降级到人类视图: 浏览 �目录 索引.md")
+        print(f"      2. 扩展搜索词: 使用同义词或更具体的关键词")
+        print(f"      3. 外部搜索: 知识库可能无此专题内容")
+
+    print(f"\n�📋 Top {len(results)} 结果:")
     for i, f in enumerate(results, 1):
         score = f.get('score', 0)
-        print(f"   {i}. {f['title']} (score: {score})")
+        confidence = f.get('confidence', 'low')
+        print(f"   {i}. {f['title']} (score: {score}, confidence: {confidence})")
         print(f"      路径: {f['path']}")
         print()
 

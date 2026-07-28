@@ -20,13 +20,20 @@ leodiarycode/
 │   ├── check_chip_links.py     # Chip 链接检查
 │   └── check_tasks.py          # Task 检查
 ├── scripts/               # CLI 入口
-│   ├── ai_index_builder.py          # AI_INDEX 构建（11命令）
-│   ├── Obsidian - index_updater.py  # 索引更新
+│   ├── ai_index_builder_v2.py          # LD-DVA Final AI 检索加速层（最新）
+│   ├── ai_index_builder.py             # AI_INDEX 构建（旧版）
+│   ├── ai_retrieval_healthcheck.py     # AI 检索层健康检查
+│   ├── batch_test_100.py               # 批量测试（100 条）
+│   ├── batch_skill_test.py             # Skill 批量测试
+│   ├── analyze_100_results.py          # 测试结果分析
+│   ├── truthful_search_test.py         # 真实性搜索测试
+│   ├── obsidian_common.py              # 公共常量（scripts 副本）
+│   ├── Obsidian - index_updater.py     # 索引更新
 │   ├── Obsidian - Home修改同步移动文件.py  # Home→目录同步
 │   ├── Obsidian - 目录修改同步home.py      # 目录→Home同步
-│   ├── Obsidian - renamepy.py       # 文件名标题检查
-│   ├── Obsidian -备份笔记.py         # 笔记备份
-│   └── Obsidian -备份python代码.py   # 代码备份
+│   ├── Obsidian - renamepy.py          # 文件名标题检查
+│   ├── Obsidian -备份笔记.py            # 笔记备份
+│   └── Obsidian -备份python代码.py      # 代码备份
 ├── lib/                   # leo-os-tools 子包
 │   ├── leo_common.py
 │   ├── lint.py
@@ -78,8 +85,8 @@ python "scripts/Obsidian - renamepy.py"
 python "scripts/Obsidian -备份笔记.py"
 python "scripts/Obsidian -备份python代码.py"
 
-# AI_INDEX
-python scripts/ai_index_builder.py rebuild|incremental|status|health
+# AI_INDEX（v2 为最新）
+python scripts/ai_index_builder_v2.py rebuild|incremental|router|search|cache-read|cache-write|status|health
 
 # Skill 一致性检查
 python src/obsidian_skill_utils.py skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"

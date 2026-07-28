@@ -4,15 +4,29 @@
 
 ## 包含脚本
 
+### 核心脚本（已打包 EXE，供 Obsidian EXE Launcher 插件调用）
+
 | 脚本 | 功能 |
 |------|------|
-| `scripts/ai_index_builder.py` | AI_INDEX 构建器（全量/增量重建、搜索、缓存、健康检查） |
+| `scripts/ai_index_builder_v2.py` | LD-DVA Final AI 检索加速层（rebuild/incremental/router/search/cache/status/health） |
 | `scripts/Obsidian - index_updater.py` | 索引更新（生成 🧩目录、🏠home、📖索引文件） |
 | `scripts/Obsidian - Home修改同步移动文件.py` | Home 文件修改后同步到目录 |
 | `scripts/Obsidian - 目录修改同步home.py` | 目录文件修改后同步到 Home |
 | `scripts/Obsidian - renamepy.py` | 确保 .md 文件标题格式正确 |
 | `scripts/Obsidian -备份笔记.py` | 备份 Obsidian 笔记 |
 | `scripts/Obsidian -备份python代码.py` | 备份 Python 代码到 GitHub |
+
+### 辅助/测试脚本
+
+| 脚本 | 功能 |
+|------|------|
+| `scripts/ai_index_builder.py` | AI_INDEX 构建器（旧版，v2 为最新） |
+| `scripts/ai_retrieval_healthcheck.py` | AI 检索层健康检查 |
+| `scripts/batch_test_100.py` | 批量测试（100 条） |
+| `scripts/batch_skill_test.py` | Skill 批量测试 |
+| `scripts/analyze_100_results.py` | 测试结果分析 |
+| `scripts/truthful_search_test.py` | 真实性搜索测试 |
+| `scripts/obsidian_common.py` | 公共常量（scripts 副本） |
 
 ## 打包 EXE
 

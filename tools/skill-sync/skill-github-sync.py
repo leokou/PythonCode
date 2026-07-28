@@ -108,6 +108,15 @@ def main():
 
     print(f"📊 共复制 {skills_count} 个 skill")
 
+    # Step 2.5: Copy top-level files (README.md, CLAUDE.md)
+    print("\n📄 复制顶层文件...")
+    top_files = ['README.md', 'CLAUDE.md']
+    for fname in top_files:
+        src_file = os.path.join(REPO_PATH, fname)
+        if os.path.exists(src_file):
+            shutil.copy2(src_file, os.path.join(CLONE_DIR, fname))
+            print(f"  ✅ {fname}")
+
     # Step 3: Commit and push
     if skills_count == 0:
         print("⚠️  没有找到可同步的 skill")
