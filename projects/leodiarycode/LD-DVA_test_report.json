@@ -1,0 +1,552 @@
+{
+  "test_info": {
+    "name": "LD-DVA 综合系统测试",
+    "start_time": "2026-07-28T16:41:36.823664",
+    "end_time": "2026-07-28T16:41:49.535288",
+    "duration_seconds": 12.7,
+    "test_topics": [
+      "AI编程与LLM应用",
+      "产品需求分析与PRD撰写",
+      "法律合规与合同审查",
+      "Cloudflare Workers部署",
+      "个人知识管理方法论"
+    ],
+    "test_files_created": 11
+  },
+  "summary": {
+    "total_checks": 65,
+    "pass": 63,
+    "warn": 2,
+    "fail": 0,
+    "score_percentage": 98.5,
+    "verdict": "PASS"
+  },
+  "results": [
+    {
+      "category": "数据创建",
+      "name": "T01 AI编程与LLM应用",
+      "status": "pass",
+      "detail": "创建 3 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "数据创建",
+      "name": "T02 产品需求分析与PRD撰写",
+      "status": "pass",
+      "detail": "创建 2 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "数据创建",
+      "name": "T03 法律合规与合同审查",
+      "status": "pass",
+      "detail": "创建 2 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "数据创建",
+      "name": "T04 Cloudflare Workers部署",
+      "status": "pass",
+      "detail": "创建 2 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "数据创建",
+      "name": "T05 个人知识管理方法论",
+      "status": "pass",
+      "detail": "创建 2 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "数据创建",
+      "name": "总计",
+      "status": "pass",
+      "detail": "共创建 5 个话题 / 11 个笔记文件",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "Skill命令",
+      "name": "is-system-file",
+      "status": "pass",
+      "detail": "执行成功: true",
+      "remediation": "",
+      "time": "16:41:36"
+    },
+    {
+      "category": "Skill命令",
+      "name": "is-system-file",
+      "status": "pass",
+      "detail": "执行成功: true",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "is-system-file",
+      "status": "pass",
+      "detail": "执行成功: false",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "validate-filename",
+      "status": "pass",
+      "detail": "执行成功: {\"valid\": true}",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "validate-filename",
+      "status": "pass",
+      "detail": "执行成功: {\"valid\": true}",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "parse-filename",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"original\": \"测试笔记 @ 2026-07-28\",\n  \"topic\": \"测试笔记\",\n  \"type\": \"\",\n  \"note\": ",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "validate-document",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"valid\": false,\n  \"has_frontmatter\": true,\n  \"has_h1\": true,\n  \"h1_text\": \"C",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "check-summary-quality",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"quality\": \"medium\",\n  \"is_title_copy\": false,\n  \"generic_word_count\": 0,\n  ",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "compute-hash",
+      "status": "pass",
+      "detail": "执行成功: {\"hash\": \"f799e3594b3d60905b91008ef8f95048\", \"title\": \"Claude Code - 实战配置教程\"}",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "scan-unindexed",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"unindexed\": [],\n  \"count\": 0\n}",
+      "remediation": "",
+      "time": "16:41:37"
+    },
+    {
+      "category": "Skill命令",
+      "name": "check-file-thresholds",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"exists\": true,\n  \"size_bytes\": 1261,\n  \"line_count\": 52,\n  \"is_trap\": false",
+      "remediation": "",
+      "time": "16:41:38"
+    },
+    {
+      "category": "Skill命令",
+      "name": "validate-metadata",
+      "status": "pass",
+      "detail": "执行成功: [FAIL] A📥 收集（Capture）/_test_simulated/T01_ai_coding/AI编程工具 - 横向评测 @ 2026.md\n    ",
+      "remediation": "",
+      "time": "16:41:38"
+    },
+    {
+      "category": "Skill命令",
+      "name": "kb-stats",
+      "status": "pass",
+      "detail": "执行成功: 📊 知识库健康度报告\n==================================================\n总文件数:       555\nfr",
+      "remediation": "",
+      "time": "16:41:38"
+    },
+    {
+      "category": "Skill命令",
+      "name": "lint-content",
+      "status": "pass",
+      "detail": "执行成功: 扫描 555 个 .md 文件\n\n[PASS] 过时检测\n\n孤儿页检测（20 项）：\n  [orphan] 无反向引用：2- 💻开发/Python/README",
+      "remediation": "",
+      "time": "16:41:40"
+    },
+    {
+      "category": "Skill命令",
+      "name": "compute-similarity",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"title_similarity\": 42.9,\n  \"entity_similarity\": 33.3,\n  \"topic_similarity\":",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "Skill命令",
+      "name": "detect-changes",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"new_files\": [],\n  \"changed\": []\n}",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "Skill命令",
+      "name": "record-access",
+      "status": "pass",
+      "detail": "执行成功: ✅ 已记录访问：D:\\Obsidian\\LeoDiary\\A📥 收集（Capture）\\_test_simulated\\T01_ai_coding\\Claude",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "Skill命令",
+      "name": "locate-domain-index",
+      "status": "pass",
+      "detail": "执行成功: D:\\Obsidian\\LeoDiary\\📖目录 索引-A📥 收集（Capture）.md",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "Skill命令",
+      "name": "verify-move",
+      "status": "pass",
+      "detail": "执行成功: {\n  \"success\": false,\n  \"issues\": [\n    \"源文件仍存在\",\n    \"AI_INDEX 中无此文件，请运行 increm",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "AI索引",
+      "name": "status",
+      "status": "pass",
+      "detail": "==================================================\n🤖 AI_INDEX 状态\n==================================================\n  追踪文件数: 454\n  最后全量重建: 2026-07-28T16:37:15\n  增量缓存: ✅ 已启用\n  缓存条目数: 1\n  查询统计: 0/0 命中（0",
+      "remediation": "",
+      "time": "16:41:41"
+    },
+    {
+      "category": "AI索引",
+      "name": "health",
+      "status": "pass",
+      "detail": "执行成功",
+      "remediation": "",
+      "time": "16:41:43"
+    },
+    {
+      "category": "AI索引",
+      "name": "cache-clear",
+      "status": "pass",
+      "detail": "缓存已清空",
+      "remediation": "",
+      "time": "16:41:43"
+    },
+    {
+      "category": "AI索引",
+      "name": "rebuild",
+      "status": "pass",
+      "detail": "全量重建成功",
+      "remediation": "",
+      "time": "16:41:43"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'AI编程'",
+      "status": "pass",
+      "detail": "返回结果: 1145字节",
+      "remediation": "",
+      "time": "16:41:43"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'Cloudflare Workers'",
+      "status": "pass",
+      "detail": "返回结果: 1291字节",
+      "remediation": "",
+      "time": "16:41:43"
+    },
+    {
+      "category": "AI检索",
+      "name": "search '合同审查'",
+      "status": "pass",
+      "detail": "返回结果: 68字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search '产品需求'",
+      "status": "pass",
+      "detail": "返回结果: 318字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search '知识管理'",
+      "status": "pass",
+      "detail": "返回结果: 476字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'LLM应用'",
+      "status": "pass",
+      "detail": "返回结果: 70字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'Serverless部署'",
+      "status": "pass",
+      "detail": "返回结果: 84字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search '合规检查'",
+      "status": "pass",
+      "detail": "返回结果: 68字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'PRD撰写'",
+      "status": "pass",
+      "detail": "返回结果: 348字节",
+      "remediation": "",
+      "time": "16:41:44"
+    },
+    {
+      "category": "AI检索",
+      "name": "search 'PARA方法论'",
+      "status": "pass",
+      "detail": "返回结果: 74字节",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "AI缓存",
+      "name": "cache-write",
+      "status": "pass",
+      "detail": "缓存写入成功: AI编程工具对比",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "AI缓存",
+      "name": "cache-read",
+      "status": "pass",
+      "detail": "缓存读取成功",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "AI缓存",
+      "name": "cache-invalidate",
+      "status": "pass",
+      "detail": "缓存失效成功",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "AI索引",
+      "name": "incremental",
+      "status": "pass",
+      "detail": "增量更新成功",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "索引验证",
+      "name": "retrieval-index.md",
+      "status": "pass",
+      "detail": "文件存在 (296,987 bytes)",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "索引验证",
+      "name": "tag-index.md",
+      "status": "pass",
+      "detail": "文件存在 (161,476 bytes)",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "索引验证",
+      "name": "entity-index.md",
+      "status": "pass",
+      "detail": "文件存在 (544,611 bytes)",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "索引验证",
+      "name": "query-cache.json",
+      "status": "pass",
+      "detail": "文件存在 (5,095 bytes)",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "索引验证",
+      "name": "index-state.json",
+      "status": "pass",
+      "detail": "文件存在 (1,032,172 bytes)",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "Frontmatter",
+      "name": "dry-run",
+      "status": "pass",
+      "detail": "试运行成功",
+      "remediation": "",
+      "time": "16:41:45"
+    },
+    {
+      "category": "Frontmatter",
+      "name": "apply",
+      "status": "pass",
+      "detail": "执行成功",
+      "remediation": "",
+      "time": "16:41:46"
+    },
+    {
+      "category": "健康检查",
+      "name": "full-check",
+      "status": "pass",
+      "detail": "全量健康检查完成",
+      "remediation": "",
+      "time": "16:41:47"
+    },
+    {
+      "category": "健康检查",
+      "name": "quick-check",
+      "status": "pass",
+      "detail": "快速检查完成",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-knowledge-queryer",
+      "status": "pass",
+      "detail": "包含 5 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-knowledge-compiler",
+      "status": "warn",
+      "detail": "仅包含 1 个AI_INDEX标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-knowledge-organizer",
+      "status": "pass",
+      "detail": "包含 4 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-pipeline",
+      "status": "pass",
+      "detail": "包含 4 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-mulu-fenlei-summary",
+      "status": "pass",
+      "detail": "包含 4 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-fire-rename",
+      "status": "pass",
+      "detail": "包含 3 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "Skill插件",
+      "name": "obsidian-health-check-all",
+      "status": "pass",
+      "detail": "包含 6 个AI_INDEX相关标记",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "数据质量",
+      "name": "追踪文件数",
+      "status": "pass",
+      "detail": "AI_INDEX追踪 454 个文件",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "数据质量",
+      "name": "字段完整性",
+      "status": "warn",
+      "detail": "发现 1 个问题: 8- 📜核心规则/CHANGELOG.md: 缺少type",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "数据质量",
+      "name": "摘要质量",
+      "status": "pass",
+      "detail": "所有文件摘要质量达标",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "清理",
+      "name": "测试数据",
+      "status": "pass",
+      "detail": "已删除: D:\\Obsidian\\LeoDiary\\A📥 收集（Capture）\\_test_simulated",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "清理",
+      "name": "AI缓存",
+      "status": "pass",
+      "detail": "缓存已清空",
+      "remediation": "",
+      "time": "16:41:49"
+    },
+    {
+      "category": "清理",
+      "name": "索引同步",
+      "status": "pass",
+      "detail": "索引已同步",
+      "remediation": "",
+      "time": "16:41:49"
+    }
+  ],
+  "details": {
+    "test_data_dir": "D:\\Obsidian\\LeoDiary\\A📥 收集（Capture）\\_test_simulated",
+    "vault_root": "D:\\Obsidian\\LeoDiary",
+    "python_dir": "D:\\Python\\projects\\leodiarycode",
+    "index_dir": "D:\\Obsidian\\LeoDiary\\🤖AI_INDEX"
+  }
+}
