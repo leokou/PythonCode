@@ -1,0 +1,36 @@
+# v3.0 同义词配置
+# 用于 ai_index_builder_v2.py 的 search 同义词扩展
+# 用户 query → 同义词扩展 → 关键词搜索 → 评分
+
+# 整改方案 P1-1 要求的 4 组核心同义词
+时间管理:
+  - 艾森豪威尔矩阵
+  - 四象限
+  - 优先级管理
+  - 时间分配
+  - 任务优先级
+
+知识库:
+  - Obsidian
+  - Markdown知识管理
+  - LeoDiary
+  - 知识管理系统
+  - 个人知识库
+
+代理:
+  - Shadowrocket
+  - Clash
+  - 分流规则
+  - VPN
+  - v2ray
+  - 翻墙
+  - 节点订阅
+
+AI编辑器:
+  - Cursor
+  - Trae
+  - Claude Code
+  - Copilot
+  - CodeBuddy
+  - AI编程工具
+  - Cherry Studio

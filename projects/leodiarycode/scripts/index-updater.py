@@ -696,14 +696,6 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
     lines.append(f"- **文件数**: {file_count}\n")
     lines.append(f"- **更新时间**: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
-    lines.append("---\n\n")
-    lines.append("## 📋 文件清单\n\n")
-    for link_path, file_stem, annotation in all_files:
-        if annotation:
-            lines.append(f"- [[{link_path}]] {annotation}\n")
-        else:
-            lines.append(f"- [[{link_path}]]\n")
-
     try:
         new_content = ''.join(lines)
         if index_path.exists():

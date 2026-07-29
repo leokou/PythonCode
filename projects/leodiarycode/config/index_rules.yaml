@@ -1,4 +1,4 @@
-# LD-DVA Final 索引扫描规则
+# v3.0 索引扫描规则
 # 用于 ai_index_builder_v2.py 的 scan_files() 函数
 # 控制哪些文件进入索引，哪些被排除
 

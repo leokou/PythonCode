@@ -1,6 +1,6 @@
 # D:\Python - AI 速查手册
 
-> 工作区级规则。项目级规则见各 `projects/*/CLAUDE.md`。·
+> 工作区级规则。项目级规则见各 `projects/*/CLAUDE.md`。
 
 ## 1. 目录结构
 
@@ -10,7 +10,7 @@ D:\Python/
 │   ├── leodiarycode/      # LeoDiary 工具链（Python）
 │   └── obsidian-exe-launcher/  # Obsidian 插件（TypeScript）
 ├── tools/                 # 独立工具
-│   ├── skill-sync/
+│   ├── sync-GitHub/
 │   ├── chrome-go/
 │   └── logseq-cleanup/
 ├── experiments/           # 实验验证
@@ -39,15 +39,16 @@ leodiarycode/
 │   ├── obsidian_skill_utils.py
 │   ├── frontmatter_enrich.py
 │   ├── health_check.py
-│   │   ├── scripts/               # CLI 入口
-│   │   │   ├── ai_index_builder_v2.py    # ⭐ AI 检索 Builder（Router/Cache/Search/Domain/Status/Rebuild/Incremental/Health）
-│   │   │   ├── batch_skill_test.py       # ⭐ 30 查询批量测试脚本
-│   │   │   ├── ai_retrieval_healthcheck.py  # ⭐ 100+ 项 AI 检索层真实检测（LD-DVA Final 全链路）
+│   └── check_*.py
+├── scripts/               # CLI 入口
+│   ├── ai_index_builder_v2.py    # ⭐ AI 检索 Builder（Router/Cache/Search/Domain）
+│   ├── batch_skill_test.py       # ⭐ 25 查询批量测试脚本
+│   ├── ai_retrieval_healthcheck.py  # ⭐ 58 项全链路健康检查
 │   ├── ai_index_builder.py
-│   ├── Obsidian - index_updater.py
-│   ├── Obsidian - Home修改同步移动文件.py
-│   ├── Obsidian - 目录修改同步home.py
-│   ├── Obsidian - renamepy.py
+│   ├── index-updater.py
+│   ├── home-to-mulu-sync.py
+│   ├── mulu-to-home-sync.py
+│   ├── rename-check.py
 │   ├── Obsidian -备份笔记.py
 │   └── Obsidian -备份python代码.py
 ├── lib/                   # leo-os-tools 子包
@@ -70,7 +71,7 @@ obsidian-exe-launcher/
 
 | 工具 | 路径 |
 |------|------|
-| Skill 同步 | `tools/skill-sync/claude目录skill同步到其他agentcode.py` |
+| Skill 同步 | `tools/sync-GitHub/skill-sync-agentcode.py` |
 | 代理节点爬取 | `tools/chrome-go/ChromeGo - 节点爬取脚本 @ 代理节点下载.py` |
 | Logseq 附件清理 | `tools/logseq-cleanup/Logseq - 附件清理脚本 @ 清理无用文件.py` |
 
@@ -101,29 +102,17 @@ python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py router "�
 # AI 检索 - 搜索
 python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py search "查询内容" --top 5
 
-# AI 检索 - 索引状态
-python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py status
-
-# AI 检索 - 全量重建（重建 .ai-index/ 目录）
-python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py rebuild
-
-# AI 检索 - 增量更新（Pipeline Step 6 触发）
-python D:\Python\projects\leodiarycode\scripts\ai_index_builder_v2.py incremental
-
-# AI 检索 - 批量测试（30 查询）
+# AI 检索 - 批量测试（25 查询）
 python D:\Python\projects\leodiarycode\scripts\batch_skill_test.py
 
-# AI 检索 - 全链路健康检查（100+ 项 AI 检索层真实检测）
+# AI 检索 - 全链路健康检查（58 项）
 python D:\Python\projects\leodiarycode\scripts\ai_retrieval_healthcheck.py
 
 # 索引更新
-python D:\Python\projects\leodiarycode\scripts\Obsidian\ -\ index_updater.py
+python D:\Python\projects\leodiarycode\scripts\index-updater.py
 
 # Skill 一致性检查
 python D:\Python\projects\leodiarycode\src\obsidian_skill_utils.py skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"
-
-# 项目级健康检查（320+ 项：140+ Python + 100+ AI 检索真实检测 + 140+ Runtime Reality Verification + 30 查询验证 + 30 三要素验证 + 10 语义模拟）
-python D:\Python\projects\leodiarycode\src\obsidian_skill_utils.py health-check-all "D:\Obsidian\LeoDiary" "C:\Users\leokou\.claude\skills\Obsidian" "D:\Python\projects\leodiarycode"
 ```
 
 ## 8. 打包 EXE

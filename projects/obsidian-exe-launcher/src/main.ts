@@ -28,31 +28,31 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: '索引更新工具',
     description: '更新所有目录索引',
-    exeName: 'Obsidian - index_updater.exe',
+    exeName: 'index-updater.exe',
     icon: '📇',
   },
   {
     name: 'Home修改同步目录',
     description: '修改了home文件后运行',
-    exeName: 'Obsidian - Home修改同步移动文件.exe',
+    exeName: 'home-to-mulu-sync.exe',
     icon: '🔄',
   },
   {
     name: '目录修改同步home',
     description: '修改了🧩目录文件后运行',
-    exeName: 'Obsidian - 目录修改同步home.exe',
+    exeName: 'mulu-to-home-sync.exe',
     icon: '🔁',
   },
   {
     name: '文件名标题检查',
     description: '检查所有.md文件标题',
-    exeName: 'Obsidian - renamepy.exe',
+    exeName: 'rename-check.exe',
     icon: '✅',
   },
   {
     name: '备份笔记',
     description: '备份Obsidian笔记（弹窗输入备注）',
-    exeName: 'Obsidian -备份笔记.exe',
+    exeName: 'leodiary-backup.exe',
     icon: '📝',
     promptRequired: true,
     promptLabel: '备注',
@@ -61,7 +61,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: '备份python代码',
     description: '备份Python代码到GitHub（弹窗输入版本说明）',
-    exeName: '备份python代码.exe',
+    exeName: 'python-code-sync-GitHub.exe',
     icon: '🐍',
     promptRequired: true,
     promptLabel: '版本说明',
@@ -70,7 +70,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: '备份Claude Skill',
     description: '备份skills到本地（弹窗输入备注）',
-    exeName: 'claude-skill.exe',
+    exeName: 'claude-skill-backup.exe',
     icon: '💾',
     promptRequired: true,
     promptLabel: '备注',
@@ -79,7 +79,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: 'Skill同步GitHub',
     description: '同步Claude Skills到GitHub（弹窗输入版本说明）',
-    exeName: 'Skill同步GitHub.exe',
+    exeName: 'skill-sync-GitHub.exe',
     icon: '☁️',
     promptRequired: true,
     promptLabel: '版本说明',
@@ -97,15 +97,14 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: '文件合并上传GitHub',
     description: '合并多个文件并上传到GitHub',
-    exeName: 'Obsidian -文件合并上传GitHub.exe',
+    exeName: 'md_merger.exe',
     icon: '📤',
   },
   {
     name: 'Skill同步其他Agent',
     description: '同步Claude Skills到其他Agent（Codex/Trae/WorkBuddy/Qoder/project）',
-    exeName: 'claude目录skill同步到其他agentcode.py',
+    exeName: 'skill-sync-agentcode.exe',
     icon: '🔀',
-    exeDir: 'D:\\Python\\tools\\skill-sync',
   },
 ]
 

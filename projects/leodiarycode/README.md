@@ -2,31 +2,22 @@
 
 管理 LeoDiary Obsidian 知识库的 Python 自动化工具体系。
 
-## 包含脚本
-
-### 核心脚本（已打包 EXE，供 Obsidian EXE Launcher 插件调用）
+## EXE 打包脚本（供 Obsidian EXE Launcher 插件调用）
 
 | 脚本 | 功能 |
 |------|------|
-| `scripts/ai_index_builder_v2.py` | LD-DVA Final AI 检索加速层（rebuild/incremental/router/search/cache/status/health） |
-| `scripts/Obsidian - index_updater.py` | 索引更新（生成 🧩目录、🏠home、📖索引文件） |
-| `scripts/Obsidian - Home修改同步移动文件.py` | Home 文件修改后同步到目录 |
-| `scripts/Obsidian - 目录修改同步home.py` | 目录文件修改后同步到 Home |
-| `scripts/Obsidian - renamepy.py` | 确保 .md 文件标题格式正确 |
-| `scripts/Obsidian -备份笔记.py` | 备份 Obsidian 笔记 |
-| `scripts/Obsidian -备份python代码.py` | 备份 Python 代码到 GitHub |
+| `scripts/index-updater.py` | 目录索引更新（生成 🧩目录、🏠home、📖索引文件） |
+| `scripts/home-to-mulu-sync.py` | Home 文件修改后同步到目录 |
+| `scripts/mulu-to-home-sync.py` | 目录文件修改后同步到 Home |
+| `scripts/rename-check.py` | 确保 .md 文件标题格式正确 |
 
-### 辅助/测试脚本
+## v3.0 AI 索引构建
 
-| 脚本 | 功能 |
-|------|------|
-| `scripts/ai_index_builder.py` | AI_INDEX 构建器（旧版，v2 为最新） |
-| `scripts/ai_retrieval_healthcheck.py` | AI 检索层健康检查 |
-| `scripts/batch_test_100.py` | 批量测试（100 条） |
-| `scripts/batch_skill_test.py` | Skill 批量测试 |
-| `scripts/analyze_100_results.py` | 测试结果分析 |
-| `scripts/truthful_search_test.py` | 真实性搜索测试 |
-| `scripts/obsidian_common.py` | 公共常量（scripts 副本） |
+索引构建工具位于 `D:\Obsidian\LeoDiary\tools\rebuild-ai-index.py`（vault 内），不在本 Python 项目中。
+
+## ⚠️ 本项目的角色（务必知悉）
+
+v3.0 起 9 个 Skill 均为纯 AI 执行，运行时不依赖本项目。本项目仅提供 `scripts/` 下 4 个 EXE 打包脚本，供 Obsidian EXE Launcher 插件调用（目录索引更新、Home 同步、文件名检查）。
 
 ## 打包 EXE
 
@@ -43,4 +34,4 @@ pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpat
 
 ## 模块依赖
 
-`src/` 下的模块通过 `import` 被 scripts 引用。任何 scripts 需要 import 的公共代码都应放在 `src/` 中。
+`scripts/` 下脚本通过 `sys.path.insert(0, os.path.dirname(__file__))` 导入同目录的 `scripts/obsidian_common.py`。

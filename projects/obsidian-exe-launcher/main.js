@@ -44,25 +44,25 @@ var EXE_CONFIGS = [
   {
     name: "\u7D22\u5F15\u66F4\u65B0\u5DE5\u5177",
     description: "\u66F4\u65B0\u6240\u6709\u76EE\u5F55\u7D22\u5F15",
-    exeName: "Obsidian - index_updater.exe",
+    exeName: "index-updater.exe",
     icon: "\u{1F4C7}"
   },
   {
     name: "Home\u4FEE\u6539\u540C\u6B65\u76EE\u5F55",
     description: "\u4FEE\u6539\u4E86home\u6587\u4EF6\u540E\u8FD0\u884C",
-    exeName: "Obsidian - Home\u4FEE\u6539\u540C\u6B65\u79FB\u52A8\u6587\u4EF6.exe",
+    exeName: "home-to-mulu-sync.exe",
     icon: "\u{1F504}"
   },
   {
     name: "\u76EE\u5F55\u4FEE\u6539\u540C\u6B65home",
     description: "\u4FEE\u6539\u4E86\u{1F9E9}\u76EE\u5F55\u6587\u4EF6\u540E\u8FD0\u884C",
-    exeName: "Obsidian - \u76EE\u5F55\u4FEE\u6539\u540C\u6B65home.exe",
+    exeName: "mulu-to-home-sync.exe",
     icon: "\u{1F501}"
   },
   {
     name: "\u6587\u4EF6\u540D\u6807\u9898\u68C0\u67E5",
     description: "\u68C0\u67E5\u6240\u6709.md\u6587\u4EF6\u6807\u9898",
-    exeName: "Obsidian - renamepy.exe",
+    exeName: "rename-check.exe",
     icon: "\u2705"
   },
   {
@@ -77,7 +77,7 @@ var EXE_CONFIGS = [
   {
     name: "\u5907\u4EFDpython\u4EE3\u7801",
     description: "\u5907\u4EFDPython\u4EE3\u7801\u5230GitHub\uFF08\u5F39\u7A97\u8F93\u5165\u7248\u672C\u8BF4\u660E\uFF09",
-    exeName: "\u5907\u4EFDpython\u4EE3\u7801.exe",
+    exeName: "python-code-sync-GitHub.exe",
     icon: "\u{1F40D}",
     promptRequired: true,
     promptLabel: "\u7248\u672C\u8BF4\u660E",
@@ -86,7 +86,7 @@ var EXE_CONFIGS = [
   {
     name: "\u5907\u4EFDClaude Skill",
     description: "\u5907\u4EFDskills\u5230\u672C\u5730\uFF08\u5F39\u7A97\u8F93\u5165\u5907\u6CE8\uFF09",
-    exeName: "claude-skill.exe",
+    exeName: "claude-skill-backup.exe",
     icon: "\u{1F4BE}",
     promptRequired: true,
     promptLabel: "\u5907\u6CE8",
@@ -113,15 +113,14 @@ var EXE_CONFIGS = [
   {
     name: "\u6587\u4EF6\u5408\u5E76\u4E0A\u4F20GitHub",
     description: "\u5408\u5E76\u591A\u4E2A\u6587\u4EF6\u5E76\u4E0A\u4F20\u5230GitHub",
-    exeName: "Obsidian -\u6587\u4EF6\u5408\u5E76\u4E0A\u4F20GitHub.exe",
+    exeName: "md_merger.exe",
     icon: "\u{1F4E4}"
   },
   {
     name: "Skill\u540C\u6B65\u5176\u4ED6Agent",
     description: "\u540C\u6B65Claude Skills\u5230\u5176\u4ED6Agent\uFF08Codex/Trae/WorkBuddy/Qoder/project\uFF09",
-    exeName: "claude\u76EE\u5F55skill\u540C\u6B65\u5230\u5176\u4ED6agentcode.py",
-    icon: "\u{1F500}",
-    exeDir: "D:\\Python\\tools\\skill-sync"
+    exeName: "skill-sync-agentcode.exe",
+    icon: "\u{1F500}"
   }
 ];
 var PYTHON_EXE = "python";

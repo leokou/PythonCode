@@ -11,85 +11,45 @@ Python 项目，管理 LeoDiary Obsidian 知识库的自动化工具体系。
 
 ```
 leodiarycode/
-├── src/                   # importable 模块
+├── scripts/               # CLI 入口（Obsidian EXE 插件）
 │   ├── obsidian_common.py      # 公共常量/工具（VAULT_ROOT、跳过规则等）
-│   ├── obsidian_skill_utils.py # 30+ 通用命令，所有 Skill 共用
-│   ├── frontmatter_enrich.py   # 批量补全元数据
-│   ├── health_check.py         # AI 检索层健康检查（49项）
-│   ├── check_ai_dir.py         # AI_DIR 检查
-│   ├── check_chip_links.py     # Chip 链接检查
-│   └── check_tasks.py          # Task 检查
-├── scripts/               # CLI 入口
-│   ├── ai_index_builder_v2.py          # LD-DVA Final AI 检索加速层（最新）
-│   ├── ai_index_builder.py             # AI_INDEX 构建（旧版）
-│   ├── ai_retrieval_healthcheck.py     # AI 检索层健康检查
-│   ├── batch_test_100.py               # 批量测试（100 条）
-│   ├── batch_skill_test.py             # Skill 批量测试
-│   ├── analyze_100_results.py          # 测试结果分析
-│   ├── truthful_search_test.py         # 真实性搜索测试
-│   ├── obsidian_common.py              # 公共常量（scripts 副本）
-│   ├── Obsidian - index_updater.py     # 索引更新
-│   ├── Obsidian - Home修改同步移动文件.py  # Home→目录同步
-│   ├── Obsidian - 目录修改同步home.py      # 目录→Home同步
-│   ├── Obsidian - renamepy.py          # 文件名标题检查
-│   ├── Obsidian -备份笔记.py            # 笔记备份
-│   └── Obsidian -备份python代码.py      # 代码备份
-├── lib/                   # leo-os-tools 子包
-│   ├── leo_common.py
-│   ├── lint.py
-│   └── validate.py
-├── tests/
-│   ├── LD-DVA_test_runner.py
-│   └── LD-DVA_test_report.json
-├── tmp/                   # 构建临时文件（gitignored）
-│   ├── build/             # PyInstaller 工作目录
-│   └── spec/              # PyInstaller .spec 文件
+│   ├── index-updater.py        # 目录索引更新
+│   ├── home-to-mulu-sync.py    # Home→目录同步
+│   ├── mulu-to-home-sync.py    # 目录→Home同步
+│   └── rename-check.py         # 文件名标题检查
+├── config/                # 配置文件
 ├── docs/
+├── tmp/                   # PyInstaller 构建临时目录
 ├── README.md
 └── CLAUDE.md
 ```
 
+**v3.0 项目定位**：9 个 Skill 均为纯 AI 执行，运行时不依赖本项目。本项目仅提供 `scripts/` 下 4 个 EXE 打包脚本，供 Obsidian EXE Launcher 插件调用。AI 索引构建工具位于 `D:\Obsidian\LeoDiary\tools\rebuild-ai-index.py`（vault 内），不在本项目中。
+
 ## import 规则
 
-scripts/ 中的脚本通过 `sys.path.insert` 自动添加 `../src` 到搜索路径，可直接 `from obsidian_common import ...`。
+scripts/ 中的脚本通过 `sys.path.insert(0, os.path.dirname(__file__))` 添加自身目录到搜索路径，导入同目录的 `scripts/obsidian_common.py`。
 
 ```python
-# scripts 中自动已加：
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-```
-
-如需从项目根运行模块：
-
-```bash
-python -m src.obsidian_skill_utils <command>
+# scripts 中实际使用：
+sys.path.insert(0, os.path.dirname(__file__))
+from obsidian_common import ...
 ```
 
 ## 运行命令
 
 ```bash
 cd D:\Python\projects\leodiarycode
-
-# 索引更新
-python scripts/Obsidian - index_updater.py
-
+# 目录索引更新
+python "scripts/index-updater.py"
 # Home 同步
-python "scripts/Obsidian - Home修改同步移动文件.py"
-
+python "scripts/home-to-mulu-sync.py"
 # 目录同步
-python "scripts/Obsidian - 目录修改同步home.py"
-
+python "scripts/mulu-to-home-sync.py"
 # 文件名检查
-python "scripts/Obsidian - renamepy.py"
-
-# 备份
-python "scripts/Obsidian -备份笔记.py"
-python "scripts/Obsidian -备份python代码.py"
-
-# AI_INDEX（v2 为最新）
-python scripts/ai_index_builder_v2.py rebuild|incremental|router|search|cache-read|cache-write|status|health
-
-# Skill 一致性检查
-python src/obsidian_skill_utils.py skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"
+python "scripts/rename-check.py"
+# AI 索引全量重建（v3.0，位于 vault tools/）
+python D:\Obsidian\LeoDiary\tools\rebuild-ai-index.py
 ```
 
 ## 打包 EXE
@@ -98,11 +58,8 @@ EXE 统一输出到 `D:\Python\dist`（Obsidian EXE Launcher 插件读取路径�
 
 ```bash
 cd D:\Python\projects\leodiarycode
-
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian - index_updater" "scripts/Obsidian - index_updater.py"
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian - Home修改同步移动文件" "scripts/Obsidian - Home修改同步移动文件.py"
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian - 目录修改同步home" "scripts/Obsidian - 目录修改同步home.py"
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian - renamepy" "scripts/Obsidian - renamepy.py"
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian -备份笔记" "scripts/Obsidian -备份笔记.py"
-pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "Obsidian -备份python代码" "scripts/Obsidian -备份python代码.py"
+pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "index-updater" "scripts/index-updater.py"
+pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "home-to-mulu-sync" "scripts/home-to-mulu-sync.py"
+pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "mulu-to-home-sync" "scripts/mulu-to-home-sync.py"
+pyinstaller --onefile --distpath "D:\Python\dist" --workpath tmp\build --specpath tmp\spec --name "rename-check" "scripts/rename-check.py"
 ```

@@ -1,6 +1,6 @@
 # Python Personal Engineering Workspace
 
-**D:\Python** 是个人软件工程母体 workspace，不是项目。·
+**D:\Python** 是个人软件工程母体 workspace，不是项目。
 
 ## 职责边界
 
@@ -41,7 +41,7 @@ D:\Python/
 │       └── .git/
 │
 ├── tools/                 # 独立工具（不绑定项目）
-│   ├── skill-sync/        # Claude Skill 同步
+│   ├── sync-GitHub/       # Skill 同步/备份
 │   ├── chrome-go/         # 代理节点爬取
 │   └── logseq-cleanup/    # Logseq 附件清理
 │
@@ -93,26 +93,14 @@ python scripts/ai_index_builder_v2.py domain-read ai
 # AI 检索 - 搜索
 python scripts/ai_index_builder_v2.py search "查询内容" --top 5
 
-# AI 检索 - 索引状态
-python scripts/ai_index_builder_v2.py status
-
-# AI 检索 - 全量重建（索引 .ai-index/ 目录）
-python scripts/ai_index_builder_v2.py rebuild
-
-# AI 检索 - 增量更新（Pipeline Step 6 触发）
-python scripts/ai_index_builder_v2.py incremental
-
-# AI 检索 - 批量测试（30 查询）
+# AI 检索 - 批量测试（25 查询）
 python scripts/batch_skill_test.py
 
-# AI 检索 - 全链路健康检查（100+ 项 AI 检索层真实检测）
+# AI 检索 - 全链路健康检查（58 项）
 python scripts/ai_retrieval_healthcheck.py
 
 # Skill 一致性检查
 python -m src.obsidian_skill_utils skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"
-
-# 项目级健康检查（320+ 项：140+ Python + 100+ AI 检索真实检测 + 140+ Runtime Reality Verification + 30 查询验证 + 30 三要素验证 + 10 语义模拟）
-python -m src.obsidian_skill_utils health-check-all "D:\Obsidian\LeoDiary" "C:\Users\leokou\.claude\skills\Obsidian" "D:\Python\projects\leodiarycode"
 
 # 元数据校验
 python -m src.obsidian_skill_utils validate-metadata "D:\Obsidian\LeoDiary" --quiet

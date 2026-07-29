@@ -6,17 +6,17 @@ Obsidian 插件，在左侧栏提供 ▶ 图标，点击弹出工具面板，调
 
 | # | 图标 | 按钮名 | 功能 | exeName | 弹窗 |
 |---|------|--------|------|---------|------|
-| 1 | � | 索引更新工具 | 更新所有目录索引 | `Obsidian - index_updater.exe` | 无 |
-| 2 | 🔄 | Home修改同步目录 | Home→目录同步 + 移动文件 | `Obsidian - Home修改同步移动文件.exe` | 无 |
-| 3 | 🔁 | 目录修改同步home | 目录→Home同步 + 重建 home | `Obsidian - 目录修改同步home.exe` | 无 |
-| 4 | ✅ | 文件名标题检查 | 检查 .md 文件标题与文件名一致 | `Obsidian - renamepy.exe` | 无 |
-| 5 | � | 备份笔记 | 备份 Obsidian 笔记库 | `Obsidian -备份笔记.exe` | 备注 |
-| 6 | 🐍 | 备份python代码 | 备份 Python 代码到 GitHub | `备份python代码.exe` | 版本说明 |
-| 7 | � | 备份Claude Skill | 备份 Skills 到本地 | `claude-skill.exe` | 备注 |
-| 8 | ☁️ | Skill同步GitHub | 同步 Skills 到 GitHub | `Skill同步GitHub.exe` | 版本说明 |
+| 1 | � | 索引更新工具 | 更新所有目录索引 | `index-updater.exe` | 无 |
+| 2 | 🔄 | Home修改同步目录 | Home→目录同步 + 移动文件 | `home-to-mulu-sync.exe` | 无 |
+| 3 | 🔁 | 目录修改同步home | 目录→Home同步 + 重建 home | `mulu-to-home-sync.exe` | 无 |
+| 4 | ✅ | 文件名标题检查 | 检查 .md 文件标题与文件名一致 | `rename-check.exe` | 无 |
+| 5 | � | 备份笔记 | 备份 Obsidian 笔记库 | `leodiary-backup.exe` | 备注 |
+| 6 | 🐍 | 备份python代码 | 备份 Python 代码到 GitHub | `python-code-sync-GitHub.exe` | 版本说明 |
+| 7 | � | 备份Claude Skill | 备份 Skills 到本地 | `claude-skill-backup.exe` | 备注 |
+| 8 | ☁️ | Skill同步GitHub | 同步 Skills 到 GitHub | `skill-sync-GitHub.exe` | 版本说明 |
 | 9 | �️ | 备份Python代码本地 | 本地备份 Python 代码 | `python-local-backup.exe` | 备注 |
-| 10 | 📤 | 文件合并上传GitHub | GUI 合并 文本/MD/Word → MD | `Obsidian -文件合并上传GitHub.exe` | 无 |
-| 11 | 🔀 | Skill同步其他Agent | 同步 Claude Skills 到其他 Agent（Codex/Trae/WorkBuddy/Qoder/project） | `claude目录skill同步到其他agentcode.py` | 无 |
+| 10 | 📤 | 文件合并上传GitHub | GUI 合并 文本/MD/Word → MD | `md_merger.exe` | 无 |
+| 11 | 🔀 | Skill同步其他Agent | 同步 Claude Skills 到其他 Agent（Codex/Trae/WorkBuddy/Qoder/project） | `skill-sync-agentcode.exe` | 无 |
 
 ## 链路说明
 
@@ -25,7 +25,7 @@ Obsidian 插件，在左侧栏提供 ▶ 图标，点击弹出工具面板，调
     ↓
 main.ts: launchExe(config)
     ├─ .exe  → exec(exeDir + exeName)            exeDir 默认 D:\Python\dist（按钮可用 exeDir 覆盖）
-    └─ .py   → exec("python" + exeDir + exeName) 用系统 PATH 中的 python 运行脚本（如 Skill同步其他Agent）
+    └─ .py   → exec("python" + exeDir + exeName) 用系统 PATH 中的 python 运行脚本（当前无 .py 按钮，保留备用）
     ↓
 目标进程启动（exe 或 python 脚本）
     ↓
@@ -108,7 +108,7 @@ obsidian-exe-launcher/
   description: '功能描述',   // 悬停提示
   exeName: 'xxx.exe',       // exe 文件名（默认在 D:\Python\dist），或 .py 脚本名
   icon: ' emoji',           // 按钮 emoji
-  exeDir: 'D:\\Python\\tools\\skill-sync', // 可选：覆盖默认 exe 目录（如脚本不在 dist）
+  exeDir: 'D:\\Python\\tools\\sync-GitHub', // 可选：覆盖默认 exe 目录（如脚本不在 dist）
   promptRequired: true,     // 是否弹窗输入
   promptLabel: '字段名',    // 弹窗标签
   promptPlaceholder: '...', // 弹窗占位符

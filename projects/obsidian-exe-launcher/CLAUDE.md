@@ -29,7 +29,7 @@ obsidian-exe-launcher/
 - **`launchExe(config, arg?)`**：启动逻辑。
   - `exeName` 以 `.exe` 结尾 → `exec(exeDir + exeName)`，可选 `--remark` 传参。
   - `exeName` 以 `.py` 结尾 → `exec("python" + exeDir + exeName)`，用系统 PATH 中 `python`（常量 `PYTHON_EXE`）运行；点击即弹「同步中...」，完成取 stdout 含「汇总」的一行作提示。
-  - `exeDir` 默认 `D:\Python\dist`，按钮可覆盖（如脚本在 `D:\Python\tools\skill-sync`）。
+  - `exeDir` 默认 `D:\Python\dist`，按钮可覆盖（如脚本在 `D:\Python\tools\sync-GitHub`）。
 - **`ExeLauncherModal`**：弹窗，网格按钮 + 拖拽排序 + 设置入口。
 - **`PromptModal` / `SettingsModal`**：备注输入 / 按钮大小与顺序设置。
 
