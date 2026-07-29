@@ -21,6 +21,8 @@ CLONE_DIR = r"D:\project\leodiary-skills-tmp"
 SKIP_DIRS = {'.system', '.obsidian', '__pycache__'}
 SKIP_FILES = {'desktop.ini', '.DS_Store'}
 
+TASK_NAME = "Skill同步GitHub"
+
 def on_rmtree_error(func, path, exc_info):
     """处理 Windows 上 .git 只读文件导致的删除失败"""
     try:
@@ -48,6 +50,7 @@ def main():
     args = parser.parse_args()
     message = (args.message or args.remark or "").strip()
 
+    print(f"🔁 {TASK_NAME} 启动")
     print("=" * 60)
     print("☁️  Claude Skill → GitHub 同步")
     print(f"源: {REPO_PATH}")
@@ -56,6 +59,7 @@ def main():
 
     if not os.path.isdir(REPO_PATH):
         print(f"❌ 源目录不存在: {REPO_PATH}")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     if not message:
@@ -72,6 +76,7 @@ def main():
     except RuntimeError as e:
         print(f"⚠️  克隆失败: {e}")
         print("   如果是第一次使用，请先手动配置 Git 凭据。")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     # Step 2: Clean clone dir (keep .git only) then copy skills
@@ -120,6 +125,7 @@ def main():
     # Step 3: Commit and push
     if skills_count == 0:
         print("⚠️  没有找到可同步的 skill")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     print("\n📤 提交并推送到 GitHub...")
@@ -132,8 +138,10 @@ def main():
     except RuntimeError as e:
         if 'nothing to commit' in str(e) or 'no changes' in str(e):
             print("✅ 没有变更，无需同步")
+            print(f"✅ {TASK_NAME} 成功")
         else:
             print(f"❌ 提交失败: {e}")
+            print(f"❌ {TASK_NAME} 失败")
             return
 
     try:
@@ -142,6 +150,7 @@ def main():
     except RuntimeError as e:
         print(f"❌ 推送失败: {e}")
         print("   可能是认证问题，请检查 Git 凭据配置")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     # Cleanup
@@ -155,6 +164,7 @@ def main():
     print(f"🎉 Skill 同步完成！")
     print(f"   版本说明: {message}")
     print(f"   Skill 数: {skills_count}")
+    print(f"✅ {TASK_NAME} 成功")
     print(f"{'='*60}")
 
 if __name__ == "__main__":

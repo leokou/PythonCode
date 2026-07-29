@@ -27,6 +27,8 @@ SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg',
 
 MAX_BACKUPS = 20
 
+TASK_NAME = "Obsidian笔记备份"
+
 def get_backup_dir(remark="") -> Path:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if remark:
@@ -77,8 +79,11 @@ def main():
     args = parser.parse_args()
     remark = args.remark.strip()
 
+    print(f"🔁 {TASK_NAME} 启动")
+
     if not SOURCE_DIR.exists():
         print(f"❌ 源目录不存在：{SOURCE_DIR}")
+        print(f"❌ {TASK_NAME} 失败")
         sys.exit(1)
 
     BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
@@ -114,6 +119,7 @@ def main():
     print(f"📄 复制文件：{copied} 个")
     print(f"⏭️  跳过文件：{skipped} 个")
     print(f"📁 备份位置：{backup_dir}")
+    print(f"✅ {TASK_NAME} 成功")
 
 if __name__ == "__main__":
     main()

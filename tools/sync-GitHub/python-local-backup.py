@@ -16,6 +16,8 @@ SOURCE = r"D:\Python"
 BACKUP_ROOT = r"D:\project\python备份"
 MAX_BACKUPS = 10
 
+TASK_NAME = "Python代码本地备份"
+
 def on_rmtree_error(func, path, exc_info):
     os.chmod(path, stat.S_IWRITE)
     func(path)
@@ -26,12 +28,14 @@ def main():
     args = parser.parse_args()
     remark = args.remark.strip()
 
+    print(f"🔁 {TASK_NAME} 启动")
     print("=" * 50)
     print("📁 Python 代码本地备份")
     print(f"源: {SOURCE}")
 
     if not os.path.isdir(SOURCE):
         print(f"❌ 源目录不存在: {SOURCE}")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     os.makedirs(BACKUP_ROOT, exist_ok=True)
@@ -59,11 +63,16 @@ def main():
     print(f"📦 备份目标: {backup_dir}")
     print("🔄 开始复制（可能需要几分钟）...")
 
-    shutil.copytree(
-        SOURCE, backup_dir,
-        ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.git', 'node_modules', 'dist', 'build'),
-        symlinks=True
-    )
+    try:
+        shutil.copytree(
+            SOURCE, backup_dir,
+            ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.git', 'node_modules', 'dist', 'build'),
+            symlinks=True
+        )
+    except Exception as e:
+        print(f"❌ 复制失败: {e}")
+        print(f"❌ {TASK_NAME} 失败")
+        return
 
     size = sum(
         os.path.getsize(os.path.join(dp, f))
@@ -81,6 +90,7 @@ def main():
     for b in all_backups:
         print(f"   {b}")
 
+    print(f"✅ {TASK_NAME} 成功")
     print("=" * 50 + "\n")
 
 if __name__ == "__main__":

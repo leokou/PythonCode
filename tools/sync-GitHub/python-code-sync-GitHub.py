@@ -11,6 +11,8 @@ if hasattr(sys.stderr, 'reconfigure'):
 
 REPO_PATH = r'D:\Python'
 
+TASK_NAME = "Python代码同步GitHub"
+
 def run_git_command(repo_path, args):
     try:
         result = subprocess.run(
@@ -30,6 +32,7 @@ def main():
     args = parser.parse_args()
     message = (args.message or args.remark or "").strip()
 
+    print(f"🔁 {TASK_NAME} 启动")
     print("=" * 60)
     print("🐍 备份Python代码到GitHub")
     print("=" * 60)
@@ -39,10 +42,12 @@ def main():
 
     if not os.path.isdir(REPO_PATH):
         print(f"❌ 错误：目录不存在 {REPO_PATH}")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     if not os.path.isdir(os.path.join(REPO_PATH, '.git')):
         print(f"❌ 错误：不是Git仓库 {REPO_PATH}")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     if not message:
@@ -52,10 +57,12 @@ def main():
     success, output = run_git_command(REPO_PATH, ['status', '--porcelain'])
     if not success:
         print(f"❌ git status 失败：{output}")
+        print(f"❌ {TASK_NAME} 失败")
         return
 
     if not output.strip():
         print(f"✅ 没有变更，无需同步")
+        print(f"✅ {TASK_NAME} 成功")
         return
 
     changed_count = len([line for line in output.strip().split('\n') if line.strip()])
@@ -65,6 +72,7 @@ def main():
     success, output = run_git_command(REPO_PATH, ['add', '-A'])
     if not success:
         print(f"❌ git add 失败：{output}")
+        print(f"❌ {TASK_NAME} 失败")
         return
     print(f"✅ 已暂存所有变更")
 
@@ -75,8 +83,10 @@ def main():
     if not success:
         if 'nothing to commit' in output or 'no changes' in output:
             print(f"✅ 没有需要提交的变更")
+            print(f"✅ {TASK_NAME} 成功")
             return
         print(f"❌ git commit 失败：{output}")
+        print(f"❌ {TASK_NAME} 失败")
         return
     print(f"✅ 提交成功")
 
@@ -84,6 +94,7 @@ def main():
     success, output = run_git_command(REPO_PATH, ['push'])
     if not success:
         print(f"❌ git push 失败：{output}")
+        print(f"❌ {TASK_NAME} 失败")
         return
     print(f"✅ 推送成功")
 
@@ -93,6 +104,7 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"🎉 Python代码备份完成！")
+    print(f"✅ {TASK_NAME} 成功")
     print(f"{'='*60}")
 
 if __name__ == "__main__":

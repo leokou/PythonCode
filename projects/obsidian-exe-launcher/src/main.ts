@@ -532,19 +532,19 @@ class ExeLauncherModal extends Modal {
 
       exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
-          new Notice(`启动失败: ${config.name}\n${error.message}`)
+          new Notice(`❌ ${config.name} 失败\n${error.message}`)
           return
         }
-        if (isPython) {
-          // 仅提取"汇总"一行作为结果摘要，避免刷屏
-          const lines = (stdout || stderr || '')
-            .split('\n').map(s => s.trim()).filter(Boolean)
-          const summaryLine = lines.find(l => l.includes('汇总'))
-          const summary = summaryLine || lines.slice(-1)[0] || '完成'
-          new Notice(`✅ ${config.name} 完成\n${summary}`)
-        } else {
-          new Notice(`已启动: ${config.name}`)
-        }
+        // 统一从 stdout 中提取提示行（EXE 和 .py 共用）
+        const lines = (stdout || stderr || '')
+          .split('\n').map(s => s.trim()).filter(Boolean)
+        // 优先匹配失败/成功/汇总三类关键行
+        const failLine = lines.find(l => l.includes('❌') && l.includes('失败'))
+        const successLine = lines.find(l => l.includes('✅') && l.includes('成功'))
+        const summaryLine = lines.find(l => l.includes('汇总'))
+        const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || '完成'
+        const prefix = failLine ? '❌' : '✅'
+        new Notice(`${prefix} ${config.name}\n${summary}`)
       })
     } catch (err: any) {
       new Notice(`启动失败: ${config.name}\n${err?.message ?? err}`)

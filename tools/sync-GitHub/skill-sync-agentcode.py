@@ -26,6 +26,8 @@ EXCLUDE_FILES = {'desktop.ini', 'README.md', 'LICENSE', 'LEGAL.md',
 SYSTEM_DIRS = {'.system', '.obsidian'}
 OBSIDIAN_WRAPPER = 'Obsidian'
 
+TASK_NAME = "Skill同步其他Agent"
+
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "skill-sync.log")
 
 def log(msg):
@@ -189,6 +191,7 @@ def sync_to_target(target, skills):
     return copied, updated, removed, failed
 
 def main():
+    log(f"🔁 {TASK_NAME} 启动")
     log("=" * 60)
     log("LEO Skill Sync v2 启动")
     log(f"源: {SOURCE}")
@@ -198,6 +201,7 @@ def main():
 
     if not skills:
         log("⚠️  无 skill 可同步，终止")
+        log(f"❌ {TASK_NAME} 失败")
         return
 
     tc = tu = tr = tf = 0
@@ -207,6 +211,7 @@ def main():
 
     log(f"汇总: 新增{tc} 更新{tu} 移除{tr} 失败{tf}")
     log("LEO Skill Sync v2 完成")
+    log(f"✅ {TASK_NAME} 成功")
     log("=" * 60 + "\n")
 
 if __name__ == "__main__":

@@ -68,7 +68,7 @@ var EXE_CONFIGS = [
   {
     name: "\u5907\u4EFD\u7B14\u8BB0",
     description: "\u5907\u4EFDObsidian\u7B14\u8BB0\uFF08\u5F39\u7A97\u8F93\u5165\u5907\u6CE8\uFF09",
-    exeName: "Obsidian -\u5907\u4EFD\u7B14\u8BB0.exe",
+    exeName: "leodiary-backup.exe",
     icon: "\u{1F4DD}",
     promptRequired: true,
     promptLabel: "\u5907\u6CE8",
@@ -95,7 +95,7 @@ var EXE_CONFIGS = [
   {
     name: "Skill\u540C\u6B65GitHub",
     description: "\u540C\u6B65Claude Skills\u5230GitHub\uFF08\u5F39\u7A97\u8F93\u5165\u7248\u672C\u8BF4\u660E\uFF09",
-    exeName: "Skill\u540C\u6B65GitHub.exe",
+    exeName: "skill-sync-GitHub.exe",
     icon: "\u2601\uFE0F",
     promptRequired: true,
     promptLabel: "\u7248\u672C\u8BF4\u660E",

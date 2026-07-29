@@ -16,6 +16,8 @@ SOURCE = r"C:\Users\leokou\.claude\skills"
 BACKUP_ROOT = r"D:\project\skill备份"
 MAX_BACKUPS = 10
 
+TASK_NAME = "Claude Skill备份"
+
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "skill-backup.log")
 
 def log(msg):
@@ -38,12 +40,14 @@ def main():
     args = parser.parse_args()
     remark = args.remark.strip()
 
+    log(f"🔁 {TASK_NAME} 启动")
     log("=" * 50)
     log("Claude Skill 备份 启动")
     log(f"源: {SOURCE}")
 
     if not os.path.isdir(SOURCE):
         log(f"❌ 源目录不存在: {SOURCE}")
+        log(f"❌ {TASK_NAME} 失败")
         return
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -81,6 +85,7 @@ def main():
         log(f"   大小: {size / 1024 / 1024:.1f} MB")
     except Exception as e:
         log(f"❌ 备份失败: {e}")
+        log(f"❌ {TASK_NAME} 失败")
         return
 
     all_backups = sorted([
@@ -92,6 +97,7 @@ def main():
         log(f"   {b}")
 
     log("Claude Skill 备份 完成")
+    log(f"✅ {TASK_NAME} 成功")
     log("=" * 50 + "\n")
 
 if __name__ == "__main__":
