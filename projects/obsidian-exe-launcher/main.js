@@ -115,8 +115,16 @@ var EXE_CONFIGS = [
     description: "\u5408\u5E76\u591A\u4E2A\u6587\u4EF6\u5E76\u4E0A\u4F20\u5230GitHub",
     exeName: "Obsidian -\u6587\u4EF6\u5408\u5E76\u4E0A\u4F20GitHub.exe",
     icon: "\u{1F4E4}"
+  },
+  {
+    name: "Skill\u540C\u6B65\u5176\u4ED6Agent",
+    description: "\u540C\u6B65Claude Skills\u5230\u5176\u4ED6Agent\uFF08Codex/Trae/WorkBuddy/Qoder/project\uFF09",
+    exeName: "claude\u76EE\u5F55skill\u540C\u6B65\u5230\u5176\u4ED6agentcode.py",
+    icon: "\u{1F500}",
+    exeDir: "D:\\Python\\tools\\skill-sync"
   }
 ];
+var PYTHON_EXE = "python";
 function getOrderedConfigs(data) {
   const configMap = new Map(EXE_CONFIGS.map((c) => [c.exeName, c]));
   const result = [];
@@ -439,21 +447,34 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
     this.dragCleanups = [];
   }
   async launchExe(config, arg) {
+    const isPython = config.exeName.toLowerCase().endsWith(".py");
     const baseDir = config.exeDir ?? "D:\\Python\\dist";
     const exePath = path.join(baseDir, config.exeName);
     if (!fs.existsSync(exePath)) {
-      new import_obsidian.Notice(`EXE\u4E0D\u5B58\u5728: ${config.exeName}`);
+      new import_obsidian.Notice(`\u6587\u4EF6\u4E0D\u5B58\u5728: ${config.exeName}`);
       return;
     }
     try {
-      let cmd = `"${exePath}"`;
-      if (arg) {
-        cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`;
+      let cmd;
+      if (isPython) {
+        cmd = `"${PYTHON_EXE}" "${exePath}"`;
+      } else {
+        cmd = `"${exePath}"`;
+        if (arg) {
+          cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`;
+        }
       }
-      (0, import_child_process.exec)(cmd, (error) => {
+      (0, import_child_process.exec)(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
           new import_obsidian.Notice(`\u542F\u52A8\u5931\u8D25: ${config.name}
 ${error.message}`);
+          return;
+        }
+        if (isPython) {
+          const out = (stdout || stderr || "").trim().split("\n").filter(Boolean);
+          const summary = out.slice(-5).join("\n") || "\u5B8C\u6210";
+          new import_obsidian.Notice(`\u2705 ${config.name} \u5B8C\u6210
+${summary}`);
         } else {
           new import_obsidian.Notice(`\u5DF2\u542F\u52A8: ${config.name}`);
         }

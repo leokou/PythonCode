@@ -100,7 +100,17 @@ const EXE_CONFIGS: ExeConfig[] = [
     exeName: 'Obsidian -文件合并上传GitHub.exe',
     icon: '📤',
   },
+  {
+    name: 'Skill同步其他Agent',
+    description: '同步Claude Skills到其他Agent（Codex/Trae/WorkBuddy/Qoder/project）',
+    exeName: 'claude目录skill同步到其他agentcode.py',
+    icon: '🔀',
+    exeDir: 'D:\\Python\\tools\\skill-sync',
+  },
 ]
+
+/** 运行 .py 脚本时使用的 Python 解释器（需位于 PATH 中） */
+const PYTHON_EXE = 'python'
 
 function getOrderedConfigs(data: PluginData): ExeConfig[] {
   const configMap = new Map(EXE_CONFIGS.map(c => [c.exeName, c]))
@@ -496,23 +506,36 @@ class ExeLauncherModal extends Modal {
   }
 
   private async launchExe(config: ExeConfig, arg?: string) {
+    const isPython = config.exeName.toLowerCase().endsWith('.py')
     const baseDir = config.exeDir ?? 'D:\\Python\\dist'
     const exePath = path.join(baseDir, config.exeName)
 
     if (!fs.existsSync(exePath)) {
-      new Notice(`EXE不存在: ${config.exeName}`)
+      new Notice(`文件不存在: ${config.exeName}`)
       return
     }
 
     try {
-      let cmd = `"${exePath}"`
-      if (arg) {
-        cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`
+      let cmd: string
+      if (isPython) {
+        cmd = `"${PYTHON_EXE}" "${exePath}"`
+      } else {
+        cmd = `"${exePath}"`
+        if (arg) {
+          cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`
+        }
       }
 
-      exec(cmd, (error) => {
+      exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
           new Notice(`启动失败: ${config.name}\n${error.message}`)
+          return
+        }
+        if (isPython) {
+          // 取脚本最后几行输出作为同步结果摘要
+          const out = (stdout || stderr || '').trim().split('\n').filter(Boolean)
+          const summary = out.slice(-5).join('\n') || '完成'
+          new Notice(`✅ ${config.name} 完成\n${summary}`)
         } else {
           new Notice(`已启动: ${config.name}`)
         }
