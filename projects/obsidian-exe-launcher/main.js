@@ -454,6 +454,9 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
       new import_obsidian.Notice(`\u6587\u4EF6\u4E0D\u5B58\u5728: ${config.exeName}`);
       return;
     }
+    if (isPython) {
+      new import_obsidian.Notice(`\u{1F504} ${config.name}\uFF1A\u540C\u6B65\u4E2D...`);
+    }
     try {
       let cmd;
       if (isPython) {
@@ -471,8 +474,9 @@ ${error.message}`);
           return;
         }
         if (isPython) {
-          const out = (stdout || stderr || "").trim().split("\n").filter(Boolean);
-          const summary = out.slice(-5).join("\n") || "\u5B8C\u6210";
+          const lines = (stdout || stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
+          const summaryLine = lines.find((l) => l.includes("\u6C47\u603B"));
+          const summary = summaryLine || lines.slice(-1)[0] || "\u5B8C\u6210";
           new import_obsidian.Notice(`\u2705 ${config.name} \u5B8C\u6210
 ${summary}`);
         } else {

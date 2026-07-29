@@ -515,6 +515,11 @@ class ExeLauncherModal extends Modal {
       return
     }
 
+    // Python 脚本运行较慢，先给出"启动中"提示
+    if (isPython) {
+      new Notice(`🔄 ${config.name}：同步中...`)
+    }
+
     try {
       let cmd: string
       if (isPython) {
@@ -532,9 +537,11 @@ class ExeLauncherModal extends Modal {
           return
         }
         if (isPython) {
-          // 取脚本最后几行输出作为同步结果摘要
-          const out = (stdout || stderr || '').trim().split('\n').filter(Boolean)
-          const summary = out.slice(-5).join('\n') || '完成'
+          // 仅提取"汇总"一行作为结果摘要，避免刷屏
+          const lines = (stdout || stderr || '')
+            .split('\n').map(s => s.trim()).filter(Boolean)
+          const summaryLine = lines.find(l => l.includes('汇总'))
+          const summary = summaryLine || lines.slice(-1)[0] || '完成'
           new Notice(`✅ ${config.name} 完成\n${summary}`)
         } else {
           new Notice(`已启动: ${config.name}`)
