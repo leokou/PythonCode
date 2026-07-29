@@ -150,8 +150,15 @@ def sync_to_target(target, skills):
     existing = set(os.listdir(target))
     source_names = {name for name, _ in skills}
 
-    # 1. 删除目标中源已不存在的 skill（但不删系统目录和排除文件）
-    to_remove = existing - source_names - SYSTEM_DIRS - EXCLUDE_FILES - {'.git'}
+    # 1. 只删除目标中"曾是 skill（含 SKILL.md）但源已不存在"的目录
+    #    保护非 skill 目录（如备份目录 python备份/skill备份）
+    to_remove = set()
+    for name in existing:
+        if name in source_names or name in SYSTEM_DIRS or name in EXCLUDE_FILES or name == '.git':
+            continue
+        p = os.path.join(target, name)
+        if os.path.isdir(p) and os.path.exists(os.path.join(p, "SKILL.md")):
+            to_remove.add(name)
     removed = 0
     for name in to_remove:
         p = os.path.join(target, name)

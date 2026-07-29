@@ -32,8 +32,8 @@ main.ts: launchExe(config)
 弹窗输入参数（promptRequired=true 时，通过 --remark 传递）
     ↓
 执行逻辑 → 完成 / 报错
-    · .py 脚本点击即弹「同步中...」，完成后仅取 stdout 中"汇总"一行作提示
-    · .exe 完成后弹「已启动」
+    · EXE 与 .py 统一逻辑：从 stdout 按优先级提取「❌xxx失败」→「✅xxx成功」→ 含「汇总」的行 → 最后一行，作为完成提示
+    · 进程 error 分支显示「❌ {name} 失败」
 ```
 
 **py 源码位置**：见 [D:\Python\CLAUDE.md](file:///D:/Python/CLAUDE.md) 第 2 节三方对照表
@@ -115,6 +115,8 @@ obsidian-exe-launcher/
 }
 ```
 
-> **.py 脚本按钮**：`exeName` 以 `.py` 结尾时，`launchExe` 自动用系统 `python` 运行（常量 `PYTHON_EXE`），并捕获 stdout 中的「汇总」行作为完成提示；无需 `promptRequired`。
+> **.py 脚本按钮**：`exeName` 以 `.py` 结尾时，`launchExe` 自动用系统 `python` 运行（常量 `PYTHON_EXE`）；无需 `promptRequired`。
+>
+> **完成提示逻辑**：EXE 与 .py 统一，`launchExe` 从子进程 stdout 按优先级提取提示行：`❌xxx失败` → `✅xxx成功` → 含「汇总」的行 → 最后一行；进程 error 分支显示 `❌ {name} 失败`。6 个 Python 脚本（备份笔记 / 备份 python 代码 / 备份 Claude Skill / Skill 同步 GitHub / 备份 Python 代码本地 / Skill 同步其他 Agent）已统一在启动/成功/失败时输出 `🔁 {TASK_NAME} 启动` / `✅ {TASK_NAME} 成功` / `❌ {TASK_NAME} 失败` 格式，便于 `launchExe` 提取。
 
 改后 `npm run build` → 复制到插件目录 → 重新加载插件。

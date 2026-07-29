@@ -28,7 +28,8 @@ obsidian-exe-launcher/
 - **`EXE_CONFIGS`**：按钮定义数组（11 个）。字段：`name` / `description` / `exeName` / `icon` / `exeDir?` / `promptRequired?` / `promptLabel?` / `promptPlaceholder?`。
 - **`launchExe(config, arg?)`**：启动逻辑。
   - `exeName` 以 `.exe` 结尾 → `exec(exeDir + exeName)`，可选 `--remark` 传参。
-  - `exeName` 以 `.py` 结尾 → `exec("python" + exeDir + exeName)`，用系统 PATH 中 `python`（常量 `PYTHON_EXE`）运行；点击即弹「同步中...」，完成取 stdout 含「汇总」的一行作提示。
+  - `exeName` 以 `.py` 结尾 → `exec("python" + exeDir + exeName)`，用系统 PATH 中 `python`（常量 `PYTHON_EXE`）运行。
+  - **完成提示（EXE/.py 统一）**：从 stdout 按优先级提取 `❌xxx失败` → `✅xxx成功` → 含「汇总」的行 → 最后一行；进程 error 分支显示 `❌ {name} 失败`。6 个 Python 脚本已统一输出 `🔁 {TASK_NAME} 启动` / `✅ {TASK_NAME} 成功` / `❌ {TASK_NAME} 失败` 格式以便提取。
   - `exeDir` 默认 `D:\Python\dist`，按钮可覆盖（如脚本在 `D:\Python\tools\sync-GitHub`）。
 - **`ExeLauncherModal`**：弹窗，网格按钮 + 拖拽排序 + 设置入口。
 - **`PromptModal` / `SettingsModal`**：备注输入 / 按钮大小与顺序设置。

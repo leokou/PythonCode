@@ -18,7 +18,7 @@ D:\Python\projects\
 ├── leodiarycode/              # LeoDiary Python 工具链
 │   ├── src/                   #   importable 模块（v3.0 已废弃）
 │   ├── scripts/               #   ⭐ 4 个 EXE 打包脚本（仍在用）
-│   ├── lib/                   #   leo-os-tools 子包
+│   ├── lib/                   #   leo-os-tools 子包（v3.0 已删除）
 │   ├── config/                #   配置（index_rules.yaml / synonyms.yaml）
 │   ├── README.md
 │   └── CLAUDE.md

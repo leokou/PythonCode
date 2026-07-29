@@ -468,19 +468,18 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
       }
       (0, import_child_process.exec)(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
-          new import_obsidian.Notice(`\u542F\u52A8\u5931\u8D25: ${config.name}
+          new import_obsidian.Notice(`\u274C ${config.name} \u5931\u8D25
 ${error.message}`);
           return;
         }
-        if (isPython) {
-          const lines = (stdout || stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
-          const summaryLine = lines.find((l) => l.includes("\u6C47\u603B"));
-          const summary = summaryLine || lines.slice(-1)[0] || "\u5B8C\u6210";
-          new import_obsidian.Notice(`\u2705 ${config.name} \u5B8C\u6210
+        const lines = (stdout || stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
+        const failLine = lines.find((l) => l.includes("\u274C") && l.includes("\u5931\u8D25"));
+        const successLine = lines.find((l) => l.includes("\u2705") && l.includes("\u6210\u529F"));
+        const summaryLine = lines.find((l) => l.includes("\u6C47\u603B"));
+        const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || "\u5B8C\u6210";
+        const prefix = failLine ? "\u274C" : "\u2705";
+        new import_obsidian.Notice(`${prefix} ${config.name}
 ${summary}`);
-        } else {
-          new import_obsidian.Notice(`\u5DF2\u542F\u52A8: ${config.name}`);
-        }
       });
     } catch (err) {
       new import_obsidian.Notice(`\u542F\u52A8\u5931\u8D25: ${config.name}
