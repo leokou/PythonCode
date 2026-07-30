@@ -24,7 +24,7 @@
 LeoDiary 知识库 v3.0 起 9 个 Skill 均为纯 AI 执行（Read/Grep/Glob/LS），不再依赖 `D:\Python\projects\leodiarycode\src\` 运行时：
 - `obsidian_skill_utils.py`（旧体系 30+ 命令）已废弃
 - `health_check.py` / `check_*.py` 已废弃
-- v3.0 唯一 Python 工具是 vault 内的 `tools/rebuild-ai-index.py`
+- v3.0 Python 工具：`tools/rebuild-ai-index.py`（索引全量重建）+ `tools/health-check-verify.py`（跨文件一致性批量校验）
 
 `leodiarycode` 当前实际价值仅剩 `scripts/` 下 4 个 EXE 打包脚本，供 Obsidian EXE Launcher 插件调用。
 

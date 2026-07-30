@@ -16,7 +16,7 @@ Obsidian 插件，在左侧栏提供 ▶ 图标，点击弹出工具面板，调
 | 8 | ☁️ | Skill同步GitHub | 同步 Skills 到 GitHub | `skill-sync-GitHub.exe` | 版本说明 |
 | 9 | �️ | 备份Python代码本地 | 本地备份 Python 代码 | `python-local-backup.exe` | 备注 |
 | 10 | 📤 | 文件合并上传GitHub | GUI 合并 文本/MD/Word → MD | `md_merger.exe` | 无 |
-| 11 | 🔀 | Skill同步其他Agent | 同步 Claude Skills 到其他 Agent（Codex/Trae/WorkBuddy/Qoder/project） | `skill-sync-agentcode.exe` | 无 |
+| 11 | 🔀 | Skill同步其他Agent | 同步 Claude Skills 到其他 Agent（Codex/Trae/Qoder/project） | `skill-sync-agentcode.exe` | 无 |
 
 ## 链路说明
 

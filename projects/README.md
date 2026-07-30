@@ -48,7 +48,7 @@ D:\Python\projects\
 
 **v3.0 架构变化**：
 - 9 个 Skill 均为纯 AI 执行（Read/Grep/Glob/LS），不再依赖 `src/obsidian_skill_utils.py`、`src/health_check.py` 等
-- v3.0 唯一 AI 索引构建工具位于 vault 内：`D:\Obsidian\LeoDiary\tools\rebuild-ai-index.py`
+- v3.0 AI 索引构建工具位于 vault 内：`D:\Obsidian\LeoDiary\tools\rebuild-ai-index.py`（索引全量重建）+ `health-check-verify.py`（跨文件一致性批量校验）
 - `src/` 下的 `obsidian_skill_utils.py`、`health_check.py`、`check_*.py` 已废弃
 
 详见 [leodiarycode/README.md](./leodiarycode/README.md)。
