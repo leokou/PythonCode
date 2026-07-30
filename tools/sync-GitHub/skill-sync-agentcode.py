@@ -16,9 +16,11 @@ SOURCE = r"C:\Users\leokou\.claude\skills"
 TARGETS = [
     r"C:\Users\leokou\.codex\skills",
     r"C:\Users\leokou\.trae\skills",
-    r"C:\Users\leokou\.codebuddy",
+    r"C:\Users\leokou\.trae-cn\skills",    
+    r"C:\Users\leokou\.workbuddy\skills",
+    r"C:\Users\leokou\.codebuddy\skills",
     r"C:\Users\leokou\.qoderworkcn\skills",
-     r"D:\project",    
+    r"D:\project",    
 ]
 
 EXCLUDE_FILES = {'desktop.ini', 'README.md', 'LICENSE', 'LEGAL.md',
