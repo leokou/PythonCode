@@ -1,0 +1,46 @@
+# v3.0 索引扫描规则
+# 用于 ai_index_builder_v2.py 的 scan_files() 函数
+# 控制哪些文件进入索引，哪些被排除
+
+# 全局包含规则（所有目录通用）
+include:
+  - "**/*.md"  # 默认只索引 Markdown 文件
+
+# 全局排除规则（所有目录通用）
+exclude:
+  - "**/*.py"
+  - "**/*.pyc"
+  - "**/*.pyo"
+  - "**/__pycache__/**"
+  - "**/temp/**"
+  - "**/.git/**"
+  - "**/node_modules/**"
+
+# 特殊目录白名单
+# 这些目录默认会被 SKIP_DIRS 跳过，但白名单中的文件模式仍会被索引
+special_dirs:
+  skills:
+    # skills 目录下的元文档需要被索引（如知识处理系统使用手册、Skill说明）
+    # 但 Python 文件、临时文件仍然排除
+    include:
+      - "**/*.md"
+    exclude:
+      - "**/*.py"
+      - "**/*.pyc"
+      - "**/__pycache__/**"
+      - "**/temp/**"
+    # 额外排除特定文件（系统生成，非知识内容）
+    exclude_files:
+      - "🤖 AI指令.md"
+      - "🧩 目录-skills.md"
+      - "🏠 home-skills.md"
+
+# 永远不索引的目录（无法被白名单覆盖）
+hard_exclude:
+  - ".ai-index"
+  - "_trash"
+  - "logs"
+  - ".obsidian"
+  - ".git"
+  - "__pycache__"
+  - "node_modules"
