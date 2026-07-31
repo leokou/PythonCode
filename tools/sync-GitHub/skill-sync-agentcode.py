@@ -144,7 +144,7 @@ def sync_to_target(target, skills):
     parent = os.path.dirname(target)
     if not os.path.exists(parent):
         log(f"    ⚠️  父目录不存在，跳过")
-        return
+        return 0, 0, 0, 0
 
     if not os.path.exists(target):
         os.makedirs(target)

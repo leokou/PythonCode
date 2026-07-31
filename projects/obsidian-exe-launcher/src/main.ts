@@ -61,8 +61,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: '备份python代码',
     description: '备份Python代码到GitHub（弹窗输入版本说明）',
-    exeName: 'python-code-sync-GitHub.py',
-    exeDir: 'D:\\Python\\tools\\sync-GitHub',
+    exeName: 'python-code-sync-GitHub.exe',
     icon: '🐍',
     promptRequired: true,
     promptLabel: '版本说明',
@@ -80,8 +79,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: 'Skill同步GitHub',
     description: '同步Claude Skills到GitHub（弹窗输入版本说明）',
-    exeName: 'skill-sync-GitHub.py',
-    exeDir: 'D:\\Python\\tools\\sync-GitHub',
+    exeName: 'skill-sync-GitHub.exe',
     icon: '☁️',
     promptRequired: true,
     promptLabel: '版本说明',
@@ -105,8 +103,7 @@ const EXE_CONFIGS: ExeConfig[] = [
   {
     name: 'Skill同步其他Agent',
     description: '同步Claude Skills到其他Agent（Codex/Trae/WorkBuddy/Qoder/project）',
-    exeName: 'skill-sync-agentcode.py',
-    exeDir: 'D:\\Python\\tools\\sync-GitHub',
+    exeName: 'skill-sync-agentcode.exe',
     icon: '🔀',
   },
 ]
@@ -526,9 +523,6 @@ class ExeLauncherModal extends Modal {
       let cmd: string
       if (isPython) {
         cmd = `"${PYTHON_EXE}" "${exePath}"`
-        if (arg) {
-          cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`
-        }
       } else {
         cmd = `"${exePath}"`
         if (arg) {

@@ -77,8 +77,7 @@ var EXE_CONFIGS = [
   {
     name: "\u5907\u4EFDpython\u4EE3\u7801",
     description: "\u5907\u4EFDPython\u4EE3\u7801\u5230GitHub\uFF08\u5F39\u7A97\u8F93\u5165\u7248\u672C\u8BF4\u660E\uFF09",
-    exeName: "python-code-sync-GitHub.py",
-    exeDir: "D:\\Python\\tools\\sync-GitHub",
+    exeName: "python-code-sync-GitHub.exe",
     icon: "\u{1F40D}",
     promptRequired: true,
     promptLabel: "\u7248\u672C\u8BF4\u660E",
@@ -96,8 +95,7 @@ var EXE_CONFIGS = [
   {
     name: "Skill\u540C\u6B65GitHub",
     description: "\u540C\u6B65Claude Skills\u5230GitHub\uFF08\u5F39\u7A97\u8F93\u5165\u7248\u672C\u8BF4\u660E\uFF09",
-    exeName: "skill-sync-GitHub.py",
-    exeDir: "D:\\Python\\tools\\sync-GitHub",
+    exeName: "skill-sync-GitHub.exe",
     icon: "\u2601\uFE0F",
     promptRequired: true,
     promptLabel: "\u7248\u672C\u8BF4\u660E",
@@ -121,8 +119,7 @@ var EXE_CONFIGS = [
   {
     name: "Skill\u540C\u6B65\u5176\u4ED6Agent",
     description: "\u540C\u6B65Claude Skills\u5230\u5176\u4ED6Agent\uFF08Codex/Trae/WorkBuddy/Qoder/project\uFF09",
-    exeName: "skill-sync-agentcode.py",
-    exeDir: "D:\\Python\\tools\\sync-GitHub",
+    exeName: "skill-sync-agentcode.exe",
     icon: "\u{1F500}"
   }
 ];
@@ -463,9 +460,6 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
       let cmd;
       if (isPython) {
         cmd = `"${PYTHON_EXE}" "${exePath}"`;
-        if (arg) {
-          cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`;
-        }
       } else {
         cmd = `"${exePath}"`;
         if (arg) {
