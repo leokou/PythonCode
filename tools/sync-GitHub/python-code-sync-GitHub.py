@@ -16,7 +16,7 @@ TASK_NAME = "Python代码同步GitHub"
 def run_git_command(repo_path, args):
     try:
         result = subprocess.run(
-            ['git'] + args,
+            ['git', '-c', 'http.proxy=', '-c', 'https.proxy='] + args,
             cwd=repo_path,
             capture_output=True, text=True, encoding='utf-8', errors='replace',
             shell=True

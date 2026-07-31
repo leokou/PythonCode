@@ -34,7 +34,7 @@ def on_rmtree_error(func, path, exc_info):
 def run_git(repo_path, args, check=True):
     cwd = repo_path if (repo_path and os.path.isdir(repo_path)) else None
     result = subprocess.run(
-        ['git'] + args,
+        ['git', '-c', 'http.proxy=', '-c', 'https.proxy='] + args,
         cwd=cwd,
         capture_output=True, text=True, encoding='utf-8', errors='replace',
         shell=True
