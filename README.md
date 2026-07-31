@@ -1,6 +1,6 @@
 # Python Personal Engineering Workspace
 
-**D:\Python** 是个人软件工程母体 workspace，不是项目。
+**D:\Python** 是个人软件工程母体 workspace，不是项目。=
 
 ## 职责边界
 
