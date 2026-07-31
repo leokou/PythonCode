@@ -668,22 +668,22 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
                           link_annotations: dict, skill_summaries: dict,
                           chip_summaries: dict, freq_data: dict = None) -> dict:
     """
-    为单个一级目录生成二级索引文件（📖目录 索引-{目录名}.md）。
+    为单个一级目录生成领域首页文件（🏠 home-{目录名}.md）。
     返回该领域的元数据：{name, file_count, dir_count, index_file, keywords, sample_files}
     """
     if freq_data is None:
         freq_data = {}
     
     dir_name = first_dir.name
-    index_name = f"📖目录 索引-{dir_name}.md"
-    index_path = target_dir / index_name
+    index_name = f"🏠 home-{dir_name}.md"
+    index_path = target_dir / dir_name / index_name
 
     dir_count, file_count, tree_lines, all_files = _collect_dir_files(
         target_dir, first_dir, link_annotations, skill_summaries, chip_summaries
     )
 
     lines = []
-    lines.append(f"# 📖目录 索引-{dir_name}\n")
+    lines.append(f"# 🏠 home-{dir_name}\n")
     lines.append(f"{dir_name} 领域的完整目录索引，用于精准检索该领域文件，节省 Token。\n\n")
     lines.append("---\n\n")
 
@@ -714,8 +714,6 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
         if file_stem.startswith("🏠 home-"):
             return True
         if file_stem.startswith("🧩 目录-"):
-            return True
-        if file_stem.startswith("📖目录 索引"):
             return True
         if file_stem == "🤖 AI指令":
             return True
@@ -754,11 +752,11 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
 def generate_directory_index(target_dir: Path) -> int:
     """
     生成分层索引体系：
-    1. 各领域二级索引：📖目录 索引-{一级目录名}.md
+    1. 各领域首页：🏠 home-{一级目录名}.md（存储在对应子目录下）
     2. 总路由索引：📖目录 索引.md（含关键词快速定位 + 领域导航）
     
     最快检索路径：关键词快速定位表 → 直接命中文件
-                 → 未命中则按领域导航 → 读取对应二级索引
+                 → 未命中则按领域导航 → 读取对应home文件
     """
     index_path = target_dir / "📖目录 索引.md"
     
@@ -808,18 +806,21 @@ def generate_directory_index(target_dir: Path) -> int:
         total_files += meta['file_count']
         print(f"  📄 {meta['index_file']} : {meta['file_count']} 个文件")
     
-    # 清理孤儿域索引（不对应任何一级目录的 📖目录 索引-*.md）
+    # 清理孤儿首页文件（不对应任何一级目录的 🏠 home-*.md）
     valid_index_names = {meta['index_file'] for meta in domain_metas}
     valid_index_names.add("📖目录 索引.md")  # 总路由不算孤儿
-    for f in target_dir.iterdir():
-        if f.is_file() and f.name.startswith("📖目录 索引-") and f.name.endswith(".md"):
-            if f.name not in valid_index_names:
-                f.unlink()
-                print(f"  🗑️ 删除孤儿域索引：{f.name}")
+    for sub in target_dir.iterdir():
+        if not sub.is_dir() or should_skip_dir(sub.name):
+            continue
+        for f in sub.iterdir():
+            if f.is_file() and f.name.startswith("🏠 home-") and f.name.endswith(".md"):
+                if f.name not in valid_index_names:
+                    f.unlink()
+                    print(f"  🗑️ 删除孤儿首页：{sub.name}/{f.name}")
     
     root_files = []
     for f in sorted(target_dir.iterdir()):
-        if f.is_file() and f.name.endswith(".md") and not f.name.startswith("📖目录 索引"):
+        if f.is_file() and f.name.endswith(".md") and f.name != "📖目录 索引.md" and not f.name.startswith("🏠 home-"):
             file_stem = f.name[:-3]
             
             def _get_anno(link_key, fallback_stem=""):
@@ -869,8 +870,8 @@ def generate_directory_index(target_dir: Path) -> int:
     lines.append("# 📖目录 索引\n")
     lines.append("LeoDiary 知识库分层索引总路由。**请按以下顺序检索以节省 Token**：\n\n")
     lines.append("1. 先查 `⚡ 关键词快速定位` — 直接命中则跳转，无需读其他\n")
-    lines.append("2. 未命中则看 `🧭 领域导航` — 根据关键词判断读哪个领域索引\n")
-    lines.append("3. 打开对应领域索引继续查找\n\n")
+    lines.append("2. 未命中则看 `🧭 领域导航` — 根据关键词判断读哪个home文件\n")
+    lines.append("3. 打开对应home文件继续查找\n\n")
     lines.append("---\n\n")
     
     lines.append("## ⚡ 关键词快速定位\n\n")
@@ -886,15 +887,15 @@ def generate_directory_index(target_dir: Path) -> int:
     lines.append("---\n\n")
     
     lines.append("## 🧭 领域导航\n\n")
-    lines.append("按一级目录划分的领域索引，精准定位到具体领域后再深入：\n\n")
-    lines.append("| 领域索引 | 文件数 | 核心关键词 |\n")
+    lines.append("按一级目录划分的home文件，精准定位到具体领域后再深入：\n\n")
+    lines.append("| home文件 | 文件数 | 核心关键词 |\n")
     lines.append("|---------|-------|----------|\n")
     
     for meta in domain_metas:
         kws = "、".join(meta['keywords'][:8])
         lines.append(f"| [[{meta['index_file']}]] | {meta['file_count']} | {kws} |\n")
     
-    lines.append("\n> 💡 根据问题关键词匹配上表，**只读取命中的领域索引文件**，其他跳过。\n\n")
+    lines.append("\n> 💡 根据问题关键词匹配上表，**只读取命中的home文件**，其他跳过。\n\n")
     lines.append("---\n\n")
     
     if root_files:
