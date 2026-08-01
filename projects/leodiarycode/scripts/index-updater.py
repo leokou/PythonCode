@@ -668,22 +668,22 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
                           link_annotations: dict, skill_summaries: dict,
                           chip_summaries: dict, freq_data: dict = None) -> dict:
     """
-    为单个一级目录生成领域首页文件（🏠 home-{目录名}.md）。
+    为单个一级目录生成二级索引文件（📖目录 索引-{目录名}.md）。
     返回该领域的元数据：{name, file_count, dir_count, index_file, keywords, sample_files}
     """
     if freq_data is None:
         freq_data = {}
     
     dir_name = first_dir.name
-    index_name = f"🏠 home-{dir_name}.md"
-    index_path = target_dir / dir_name / index_name
+    index_name = f"📖目录 索引-{dir_name}.md"
+    index_path = target_dir / index_name
 
     dir_count, file_count, tree_lines, all_files = _collect_dir_files(
         target_dir, first_dir, link_annotations, skill_summaries, chip_summaries
     )
 
     lines = []
-    lines.append(f"# 🏠 home-{dir_name}\n")
+    lines.append(f"# 📖目录 索引-{dir_name}\n")
     lines.append(f"{dir_name} 领域的完整目录索引，用于精准检索该领域文件，节省 Token。\n\n")
     lines.append("---\n\n")
 
@@ -714,6 +714,8 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
         if file_stem.startswith("🏠 home-"):
             return True
         if file_stem.startswith("🧩 目录-"):
+            return True
+        if file_stem.startswith("📖目录 索引"):
             return True
         if file_stem == "🤖 AI指令":
             return True
@@ -751,71 +753,165 @@ def generate_domain_index(target_dir: Path, first_dir: Path,
 
 def generate_directory_index(target_dir: Path) -> int:
     """
-    仅生成总路由索引：📖目录 索引.md
-    不再生成子目录索引文件。
+    生成分层索引体系：
+    1. 各领域二级索引：📖目录 索引-{一级目录名}.md
+    2. 总路由索引：📖目录 索引.md（含关键词快速定位 + 领域导航）
+    
+    最快检索路径：关键词快速定位表 → 直接命中文件
+                 → 未命中则按领域导航 → 读取对应二级索引
     """
     index_path = target_dir / "📖目录 索引.md"
-
-    # 收集一级目录信息
+    
+    link_annotations = {}
+    if index_path.exists():
+        try:
+            old_content = index_path.read_text(encoding='utf-8')
+            for line in old_content.splitlines():
+                match = re.search(r'\[\[([^\]]+)\]\](.*)', line)
+                if match:
+                    link_name = match.group(1).strip()
+                    user_text = match.group(2).strip()
+                    if user_text:
+                        link_annotations[link_name] = user_text
+                        pure_name = link_name.replace('\\', '/').split('/')[-1]
+                        if pure_name not in link_annotations:
+                            link_annotations[pure_name] = user_text
+        except Exception:
+            pass
+    
+    chip_summaries = extract_summaries_from_chip_files(target_dir)
+    for pure_name, summary in chip_summaries.items():
+        link_annotations[pure_name] = summary
+    
+    skill_summaries = extract_summaries_from_skill_dirs()
+    
+    # 加载访问频率数据
+    freq_data = load_access_frequency(target_dir)
+    
     first_level_dirs = []
     for entry in target_dir.iterdir():
         if entry.is_dir() and not should_skip_dir(entry.name):
             first_level_dirs.append(entry)
     first_level_dirs.sort(key=lambda x: x.name)
-
+    
+    print("📖 生成各领域二级索引...")
+    domain_metas = []
     total_dirs = 0
     total_files = 0
-    domain_info = []
-
+    
     for first_dir in first_level_dirs:
-        dir_count, file_count, _ = _collect_dir_files(target_dir, first_dir, {}, {}, {})
-        total_dirs += dir_count
-        total_files += file_count
-
-        # 提取关键词
-        all_keywords = set()
-        for kw in _extract_keywords_from_name(first_dir.name, 5):
-            all_keywords.add(kw)
-
-        domain_info.append({
-            'name': first_dir.name,
-            'file_count': file_count,
-            'dir_count': dir_count,
-            'keywords': list(all_keywords)[:15],
-        })
-
-    # 根目录文件
+        meta = generate_domain_index(target_dir, first_dir,
+                                     link_annotations, skill_summaries, chip_summaries,
+                                     freq_data)
+        domain_metas.append(meta)
+        total_dirs += meta['dir_count']
+        total_files += meta['file_count']
+        print(f"  📄 {meta['index_file']} : {meta['file_count']} 个文件")
+    
+    # 清理孤儿域索引（不对应任何一级目录的 📖目录 索引-*.md）
+    valid_index_names = {meta['index_file'] for meta in domain_metas}
+    valid_index_names.add("📖目录 索引.md")  # 总路由不算孤儿
+    for f in target_dir.iterdir():
+        if f.is_file() and f.name.startswith("📖目录 索引-") and f.name.endswith(".md"):
+            if f.name not in valid_index_names:
+                f.unlink()
+                print(f"  🗑️ 删除孤儿域索引：{f.name}")
+    
     root_files = []
     for f in sorted(target_dir.iterdir()):
-        if f.is_file() and f.name.endswith(".md") and f.name != "📖目录 索引.md":
+        if f.is_file() and f.name.endswith(".md") and not f.name.startswith("📖目录 索引"):
             file_stem = f.name[:-3]
-            root_files.append(file_stem)
-
+            
+            def _get_anno(link_key, fallback_stem=""):
+                if link_key in link_annotations:
+                    return link_annotations[link_key]
+                if fallback_stem and fallback_stem in link_annotations:
+                    return link_annotations[fallback_stem]
+                if fallback_stem:
+                    for sn, sv in skill_summaries.items():
+                        if sn.lower() in fallback_stem.lower():
+                            return sv
+                return ""
+            
+            anno = _get_anno(file_stem, file_stem)
+            root_files.append((file_stem, anno))
+    
+    print("📖 生成总路由索引...")
+    
+    # 按优先级领域排序：PRIORITY_DOMAINS 中的领域排前面，其他按原顺序
+    priority_set = set(PRIORITY_DOMAINS)
+    priority_metas = []
+    other_metas = []
+    for meta in domain_metas:
+        if meta['name'] in priority_set:
+            priority_metas.append(meta)
+        else:
+            other_metas.append(meta)
+    # 优先级领域按 PRIORITY_DOMAINS 顺序排序
+    priority_metas.sort(key=lambda m: PRIORITY_DOMAINS.index(m['name']) if m['name'] in PRIORITY_DOMAINS else 999)
+    sorted_domains = priority_metas + other_metas
+    
+    quick_jump = []
+    for meta in sorted_domains:
+        for i, (link_path, file_stem, annotation) in enumerate(meta['sample_files']):
+            if i >= QUICK_JUMP_PER_DOMAIN:
+                break
+            full_link = f"{meta['name']}\\{link_path}"
+            short_anno = annotation
+            if len(short_anno) > 50:
+                short_anno = short_anno[:47] + "..."
+            quick_jump.append((file_stem, full_link, short_anno, meta['name']))
+    
+    # 限制最大条数
+    quick_jump = quick_jump[:QUICK_JUMP_MAX]
+    
     lines = []
     lines.append("# 📖目录 索引\n")
-    lines.append("LeoDiary 知识库总索引。\n\n")
+    lines.append("LeoDiary 知识库分层索引总路由。**请按以下顺序检索以节省 Token**：\n\n")
+    lines.append("1. 先查 `⚡ 关键词快速定位` — 直接命中则跳转，无需读其他\n")
+    lines.append("2. 未命中则看 `🧭 领域导航` — 根据关键词判断读哪个领域索引\n")
+    lines.append("3. 打开对应领域索引继续查找\n\n")
     lines.append("---\n\n")
-
-    if domain_info:
-        lines.append("## 🏭 领域导航\n\n")
-        lines.append("| 领域 | 文件数 | 目录数 |\n")
-        lines.append("|------|-------|-------|\n")
-        for info in domain_info:
-            lines.append(f"| {info['name']} | {info['file_count']} | {info['dir_count']} |\n")
-        lines.append("\n---\n\n")
-
+    
+    lines.append("## ⚡ 关键词快速定位\n\n")
+    lines.append("高频文件直接跳转表（命中即止，无需读完整索引）：\n\n")
+    lines.append("| 文件名 | 所在领域 | 摘要 |\n")
+    lines.append("|--------|---------|------|\n")
+    for file_stem, full_link, short_anno, domain_name in quick_jump:
+        display_name = file_stem if len(file_stem) <= 30 else file_stem[:27] + "..."
+        anno_display = short_anno.replace('✍️ ', '').replace('|', '\\|')
+        lines.append(f"| [[{full_link}\\|{display_name}]] | {domain_name} | {anno_display} |\n")
+    
+    lines.append("\n> 💡 在表中找到关键词匹配的文件，直接点击跳转即可，无需继续往下读。\n\n")
+    lines.append("---\n\n")
+    
+    lines.append("## 🧭 领域导航\n\n")
+    lines.append("按一级目录划分的领域索引，精准定位到具体领域后再深入：\n\n")
+    lines.append("| 领域索引 | 文件数 | 核心关键词 |\n")
+    lines.append("|---------|-------|----------|\n")
+    
+    for meta in domain_metas:
+        kws = "、".join(meta['keywords'][:8])
+        lines.append(f"| [[{meta['index_file']}]] | {meta['file_count']} | {kws} |\n")
+    
+    lines.append("\n> 💡 根据问题关键词匹配上表，**只读取命中的领域索引文件**，其他跳过。\n\n")
+    lines.append("---\n\n")
+    
     if root_files:
         lines.append("## 📄 根目录文件\n\n")
-        for file_stem in root_files:
-            lines.append(f"- [[{file_stem}]]\n")
+        for file_stem, anno in root_files:
+            if anno:
+                lines.append(f"- [[{file_stem}]] {anno}\n")
+            else:
+                lines.append(f"- [[{file_stem}]]\n")
         lines.append("\n---\n\n")
-
+    
     lines.append("## 📊 统计摘要\n\n")
-    lines.append(f"- **领域数**: {len(domain_info)}\n")
+    lines.append(f"- **领域数**: {len(domain_metas)}\n")
     lines.append(f"- **总目录数**: {total_dirs}\n")
     lines.append(f"- **总文件数**: {total_files}\n")
     lines.append(f"- **更新时间**: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-
+    
     try:
         new_content = ''.join(lines)
         if index_path.exists():
@@ -824,7 +920,7 @@ def generate_directory_index(target_dir: Path) -> int:
                 print(f"📖 总路由索引 : 无变化，跳过写入")
                 return total_dirs + total_files
         index_path.write_text(new_content, encoding='utf-8')
-        print(f"📖 总路由索引 : 已生成（{len(domain_info)} 个领域，{total_files} 个文件）")
+        print(f"📖 总路由索引 : 已生成（{len(domain_metas)} 个领域，{total_files} 个文件）")
         return total_dirs + total_files
     except Exception as e:
         print(f"  错误：写入总路由索引失败 - {e}")
@@ -898,7 +994,47 @@ def main():
     print(f"🚫 跳过白名单：{', '.join(sorted(SKIP_DIRS))}")
     print("-" * 60)
 
-    print("📖 生成总路由索引...")
+    # 目标根目录创建 AI 指令文件（如果不存在）
+    ensure_ai_instruction_file(target)
+
+    # 获取目标目录下的一级子目录
+    root_dirs = [d for d in target.iterdir() if d.is_dir() and not should_skip_dir(d.name)]
+    if not root_dirs:
+        print("⚠️ 目标目录下没有可处理的子目录。")
+        return
+
+    # 第一阶段：处理根目录和PARA文件夹（生成🧩），处理其他一级目录（生成home）
+    for subdir in root_dirs:
+        print(f"📁 {subdir.relative_to(target)} : 处理子目录索引...")
+        if subdir.name in PARA_DIRS:
+            # 先删除旧home文件（如果存在），再处理目录
+            old_home = subdir / f"🏠 home-{subdir.name}.md"
+            if old_home.exists():
+                old_home.unlink()
+                print(f"  🗑️ 删除旧 home 文件：{old_home.name}")
+            process_directory(subdir, level=1, base_path=target, use_chip_for_level1=True)
+        else:
+            process_directory(subdir, level=1, base_path=target)
+        walk_and_process(subdir, target)
+    
+    # 处理根目录自身（生成🧩）
+    print(f"📁 根目录 : 生成 🧩 目录文件...")
+    # 先删除旧home文件（如果存在），再处理目录
+    old_home = target / f"🏠 home-{target.name}.md"
+    if old_home.exists():
+        old_home.unlink()
+        print(f"  🗑️ 删除旧 home 文件：{old_home.name}")
+    process_directory(target, level=1, base_path=target, use_chip_for_level1=True)
+
+    print("-" * 60)
+    print("🔄 开始重建一级目录的 home 索引（分模块展示）...")
+
+    # 第二阶段：仅为非PARA文件夹重建 home 文件
+    non_para_dirs = [d for d in root_dirs if d.name not in PARA_DIRS]
+    aggregate_and_update_home(target, non_para_dirs)
+
+    print("-" * 60)
+    print("📖 生成目录索引文件（方便AI检索）...")
     generate_directory_index(target)
 
     print("-" * 60)

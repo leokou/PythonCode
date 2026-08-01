@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Obsidian Skill 工具脚本
@@ -21,7 +21,7 @@ SKILL.md 只保留 AI 判断规则和触发条件，固定逻辑全部在此实�
   validate-document <filepath>                        文档格式校验（frontmatter/H1/摘要/标题层级）
 
 索引操作：
-  locate-domain-index <filepath> <vault>              定位home文件
+  locate-domain-index <filepath> <vault>              定位领域索引文件
   update-index-entry <index_file> <old_link> <new_link> <summary>  更新索引条目
   remove-index-entry <index_file> <link>              删除索引条目
   add-to-default-category <chip_file> <link> <summary> 添加到待归类
@@ -43,7 +43,7 @@ SKILL.md 只保留 AI 判断规则和触发条件，固定逻辑全部在此实�
   add-record <vault> <type> <description> [path]    写入⚓新增文件记录
   record-access <vault> <filepath>                    记录访问频率
 
-质量保障：
+质量保障（LEO OS 迁移）：
   validate-metadata <vault> [--quiet]               元数据校验（LeoDiary轻量标准：type/tags/日期/摘要/双链）
   lint-content <vault> [type]                       内容健康检查（过时/孤儿/断链/矛盾等7项）
   kb-stats <vault> [--json]                          知识库健康度统计
@@ -76,7 +76,7 @@ if sys.platform == "win32":
 # ======================================================================
 
 # 系统文件前缀（不参与知识内容处理）
-SYSTEM_FILE_PREFIXES = ("🏠 home-", "🧩 目录-", "🤖 AI指令")
+SYSTEM_FILE_PREFIXES = ("🏠 home-", "🧩 目录-", "📖目录 索引", "🤖 AI指令")
 
 # 高频优先领域
 PRIORITY_DOMAINS = ["1- 🤖AI 相关", "5- 🧁项目"]
@@ -140,7 +140,7 @@ def is_system_file(file_stem: str) -> bool:
         if stem.startswith(prefix):
             return True
     # 不带emoji前缀的匹配（去掉emoji后的纯文本前缀）
-    no_emoji_prefixes = ("home-", "目录-", "AI指令", "🤖 AI指令")
+    no_emoji_prefixes = ("home-", "目录-", "📖目录 索引", "AI指令", "🤖 AI指令")
     for prefix in no_emoji_prefixes:
         if stem.startswith(prefix):
             return True
@@ -157,20 +157,20 @@ def cmd_is_system_file(filename: str) -> None:
 
 
 # ======================================================================
-# home文件定位
+# 领域索引定位
 # ======================================================================
 
 def locate_domain_index(file_path: str, vault: Path) -> Path:
-    """根据文件路径定位对应的home文件"""
+    """根据文件路径定位对应的领域索引文件"""
     parts = file_path.replace('\\', '/').split('/')
     if not parts:
         return None
     first_dir = parts[0]
-    return vault / first_dir / f"🏠 home-{first_dir}.md"
+    return vault / f"📖目录 索引-{first_dir}.md"
 
 
 def cmd_locate_domain_index(file_path: str, vault_str: str) -> None:
-    """定位home文件"""
+    """定位领域索引文件"""
     vault = Path(vault_str)
     index_path = locate_domain_index(file_path, vault)
     if index_path and index_path.exists():
@@ -834,7 +834,7 @@ def cmd_verify_move(src_path: str, dst_path: str, index_file: str = "", new_link
         if abs(src_size - dst_size) > 10:
             issues.append(f"文件大小不一致：源{src_size}字节 vs 目标{dst_size}字节")
     
-    # home文件已更新
+    # 领域索引已更新
     index_updated = False
     if index_file and new_link:
         idx = Path(index_file)
@@ -1278,7 +1278,7 @@ def cmd_add_record(vault_str: str, operation_type: str, description: str, path: 
 
 
 # ======================================================================
-# 质量保障：元数据校验、内容健康检查、知识库健康度
+# LEO OS 迁移：元数据校验、内容健康检查、知识库健康度
 # ======================================================================
 
 def cmd_validate_metadata(vault: str, quiet: bool = False) -> None:
@@ -1514,7 +1514,7 @@ DEPRECATED_DIRS = {
 }
 
 # 标准系统文件（与 is-system-file 对齐）
-VALID_SYSTEM_FILES = {"🏠 home-", "🧩 目录-", "🤖 AI指令", "README", "CLAUDE", "AGENTS", "🍕 作业区"}
+VALID_SYSTEM_FILES = {"🏠 home-", "🧩 目录-", "📖目录 索引", "🤖 AI指令", "README", "CLAUDE", "AGENTS", "🍕 作业区"}
 
 # 标准流程顺序
 VALID_PIPELINE_ORDER = ["Planner", "Compiler", "Fire-rename", "Organizer"]
@@ -1985,11 +1985,11 @@ def _check_kb_content_health(vault: Path) -> list:
         return results
 
     # 检查1：frontmatter 覆盖率
-    # 注意：系统文件（🧩 目录-/🏠 home- 等）的 frontmatter 规范不一致，
+    # 注意：系统文件（🧩 目录-/📖目录 索引/🏠 home- 等）的 frontmatter 规范不一致，
     # 单独统计内容文件，避免把"系统文件跳过、内容文件没 frontmatter"误报为 0%。
-    system_prefixes = ("🧩 目录-", "🏠 home-")
+    system_prefixes = ("🧩 目录-", "📖目录 索引", "🏠 home-")
     system_exact = {"⚓新增文件记录.md", "🍕 作业区.md", "CLAUDE.md", "README.md",
-                    "🤖 AI指令.md"}
+                    "LEO OS.md", "LEO-OS.md", "🤖 AI指令.md"}
     content_files = []
     system_fm_count = 0
     system_total = 0
@@ -2120,7 +2120,7 @@ def _check_kb_content_health(vault: Path) -> list:
             if link.startswith("../") or link.startswith("./"):
                 continue
             # 跳过示例链接模式
-            if "举例类比" in link:
+            if "举例类比" in link or "LEO OS/" in link:
                 continue
             
             # 取末尾文件名/目录名部分
@@ -3784,13 +3784,13 @@ def _check_leodiary_structure(vault: Path) -> list:
                                          f"{fname} 不存在",
                                          "文件缺失", "文件存在", f"创建 {fname}"))
 
-    # 检查4：每个一级目录是否有对应的 🏠 home-xxx.md
-    missing_indexes = [d for d in knowledge_dirs if not (vault / d / f"🏠 home-{d}.md").exists()]
+    # 检查4：每个一级目录是否有对应的 📖目录 索引-xxx.md
+    missing_indexes = [d for d in knowledge_dirs if not (vault / f"📖目录 索引-{d}.md").exists()]
     if not missing_indexes:
-        results.append(_make_result(category, "一级目录的home文件", "pass",
-                                     "9个一级目录都有对应的🏠 home文件"))
+        results.append(_make_result(category, "一级目录的📖目录索引", "pass",
+                                     "9个一级目录都有对应的📖目录索引"))
     else:
-        results.append(_make_result(category, "一级目录的home文件", "warn",
+        results.append(_make_result(category, "一级目录的📖目录索引", "warn",
                                      f"缺失：{', '.join(missing_indexes)}",
                                      f"缺失{len(missing_indexes)}个",
                                      "9个齐全",
