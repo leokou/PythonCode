@@ -18,18 +18,29 @@ Obsidian 插件，在左侧栏提供 ▶ 图标，点击弹出工具面板，调
 | 10 | 📤 | 文件合并上传GitHub | GUI 合并 文本/MD/Word → MD | `md_merger.exe` | 无 |
 | 11 | 🔀 | Skill同步其他Agent | 同步 Claude Skills 到其他 Agent（Codex/Trae/Qoder/project） | `skill-sync-agentcode.exe` | 无 |
 
+### 一键同步
+
+弹窗头部「🚀 一键同步」按钮：按顺序运行 6 个备份/同步工具，共用同一个说明备注（输入框记忆上次内容，下次打开默认显示）：
+
+```
+备份笔记 → 备份Claude Skill → 备份Python代码本地 → Skill同步其他Agent → Skill同步GitHub → 备份python代码
+```
+
+> **弹窗输入记忆**：所有带弹窗的按钮（含一键同步）都会按按钮记忆上次输入的内容，下次打开弹窗默认显示在输入框并全选，可直接回车复用或重新输入。
+
 ## 链路说明
 
 ```
 用户点击按钮
     ↓
-main.ts: launchExe(config)
+main.ts: launchExe(config) / runSyncAll(remark)
+    ├─ 一键同步 → 按顺序 runExe 6 个备份/同步工具，共用同一备注，最后汇总结果
     ├─ .exe  → exec(exeDir + exeName)            exeDir 默认 D:\Python\dist（按钮可用 exeDir 覆盖）
     └─ .py   → exec("python" + exeDir + exeName) 用系统 PATH 中的 python 运行脚本（当前无 .py 按钮，保留备用）
     ↓
 目标进程启动（exe 或 python 脚本）
     ↓
-弹窗输入参数（promptRequired=true 时，通过 --remark 传递）
+弹窗输入参数（promptRequired=true 时，通过 --remark 传递；输入按按钮记忆，下次打开默认显示上次内容）
     ↓
 执行逻辑 → 完成 / 报错
     · EXE 与 .py 统一逻辑：从 stdout 按优先级提取「❌xxx失败」→「✅xxx成功」→ 含「汇总」的行 → 最后一行，作为完成提示
@@ -75,19 +86,20 @@ Copy-Item "D:\Python\projects\obsidian-exe-launcher\styles.css" "D:\Obsidian\Leo
 | EXE 目录 | `D:\Python\dist` | EXE 文件所在目录 |
 | 按钮大小 | 140 | 按钮尺寸（像素） |
 | 按钮顺序 | 默认顺序 | 可拖拽排序 |
+| 备注历史 | 无 | 弹窗输入按按钮记忆（`promptHistory`），下次默认显示 |
 
 ## 技术栈
 
 - TypeScript + esbuild + Obsidian Plugin API
 - 入口：`src/main.ts`
-- 配置数组：`EXE_CONFIGS`（11 个按钮定义）
+- 配置数组：`EXE_CONFIGS`（11 个按钮定义）+ `SYNC_ALL_TARGETS` / `SYNC_ALL_CONFIG`（一键同步）
 - 依赖：`child_process.exec`（调用 EXE）、`fs`（检查 EXE 存在）
 
 ## 文件结构
 
 ```
 obsidian-exe-launcher/
-├── src/main.ts             # ⭐ 源码（11 个按钮配置 + 逻辑）
+├── src/main.ts             # ⭐ 源码（11 个按钮配置 + 一键同步 + 弹窗/拖拽逻辑）
 ├── main.js                 # 构建产物（Obsidian 加载）
 ├── manifest.json           # 插件清单
 ├── styles.css              # 样式
@@ -109,7 +121,7 @@ obsidian-exe-launcher/
   exeName: 'xxx.exe',       // exe 文件名（默认在 D:\Python\dist），或 .py 脚本名
   icon: ' emoji',           // 按钮 emoji
   exeDir: 'D:\\Python\\tools\\sync-GitHub', // 可选：覆盖默认 exe 目录（如脚本不在 dist）
-  promptRequired: true,     // 是否弹窗输入
+  promptRequired: true,     // 是否弹窗输入（输入会按按钮记忆，下次默认显示）
   promptLabel: '字段名',    // 弹窗标签
   promptPlaceholder: '...', // 弹窗占位符
 }
