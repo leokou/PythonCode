@@ -12,7 +12,7 @@ TypeScript Obsidian 插件，左侧栏 ▶ 图标弹出工具面板，快速启�
 
 ```
 obsidian-exe-launcher/
-├── src/main.ts           # ⭐ 源码（11 个按钮配置 EXE_CONFIGS + 弹窗/拖拽逻辑）
+├── src/main.ts           # ⭐ 源码（11 个按钮配置 EXE_CONFIGS + 一键同步 + 弹窗/拖拽逻辑）
 ├── manifest.json         # 插件清单（id: obsidian-exe-launcher）
 ├── package.json          # 依赖配置
 ├── esbuild.config.mjs    # 构建配置
