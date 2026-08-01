@@ -38,7 +38,8 @@ var path = __toESM(require("path"));
 var fs = __toESM(require("fs"));
 var DEFAULT_DATA = {
   buttonOrder: [],
-  buttonSize: 140
+  buttonSize: 140,
+  promptHistory: {}
 };
 var EXE_CONFIGS = [
   {
@@ -124,6 +125,31 @@ var EXE_CONFIGS = [
   }
 ];
 var PYTHON_EXE = "python";
+var SYNC_ALL_TARGETS = EXE_CONFIGS.filter(
+  (c) => [
+    "leodiary-backup.exe",
+    // 备份笔记
+    "claude-skill-backup.exe",
+    // 备份Claude Skill
+    "python-local-backup.exe",
+    // 备份Python代码本地
+    "skill-sync-agentcode.exe",
+    // Skill同步其他Agent
+    "skill-sync-GitHub.exe",
+    // Skill同步GitHub
+    "python-code-sync-GitHub.exe"
+    // 备份python代码
+  ].includes(c.exeName)
+);
+var SYNC_ALL_CONFIG = {
+  name: "\u4E00\u952E\u540C\u6B65",
+  description: "\u4E00\u952E\u540C\u6B65\u6240\u6709\u5907\u4EFD\u4E0E\u540C\u6B65\u5DE5\u5177",
+  exeName: "__sync_all__",
+  icon: "\u{1F680}",
+  promptRequired: true,
+  promptLabel: "\u8BF4\u660E\u5907\u6CE8",
+  promptPlaceholder: "\u8F93\u5165\u672C\u6B21\u540C\u6B65\u7684\u5907\u6CE8\uFF08\u5C06\u5E94\u7528\u5230\u6240\u6709\u540C\u6B65\u9879\uFF09..."
+};
 function getOrderedConfigs(data) {
   const configMap = new Map(EXE_CONFIGS.map((c) => [c.exeName, c]));
   const result = [];
@@ -167,7 +193,12 @@ var PromptModal = class extends import_obsidian.Modal {
         placeholder: this.config.promptPlaceholder || ""
       }
     });
+    const lastValue = this.plugin.data.promptHistory?.[this.config.exeName] || "";
+    if (lastValue) {
+      this.inputEl.value = lastValue;
+    }
     this.inputEl.focus();
+    this.inputEl.select();
     const btnRow = container.createDiv("exe-launcher-prompt-btns");
     const cancelBtn = btnRow.createEl("button", {
       text: "\u53D6\u6D88",
@@ -183,17 +214,11 @@ var PromptModal = class extends import_obsidian.Modal {
       cls: "exe-launcher-prompt-ok"
     });
     okBtn.addEventListener("click", () => {
-      const value = this.inputEl.value.trim();
-      this.close();
-      if (this.resolved)
-        this.resolved(value);
+      void this.submit(this.inputEl.value.trim());
     });
     this.inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const value = this.inputEl.value.trim();
-        this.close();
-        if (this.resolved)
-          this.resolved(value);
+        void this.submit(this.inputEl.value.trim());
       }
       if (e.key === "Escape") {
         this.close();
@@ -201,6 +226,22 @@ var PromptModal = class extends import_obsidian.Modal {
           this.resolved("");
       }
     });
+  }
+  /** 记录本次输入并返回结果 */
+  async submit(value) {
+    this.close();
+    if (!this.plugin.data.promptHistory) {
+      this.plugin.data.promptHistory = {};
+    }
+    const history = this.plugin.data.promptHistory;
+    if (value) {
+      history[this.config.exeName] = value;
+    } else {
+      delete history[this.config.exeName];
+    }
+    await this.plugin.saveData(this.plugin.data);
+    if (this.resolved)
+      this.resolved(value);
   }
   onClose() {
     this.modalEl.removeClass("exe-launcher-prompt-modal");
@@ -301,7 +342,23 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
     const headerText = headerLeft.createDiv("exe-launcher-header-text");
     headerText.createEl("h2", { text: "\u5FEB\u901F\u542F\u52A8\u5DE5\u5177" });
     headerText.createEl("p", { text: "\u62D6\u62FD \u22EE\u22EE \u624B\u67C4\u8C03\u6574\u987A\u5E8F \xB7 \u70B9\u51FB\u542F\u52A8", cls: "exe-launcher-subtitle" });
-    const settingsBtn = header.createEl("button", {
+    const headerRight = header.createDiv("exe-launcher-header-right");
+    const syncBtn = headerRight.createEl("button", {
+      cls: "exe-launcher-sync-btn",
+      text: "\u{1F680} \u4E00\u952E\u540C\u6B65",
+      attr: {
+        title: "\u4E00\u952E\u540C\u6B65\uFF1A\u5907\u4EFD\u7B14\u8BB0 / \u5907\u4EFDClaude Skill / \u5907\u4EFDPython\u4EE3\u7801\u672C\u5730 / Skill\u540C\u6B65\u5176\u4ED6Agent / Skill\u540C\u6B65GitHub / \u5907\u4EFDpython\u4EE3\u7801"
+      }
+    });
+    syncBtn.addEventListener("click", async () => {
+      const modal = new PromptModal(this.app, this.plugin, SYNC_ALL_CONFIG);
+      modal.open();
+      const input = await modal.waitForInput();
+      if (!input)
+        return;
+      await this.runSyncAll(input);
+    });
+    const settingsBtn = headerRight.createEl("button", {
       cls: "exe-launcher-settings-btn",
       text: "\u2699\uFE0F",
       attr: { title: "\u8BBE\u7F6E" }
@@ -456,7 +513,20 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
     if (isPython) {
       new import_obsidian.Notice(`\u{1F504} ${config.name}\uFF1A\u540C\u6B65\u4E2D...`);
     }
-    try {
+    const result = await this.runExe(config, arg);
+    new import_obsidian.Notice(`${config.name}
+${result}`);
+  }
+  /** 执行单个 EXE/.py，返回结果文本（✅/❌ 前缀），不抛异常 */
+  runExe(config, arg) {
+    return new Promise((resolve) => {
+      const isPython = config.exeName.toLowerCase().endsWith(".py");
+      const baseDir = config.exeDir ?? "D:\\Python\\dist";
+      const exePath = path.join(baseDir, config.exeName);
+      if (!fs.existsSync(exePath)) {
+        resolve(`\u6587\u4EF6\u4E0D\u5B58\u5728: ${config.exeName}`);
+        return;
+      }
       let cmd;
       if (isPython) {
         cmd = `"${PYTHON_EXE}" "${exePath}"`;
@@ -466,25 +536,40 @@ var ExeLauncherModal = class extends import_obsidian.Modal {
           cmd += ` --remark "${arg.replace(/"/g, '\\"')}"`;
         }
       }
-      (0, import_child_process.exec)(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-        if (error) {
-          new import_obsidian.Notice(`\u274C ${config.name} \u5931\u8D25
-${error.message}`);
-          return;
-        }
-        const lines = (stdout || stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
-        const failLine = lines.find((l) => l.includes("\u274C") && l.includes("\u5931\u8D25"));
-        const successLine = lines.find((l) => l.includes("\u2705") && l.includes("\u6210\u529F"));
-        const summaryLine = lines.find((l) => l.includes("\u6C47\u603B"));
-        const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || "\u5B8C\u6210";
-        const prefix = failLine ? "\u274C" : "\u2705";
-        new import_obsidian.Notice(`${prefix} ${config.name}
-${summary}`);
-      });
-    } catch (err) {
-      new import_obsidian.Notice(`\u542F\u52A8\u5931\u8D25: ${config.name}
-${err?.message ?? err}`);
+      try {
+        (0, import_child_process.exec)(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+          if (error) {
+            resolve(`\u274C ${error.message}`);
+            return;
+          }
+          const lines = (stdout || stderr || "").split("\n").map((s) => s.trim()).filter(Boolean);
+          const failLine = lines.find((l) => l.includes("\u274C") && l.includes("\u5931\u8D25"));
+          const successLine = lines.find((l) => l.includes("\u2705") && l.includes("\u6210\u529F"));
+          const summaryLine = lines.find((l) => l.includes("\u6C47\u603B"));
+          const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || "\u5B8C\u6210";
+          resolve(`${failLine ? "\u274C" : "\u2705"} ${summary}`);
+        });
+      } catch (err) {
+        resolve(`\u274C ${err?.message ?? err}`);
+      }
+    });
+  }
+  /** 一键同步：按顺序运行所有备份/同步工具，共用同一个备注 */
+  async runSyncAll(remark) {
+    const results = [];
+    for (const config of SYNC_ALL_TARGETS) {
+      const baseDir = config.exeDir ?? "D:\\Python\\dist";
+      const exePath = path.join(baseDir, config.exeName);
+      if (!fs.existsSync(exePath)) {
+        results.push(`\u2B1C ${config.name}\uFF1A\u6587\u4EF6\u4E0D\u5B58\u5728`);
+        continue;
+      }
+      new import_obsidian.Notice(`\u{1F504} ${config.name}\uFF1A\u540C\u6B65\u4E2D...`);
+      const result = await this.runExe(config, remark);
+      results.push(`${config.name}: ${result}`);
     }
+    new import_obsidian.Notice(`\u{1F680} \u4E00\u952E\u540C\u6B65\u5B8C\u6210
+${results.join("\n")}`);
   }
   onClose() {
     this.cleanupDragListeners();

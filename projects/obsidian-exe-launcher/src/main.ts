@@ -17,11 +17,14 @@ interface ExeConfig {
 interface PluginData {
   buttonOrder: string[]
   buttonSize: number
+  /** exeName -> 上次弹窗输入的内容（用于下次打开默认显示） */
+  promptHistory: Record<string, string>
 }
 
 const DEFAULT_DATA: PluginData = {
   buttonOrder: [],
   buttonSize: 140,
+  promptHistory: {},
 }
 
 const EXE_CONFIGS: ExeConfig[] = [
@@ -111,6 +114,29 @@ const EXE_CONFIGS: ExeConfig[] = [
 /** 运行 .py 脚本时使用的 Python 解释器（需位于 PATH 中） */
 const PYTHON_EXE = 'python'
 
+/** 一键同步包含的备份/同步工具（按执行顺序） */
+const SYNC_ALL_TARGETS = EXE_CONFIGS.filter(c =>
+  [
+    'leodiary-backup.exe',      // 备份笔记
+    'claude-skill-backup.exe',  // 备份Claude Skill
+    'python-local-backup.exe',  // 备份Python代码本地
+    'skill-sync-agentcode.exe', // Skill同步其他Agent
+    'skill-sync-GitHub.exe',    // Skill同步GitHub
+    'python-code-sync-GitHub.exe', // 备份python代码
+  ].includes(c.exeName)
+)
+
+/** 一键同步的备注输入配置（exeName 作为历史记录 key，不实际启动） */
+const SYNC_ALL_CONFIG: ExeConfig = {
+  name: '一键同步',
+  description: '一键同步所有备份与同步工具',
+  exeName: '__sync_all__',
+  icon: '🚀',
+  promptRequired: true,
+  promptLabel: '说明备注',
+  promptPlaceholder: '输入本次同步的备注（将应用到所有同步项）...',
+}
+
 function getOrderedConfigs(data: PluginData): ExeConfig[] {
   const configMap = new Map(EXE_CONFIGS.map(c => [c.exeName, c]))
   const result: ExeConfig[] = []
@@ -165,7 +191,14 @@ class PromptModal extends Modal {
       },
     })
 
+    // 读取上次记录，默认显示在输入框
+    const lastValue = this.plugin.data.promptHistory?.[this.config.exeName] || ''
+    if (lastValue) {
+      this.inputEl.value = lastValue
+    }
+
     this.inputEl.focus()
+    this.inputEl.select()
 
     const btnRow = container.createDiv('exe-launcher-prompt-btns')
 
@@ -183,22 +216,34 @@ class PromptModal extends Modal {
       cls: 'exe-launcher-prompt-ok',
     })
     okBtn.addEventListener('click', () => {
-      const value = this.inputEl.value.trim()
-      this.close()
-      if (this.resolved) this.resolved(value)
+      void this.submit(this.inputEl.value.trim())
     })
 
     this.inputEl.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        const value = this.inputEl.value.trim()
-        this.close()
-        if (this.resolved) this.resolved(value)
+        void this.submit(this.inputEl.value.trim())
       }
       if (e.key === 'Escape') {
         this.close()
         if (this.resolved) this.resolved('')
       }
     })
+  }
+
+  /** 记录本次输入并返回结果 */
+  private async submit(value: string) {
+    this.close()
+    if (!this.plugin.data.promptHistory) {
+      this.plugin.data.promptHistory = {}
+    }
+    const history = this.plugin.data.promptHistory
+    if (value) {
+      history[this.config.exeName] = value
+    } else {
+      delete history[this.config.exeName]
+    }
+    await this.plugin.saveData(this.plugin.data)
+    if (this.resolved) this.resolved(value)
   }
 
   onClose() {
@@ -331,7 +376,24 @@ class ExeLauncherModal extends Modal {
     headerText.createEl('h2', { text: '快速启动工具' })
     headerText.createEl('p', { text: '拖拽 ⋮⋮ 手柄调整顺序 · 点击启动', cls: 'exe-launcher-subtitle' })
 
-    const settingsBtn = header.createEl('button', {
+    const headerRight = header.createDiv('exe-launcher-header-right')
+
+    const syncBtn = headerRight.createEl('button', {
+      cls: 'exe-launcher-sync-btn',
+      text: '🚀 一键同步',
+      attr: {
+        title: '一键同步：备份笔记 / 备份Claude Skill / 备份Python代码本地 / Skill同步其他Agent / Skill同步GitHub / 备份python代码',
+      },
+    })
+    syncBtn.addEventListener('click', async () => {
+      const modal = new PromptModal(this.app, this.plugin, SYNC_ALL_CONFIG)
+      modal.open()
+      const input = await modal.waitForInput()
+      if (!input) return
+      await this.runSyncAll(input)
+    })
+
+    const settingsBtn = headerRight.createEl('button', {
       cls: 'exe-launcher-settings-btn',
       text: '⚙️',
       attr: { title: '设置' },
@@ -519,7 +581,22 @@ class ExeLauncherModal extends Modal {
       new Notice(`🔄 ${config.name}：同步中...`)
     }
 
-    try {
+    const result = await this.runExe(config, arg)
+    new Notice(`${config.name}\n${result}`)
+  }
+
+  /** 执行单个 EXE/.py，返回结果文本（✅/❌ 前缀），不抛异常 */
+  private runExe(config: ExeConfig, arg?: string): Promise<string> {
+    return new Promise((resolve) => {
+      const isPython = config.exeName.toLowerCase().endsWith('.py')
+      const baseDir = config.exeDir ?? 'D:\\Python\\dist'
+      const exePath = path.join(baseDir, config.exeName)
+
+      if (!fs.existsSync(exePath)) {
+        resolve(`文件不存在: ${config.exeName}`)
+        return
+      }
+
       let cmd: string
       if (isPython) {
         cmd = `"${PYTHON_EXE}" "${exePath}"`
@@ -530,25 +607,43 @@ class ExeLauncherModal extends Modal {
         }
       }
 
-      exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
-        if (error) {
-          new Notice(`❌ ${config.name} 失败\n${error.message}`)
-          return
-        }
-        // 统一从 stdout 中提取提示行（EXE 和 .py 共用）
-        const lines = (stdout || stderr || '')
-          .split('\n').map(s => s.trim()).filter(Boolean)
-        // 优先匹配失败/成功/汇总三类关键行
-        const failLine = lines.find(l => l.includes('❌') && l.includes('失败'))
-        const successLine = lines.find(l => l.includes('✅') && l.includes('成功'))
-        const summaryLine = lines.find(l => l.includes('汇总'))
-        const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || '完成'
-        const prefix = failLine ? '❌' : '✅'
-        new Notice(`${prefix} ${config.name}\n${summary}`)
-      })
-    } catch (err: any) {
-      new Notice(`启动失败: ${config.name}\n${err?.message ?? err}`)
+      try {
+        exec(cmd, { maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
+          if (error) {
+            resolve(`❌ ${error.message}`)
+            return
+          }
+          // 统一从 stdout 中提取提示行（EXE 和 .py 共用）
+          const lines = (stdout || stderr || '')
+            .split('\n').map(s => s.trim()).filter(Boolean)
+          // 优先匹配失败/成功/汇总三类关键行
+          const failLine = lines.find(l => l.includes('❌') && l.includes('失败'))
+          const successLine = lines.find(l => l.includes('✅') && l.includes('成功'))
+          const summaryLine = lines.find(l => l.includes('汇总'))
+          const summary = failLine || successLine || summaryLine || lines.slice(-1)[0] || '完成'
+          resolve(`${failLine ? '❌' : '✅'} ${summary}`)
+        })
+      } catch (err: any) {
+        resolve(`❌ ${err?.message ?? err}`)
+      }
+    })
+  }
+
+  /** 一键同步：按顺序运行所有备份/同步工具，共用同一个备注 */
+  private async runSyncAll(remark: string) {
+    const results: string[] = []
+    for (const config of SYNC_ALL_TARGETS) {
+      const baseDir = config.exeDir ?? 'D:\\Python\\dist'
+      const exePath = path.join(baseDir, config.exeName)
+      if (!fs.existsSync(exePath)) {
+        results.push(`⬜ ${config.name}：文件不存在`)
+        continue
+      }
+      new Notice(`🔄 ${config.name}：同步中...`)
+      const result = await this.runExe(config, remark)
+      results.push(`${config.name}: ${result}`)
     }
+    new Notice(`🚀 一键同步完成\n${results.join('\n')}`)
   }
 
   onClose() {
