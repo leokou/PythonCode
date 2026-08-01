@@ -10,6 +10,7 @@ D:\Python/
 │   ├── leodiarycode/      # LeoDiary 工具链（Python）
 │   └── obsidian-exe-launcher/  # Obsidian 插件（TypeScript）
 ├── tools/                 # 独立工具
+│   ├── Obsidian-upload/   # LeoDiary Capture（pywebview 快速记录工具）
 │   ├── sync-GitHub/
 │   ├── chrome-go/
 │   └── logseq-cleanup/
@@ -71,6 +72,7 @@ obsidian-exe-launcher/
 
 | 工具 | 路径 |
 |------|------|
+| LeoDiary Capture | `tools/Obsidian-upload/`（README.md 见其目录；打包 `build.bat`，规则见该目录 CLAUDE.md） |
 | Skill 同步 | `tools/sync-GitHub/skill-sync-agentcode.py` |
 | 代理节点爬取 | `tools/chrome-go/ChromeGo - 节点爬取脚本 @ 代理节点下载.py` |
 | Logseq 附件清理 | `tools/logseq-cleanup/Logseq - 附件清理脚本 @ 清理无用文件.py` |
