@@ -1,0 +1,12 @@
+{
+  "tools": [
+    {
+      "id": "clean_empty_lines",
+      "name": "🧹 删除空行",
+      "desc": "清理 Markdown 连续空行",
+      "icon": "🧹",
+      "iconSize": 64,
+      "order": 1
+    }
+  ]
+}

@@ -368,6 +368,105 @@ def ensure_ai_instruction_file(dir_path: Path) -> None:
         print(f"🤖 已创建：{ai_file}")
 
 
+def _ensure_chip_structure(dir_path: Path, has_home: bool = False) -> None:
+    """
+    为一级目录确保🧩文件具有完整结构。
+    - 不存在则创建带 frontmatter/标题/摘要/子目录/系统文件的完整结构
+    - 存在但缺少结构（旧版空壳）则升级，保留现有链接
+    - 结构完整则仅更新 updated 时间戳
+    """
+    folder_name = dir_path.name
+    chip_path = dir_path / f"🧩 目录-{folder_name}.md"
+    today = __import__('datetime').datetime.now().strftime('%Y-%m-%d')
+
+    # 收集已有子目录（含🧩文件的）
+    sub_dir_links = ""
+    for entry in sorted(dir_path.iterdir()):
+        if entry.is_dir() and not should_skip_dir(entry.name):
+            sub_chip = dir_path / entry.name / f"🧩 目录-{entry.name}.md"
+            if sub_chip.exists():
+                sub_dir_links += f"- [[{entry.name}/🧩 目录-{entry.name}]]\n"
+
+    home_link_line = ""
+    if has_home:
+        home_link_line = f"- [[🏠 home-{folder_name}]] ✍️ {folder_name} 首页，聚合该领域所有目录内容\n"
+
+    if chip_path.exists():
+        content = read_text_safe(chip_path)
+        # 已有正确结构（含frontmatter） → 仅更新时间戳
+        body = strip_frontmatter(content)
+        if body.lstrip().startswith('# 🧩 目录-'):
+            try:
+                lines = content.splitlines(keepends=True)
+                for i, line in enumerate(lines):
+                    if line.strip().startswith('updated:'):
+                        lines[i] = f"updated: {today}\n"
+                        chip_path.write_text(''.join(lines), encoding='utf-8')
+                return
+            except Exception:
+                pass
+            return
+
+        # 旧版空壳 → 提取现有链接，升级
+        existing_links = []
+        for line in content.splitlines():
+            match = re.search(r'\[\[([^\]]+)\]\](.*)', line)
+            if match:
+                link = match.group(1).strip()
+                anno = match.group(2).strip()
+                existing_links.append((link, anno))
+
+        links_section = ""
+        for link, anno in existing_links:
+            links_section += f"- [[{link}]] {anno}\n" if anno else f"- [[{link}]]\n"
+
+        new_content = f"""---
+created: {today}
+updated: {today}
+---
+
+# 🧩 目录-{folder_name}
+
+## 📌 一句话总结
+{folder_name} 领域的知识目录索引。
+
+##### 🛠️ 系统文件
+- [[🤖 AI指令]] ✍️ 空文件，预留用于AI指令配置
+{home_link_line}
+##### 📂 子目录
+{sub_dir_links}
+##### 📄 直接文件
+
+##### 📥 待归类
+{links_section}"""
+        chip_path.write_text(new_content, encoding='utf-8')
+        print(f"  🔧 升级 🧩 文件结构：{chip_path.name}")
+        return
+
+    # 不存在 → 创建新的完整结构
+    content = f"""---
+created: {today}
+updated: {today}
+---
+
+# 🧩 目录-{folder_name}
+
+## 📌 一句话总结
+{folder_name} 领域的知识目录索引。
+
+##### 🛠️ 系统文件
+- [[🤖 AI指令]] ✍️ 空文件，预留用于AI指令配置
+{home_link_line}
+##### 📂 子目录
+{sub_dir_links}
+##### 📄 直接文件
+
+##### 📥 待归类
+"""
+    chip_path.write_text(content, encoding='utf-8')
+    print(f"  ✨ 创建结构化 🧩 文件：{chip_path.name}")
+
+
 def process_directory(dir_path: Path, level: int, base_path: Path, use_chip_for_level1: bool = False) -> dict:
     """
     处理单个目录（用于递归遍历）：
@@ -381,18 +480,46 @@ def process_directory(dir_path: Path, level: int, base_path: Path, use_chip_for_
         ensure_ai_instruction_file(dir_path)
 
     if level == 1 and not use_chip_for_level1:
-        index_name = f"🏠 home-{folder_name}.md"
-        index_path = dir_path / index_name
-        if not index_path.exists():
-            index_path.touch()
-            print(f"  ✨ 创建空 home 文件：{index_path.name}")
-        return {'removed': 0, 'added': 0}
+        # 创建/确保 home 文件存在
+        home_name = f"🏠 home-{folder_name}.md"
+        home_path = dir_path / home_name
+        if not home_path.exists():
+            home_path.touch()
+            print(f"  ✨ 创建空 home 文件：{home_path.name}")
+
+        # 为一级目录自身生成/更新结构化 🧩 文件（让 home 能聚合自身内容）
+        _ensure_chip_structure(dir_path, has_home=True)
+        chip_path = dir_path / f"🧩 目录-{folder_name}.md"
+
+        # 扫描当前目录下的 .md 文件（排除自身索引文件）
+        actual_files = scan_md_files(dir_path, chip_path.name)
+
+        ai_file = dir_path / "🤖 AI指令.md"
+        if ai_file.exists():
+            actual_files.add("🤖 AI指令")
+
+        # 先移除失效链接（home文件链接是合法的，因为 home 文件已存在）
+        removed = remove_stale_links(chip_path, actual_files)
+
+        # 新增文件排除home/AI指令（它们是系统文件，不放入待归类）
+        actual_files_for_new = actual_files.copy()
+        actual_files_for_new.discard(home_path.stem)
+
+        existing_links = extract_all_links(chip_path)
+        new_files = sorted(actual_files_for_new - existing_links)
+        new_files = [f for f in new_files if f != "🤖 AI指令"]
+        added = append_new_links_to_default_category(chip_path, new_files)
+
+        return {'removed': removed, 'added': added}
 
     # 一级（use_chip_for_level1=True）及以上目录：处理 🧩 文件
     index_name = f"🧩 目录-{folder_name}.md"
     index_path = dir_path / index_name
 
-    if not index_path.exists():
+    if level == 1:
+        # 一级PARA目录：使用结构化创建
+        _ensure_chip_structure(dir_path, has_home=False)
+    elif not index_path.exists():
         index_path.touch()
         print(f"  ✨ 创建空 🧩 索引文件：{index_path.name}")
 
@@ -479,6 +606,11 @@ def rebuild_home_from_chips(home_path: Path, base_dir: Path) -> int:
             pass
     
     chip_files = []
+    # 先检查 base_dir 自身是否有 🧩 文件（一级目录可能由 Skill 创建）
+    base_chip = base_dir / f"🧩 目录-{base_dir.name}.md"
+    if base_chip.exists():
+        chip_files.append(base_chip)
+
     # 遍历 base_dir 下的所有子目录（二级及更深）
     for sub in base_dir.iterdir():
         if not sub.is_dir() or should_skip_dir(sub.name):
@@ -1003,18 +1135,10 @@ def main():
         print("⚠️ 目标目录下没有可处理的子目录。")
         return
 
-    # 第一阶段：处理根目录和PARA文件夹（生成🧩），处理其他一级目录（生成home）
+    # 第一阶段：处理所有一级目录（含PARA），生成🧩+home文件
     for subdir in root_dirs:
         print(f"📁 {subdir.relative_to(target)} : 处理子目录索引...")
-        if subdir.name in PARA_DIRS:
-            # 先删除旧home文件（如果存在），再处理目录
-            old_home = subdir / f"🏠 home-{subdir.name}.md"
-            if old_home.exists():
-                old_home.unlink()
-                print(f"  🗑️ 删除旧 home 文件：{old_home.name}")
-            process_directory(subdir, level=1, base_path=target, use_chip_for_level1=True)
-        else:
-            process_directory(subdir, level=1, base_path=target)
+        process_directory(subdir, level=1, base_path=target)
         walk_and_process(subdir, target)
     
     # 处理根目录自身（生成🧩）
@@ -1029,9 +1153,8 @@ def main():
     print("-" * 60)
     print("🔄 开始重建一级目录的 home 索引（分模块展示）...")
 
-    # 第二阶段：仅为非PARA文件夹重建 home 文件
-    non_para_dirs = [d for d in root_dirs if d.name not in PARA_DIRS]
-    aggregate_and_update_home(target, non_para_dirs)
+    # 第二阶段：为所有一级目录重建 home 文件（含PARA目录）
+    aggregate_and_update_home(target, root_dirs)
 
     print("-" * 60)
     print("📖 生成目录索引文件（方便AI检索）...")

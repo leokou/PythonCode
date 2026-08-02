@@ -33,6 +33,29 @@ except ImportError:
 
 SUPPORTED_EXT = {'.txt', '.md', '.markdown', '.docx'}
 
+PROXY_PORTS = (7897, 10808)  # Clash / v2ray 本机代理端口，按顺序探测
+
+
+def _setup_proxy():
+    """探测本机可用代理并写入环境变量，让 requests/PyGithub 走代理；无代理时返回 None（直连）"""
+    import socket
+    for port in PROXY_PORTS:
+        try:
+            s = socket.socket()
+            s.settimeout(0.3)
+            ok = s.connect_ex(('127.0.0.1', port)) == 0
+            s.close()
+            if ok:
+                proxy = f'http://127.0.0.1:{port}'
+                os.environ['HTTP_PROXY'] = proxy
+                os.environ['HTTPS_PROXY'] = proxy
+                os.environ['http_proxy'] = proxy
+                os.environ['https_proxy'] = proxy
+                return proxy
+        except Exception:
+            continue
+    return None
+
 
 def read_txt_file(filepath):
     """读取 txt / md 文件内容"""
@@ -624,6 +647,7 @@ class FileMergerApp:
 
             def merge_upload_thread():
                 try:
+                    _setup_proxy()
                     parts = []
                     for idx, filepath in enumerate(self.file_list, 1):
                         fname = os.path.basename(filepath)
@@ -723,7 +747,8 @@ class FileMergerApp:
             return False, '请输入 GitHub Token'
 
         try:
-            g = Github(token)
+            _setup_proxy()
+            g = Github(token, timeout=30)
             repo = g.get_repo(repo_name)
             filename = os.path.basename(file_path)
 

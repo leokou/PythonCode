@@ -4,5 +4,51 @@
   "inbox_file": "D:\\Obsidian\\LeoDiary\\My-Inbox.md",
   "flashnote_file": "D:\\Obsidian\\LeoDiary\\🧠 FlashNote.md",
   "log_dir": "D:\\Obsidian\\LeoDiary\\Journals",
-  "vault_name": "LeoDiary"
+  "capture_file": "D:\\Obsidian\\LeoDiary\\A📥 收集（Capture）\\Capture.md",
+  "vault_name": "LeoDiary",
+  "associated_exts": [
+    ".md",
+    ".txt",
+    ".ini",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".tsc"
+  ],
+  "workspace_hidden_dirs": [
+    ".git",
+    "node_modules",
+    "__pycache__",
+    "dist",
+    ".obsidian",
+    ".trash"
+  ],
+  "search_exts": [
+    ".md",
+    ".txt",
+    ".py",
+    ".js",
+    ".json",
+    ".yaml",
+    ".yml"
+  ],
+  "explorer_exts": [
+    ".md",
+    ".txt",
+    ".ini",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".tsc"
+  ],
+  "layout": {
+    "editor_width": 60,
+    "preview_width": 30,
+    "outline_width": 10,
+    "outline_visible": true,
+    "pane_mode": "outline",
+    "workspace_visible": false,
+    "workspace_width": 220,
+    "explorer_sort": "time"
+  }
 }
