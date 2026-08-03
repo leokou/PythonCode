@@ -49,6 +49,9 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib.backend.uploader ^
   --hidden-import=lib.backend.capture ^
   --hidden-import=lib.backend.search_engine ^
+  --hidden-import=lib.backend.clipboard_parser ^
+  --hidden-import=lib.backend.html_converter ^
+  --hidden-import=lib.backend.image_handler ^
   --hidden-import=lib.modules.pages ^
   --hidden-import=lib.modules.file_assoc ^
   --hidden-import=lib.modules.layout_store ^

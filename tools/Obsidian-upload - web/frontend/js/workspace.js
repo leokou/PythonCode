@@ -136,6 +136,47 @@ const Workspace = (() => {
     });
   }
 
+  /* 批量删除：确认框 → 逐个调用 explorer_delete → 刷新树 */
+  async function batchDeleteFile(paths) {
+    if (!paths || paths.length < 1) return;
+    if (!window.ContextMenu) return;
+    ContextMenu.confirmDialog("批量删除", "将删除选中的 " + paths.length + " 个文件到回收站（可恢复）。", "删除", async () => {
+      const a = api();
+      if (!a || !a.explorer_delete) { toast("删除失败：接口不可用", "err"); return; }
+      try {
+        let okCount = 0;
+        let lastErr = "";
+        for (const p of paths) {
+          try {
+            const r = await a.explorer_delete(p);
+            if (r && r.ok) okCount++;
+            else lastErr = (r && r.msg) || "删除失败";
+          } catch (e2) { lastErr = String(e2); }
+        }
+        if (okCount === paths.length) {
+          toast("已批量删除 " + okCount + " 个文件", "ok");
+        } else if (okCount > 0) {
+          toast("已删除 " + okCount + "/" + paths.length + " 个文件", "ok");
+        } else {
+          toast(lastErr || "批量删除失败", "err");
+        }
+        if (okCount > 0) {
+          if (window.Explorer) {
+            const parents = new Set();
+            paths.forEach(p => parents.add(dirOf(p)));
+            for (const d of parents) {
+              if (window.Explorer && Explorer.refreshDir) Explorer.refreshDir(d);
+            }
+          }
+          if (window.History && History.refresh) History.refresh();
+          if (window.Explorer && Explorer.clearSelected) Explorer.clearSelected();
+        }
+      } catch (e) {
+        toast("批量删除出错：" + e, "err");
+      }
+    });
+  }
+
   /* 复制副本：当前目录生成 xxx-副本.md */
   async function duplicateFile(path) {
     const a = api();
@@ -183,6 +224,46 @@ const Workspace = (() => {
         }
       } catch (e) {
         toast("移动出错：" + e, "err");
+      }
+    });
+  }
+
+  /* 批量移动：弹窗选目标目录 → 后端批量移动 → 刷新 */
+  async function batchMoveFile(paths) {
+    if (!paths || paths.length < 2) return;
+    const a = api();
+    if (!a || !a.explorer_dirs) { toast("批量移动失败：接口不可用", "err"); return; }
+    let dirs = [];
+    try {
+      const res = await a.explorer_dirs();
+      if (res && res.ok) dirs = res.dirs || [];
+      else { toast((res && res.msg) || "获取目录失败", "err"); return; }
+    } catch (e) {
+      toast("获取目录出错：" + e, "err");
+      return;
+    }
+    if (!window.ContextMenu || !ContextMenu.moveDialog) return;
+    ContextMenu.moveDialog(dirs, paths[0], async (dest) => {
+      if (!a.explorer_batch_move) { toast("批量移动失败：接口不可用", "err"); return; }
+      try {
+        const res = await a.explorer_batch_move(paths, dest);
+        if (res && res.ok) {
+          toast(res.msg || "已批量移动", "ok");
+          if (window.Explorer) {
+            const parents = new Set();
+            paths.forEach(p => parents.add(dirOf(p)));
+            parents.add(dest);
+            for (const d of parents) {
+              if (window.Explorer && Explorer.refreshDir) Explorer.refreshDir(d);
+            }
+          }
+          if (window.History && History.refresh) History.refresh();
+          if (window.Explorer && Explorer.clearSelected) Explorer.clearSelected();
+        } else {
+          toast((res && res.msg) || "批量移动失败", "err");
+        }
+      } catch (e) {
+        toast("批量移动出错：" + e, "err");
       }
     });
   }
@@ -239,10 +320,25 @@ const Workspace = (() => {
   }
 
   /* 文件右键入口：弹出右键菜单 */
-  function showFileContextMenu(path, x, y) {
+  function showFileContextMenu(path, x, y, paths) {
     if (!window.ContextMenu) return;
+    if (paths && paths.length > 1) {
+      /* 多选模式：只显示批量删除 & 批量移动 */
+      const n = paths.length;
+      ContextMenu.open(x, y, [
+        { icon: "📁", label: "批量移动（" + n + " 个文件）", action: "batch_move" },
+        { icon: "🗑️", label: "批量删除（" + n + " 个文件）", action: "batch_delete", danger: true },
+      ], (item) => {
+        const act = item && item.action;
+        if (act === "batch_delete") batchDeleteFile(paths);
+        else if (act === "batch_move") batchMoveFile(paths);
+      });
+      return;
+    }
+    /* 单文件模式 */
     ContextMenu.open(x, y, [
       { icon: "⭐️", label: "收藏", action: "favorite" },
+      { icon: "🔗", label: "复制双链", action: "copy_wikilink" },
       { icon: "📋", label: "复制文件名称", action: "copy_name" },
       { icon: "🔗", label: "复制文件完整路径", action: "copy_path" },
       { icon: "📂", label: "在资源管理器中显示", action: "reveal" },
@@ -254,6 +350,7 @@ const Workspace = (() => {
     ], (item) => {
       const act = item && item.action;
       if (act === "favorite") favoriteFile(path);
+      else if (act === "copy_wikilink") copyText("[[" + fileBase(path) + "]]", "已复制双链：[[" + fileBase(path) + "]]");
       else if (act === "copy_name") copyText(fileName(path), "已复制文件名称：" + fileName(path));
       else if (act === "copy_path") copyText(path, "已复制完整路径：" + path);
       else if (act === "reveal") revealInExplorer(path);
@@ -425,7 +522,7 @@ const Workspace = (() => {
         onAddFolder: () => { addFolder(); },
         onRemoveFolder: (p) => { removeFolder(p); },
         onMoveFolder: (p, d) => { moveFolder(p, d); },
-        onFileContext: (path, x, y) => { showFileContextMenu(path, x, y); },
+        onFileContext: (path, x, y, paths) => { showFileContextMenu(path, x, y, paths); },
         onDirContext: (path, x, y) => { showDirContextMenu(path, x, y); },
       });
       if (window.Layout && Layout.getExplorerSort) {

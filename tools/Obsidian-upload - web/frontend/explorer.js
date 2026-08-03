@@ -1,5 +1,5 @@
 /* LeoDiary Capture —— 资源管理器（File Explorer）
- * 职责：目录树渲染（懒加载）、展开收起、文件点击、高亮/自动定位、排序。
+ * 职责：目录树渲染（懒加载）、展开收起、文件点击、高亮/自动定位、排序、多选。
  * 纯 UI：数据由 Workspace 注入（loadChildren 异步回调），可单独替换。
  * 排序偏好由调用方通过 setSort 传入（对应 config.json layout.explorer_sort）。
  */
@@ -12,12 +12,16 @@ const Explorer = (() => {
   let onAddFolder = null;    // () => void（空状态添加按钮）
   let onRemoveFolder = null; // (path) => void（移除工作区文件夹）
   let onMoveFolder = null;   // (path, direction) => void（上移/下移工作区文件夹）
-  let onFileContext = null;  // (path, x, y) => void（文件右键菜单）
+  let onFileContext = null;  // (path, x, y, paths?) => void（文件右键菜单）
   let onDirContext = null;   // (path, x, y) => void（目录右键菜单）
   let sort = "time";         // "time"（最近修改倒序）| "name"（名称 A-Z）
   let lastFolders = null;    // 最近一次 renderFolders 的文件夹列表
   let activePath = null;     // 当前高亮文件路径（规范化小写）
   let revealToken = 0;       // 防止并发 reveal 竞态
+
+  /* ---- 多选状态 ---- */
+  let selectedPaths = new Map();  // norm(path) -> 原始路径，当前选中的文件
+  let _lastClickedPath = null;   // 最近一次点击的文件路径（Shift 范围选择锚点）
 
   const MAX_DEPTH = 12;
 
@@ -83,16 +87,68 @@ const Explorer = (() => {
     const row = makeRow("exp-file", fileIcon(item.ext), item.name, item.path);
     row.dataset.path = item.path;
     row.addEventListener("click", (e) => {
+      /* 仅响应左键，忽略右键/中键触发的 click */
+      if (e.button !== 0) return;
       e.stopPropagation();
-      setActive(item.path);
-      if (onOpenFile) onOpenFile(item.path);
+      if (e.ctrlKey || e.metaKey) {
+        /* Ctrl+点击：切换选中 */
+        e.preventDefault();
+        /* 如果多选为空但之前有普通点击的锚点，先把锚点加入多选 */
+        if (selectedPaths.size === 0 && _lastClickedPath) {
+          selectedPaths.set(norm(_lastClickedPath), _lastClickedPath);
+        }
+        toggleSelected(item.path);
+        _lastClickedPath = item.path;
+        /* 不打开文件 */
+      } else if (e.shiftKey) {
+        /* Shift+点击：范围选择（同一父目录下的文件） */
+        e.preventDefault();
+        if (!_lastClickedPath) {
+          /* 无锚点：选中当前文件作为锚点 */
+          clearSelected();
+          toggleSelected(item.path);
+          _lastClickedPath = item.path;
+        } else {
+          const rowEl = row.parentElement;
+          if (rowEl) {
+            const fileRows = [...rowEl.querySelectorAll(":scope > .exp-file")];
+            const anchorIdx = fileRows.findIndex(r => norm(r.dataset.path) === norm(_lastClickedPath));
+            const clickIdx = fileRows.indexOf(row);
+            if (anchorIdx >= 0 && clickIdx >= 0) {
+              const from = Math.min(anchorIdx, clickIdx);
+              const to = Math.max(anchorIdx, clickIdx);
+              clearSelected();
+              for (let i = from; i <= to; i++) {
+                const p = fileRows[i].dataset.path;
+                if (p) selectedPaths.set(norm(p), p);
+              }
+              updateSelectedUI();
+            }
+          }
+          _lastClickedPath = item.path;
+        }
+        /* 不打开文件 */
+      } else {
+        /* 普通点击：清空多选、打开文件 */
+        clearSelected();
+        setActive(item.path);
+        if (onOpenFile) onOpenFile(item.path);
+        _lastClickedPath = item.path;
+      }
     });
-    /* 文件右键菜单：禁止默认菜单，交由 workspace.js 处理 */
+    /* 文件右键菜单：有多选时传入路径列表 */
     row.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      setActive(item.path);
-      if (onFileContext) onFileContext(item.path, e.clientX, e.clientY);
+      const paths = getSelected();
+      if (paths.length > 1 && selectedPaths.has(norm(item.path))) {
+        /* 多选模式：不清空多选、不 setActive（setActive 会 clearSelected） */
+        if (onFileContext) onFileContext(item.path, e.clientX, e.clientY, paths);
+      } else {
+        clearSelected();
+        setActive(item.path);
+        if (onFileContext) onFileContext(item.path, e.clientX, e.clientY);
+      }
     });
     return row;
   }
@@ -153,6 +209,7 @@ const Explorer = (() => {
   function renderFolders(folders) {
     lastFolders = folders || [];
     activePath = null;
+    clearSelected();
     if (!container) return;
     container.innerHTML = "";
     if (!lastFolders.length) {
@@ -214,6 +271,7 @@ const Explorer = (() => {
   function setActive(path) {
     const n = norm(path);
     activePath = n;
+    clearSelected();
     if (!container) return;
     container.querySelectorAll(".exp-row.exp-active").forEach((el) => el.classList.remove("exp-active"));
     if (!n) return;
@@ -227,6 +285,39 @@ const Explorer = (() => {
   }
 
   function highlight(path) { setActive(path); }
+
+  /* ---- 多选辅助函数 ---- */
+  function toggleSelected(path) {
+    const n = norm(path);
+    if (selectedPaths.has(n)) {
+      selectedPaths.delete(n);
+    } else {
+      selectedPaths.set(n, path);
+    }
+    updateSelectedUI();
+  }
+
+  function clearSelected() {
+    selectedPaths.clear();
+    updateSelectedUI();
+  }
+
+  function getSelected() {
+    return [...selectedPaths.values()];
+  }
+
+  function updateSelectedUI() {
+    if (!container) return;
+    container.querySelectorAll(".exp-row.exp-selected").forEach((el) => el.classList.remove("exp-selected"));
+    for (const n of selectedPaths.keys()) {
+      for (const r of container.querySelectorAll(".exp-row[data-path]")) {
+        if (norm(r.dataset.path) === n) {
+          r.classList.add("exp-selected");
+          break;
+        }
+      }
+    }
+  }
 
   function relativeSegments(from, to) {
     const f = norm(from);
@@ -356,6 +447,7 @@ const Explorer = (() => {
     init, setSort, getSort, renderFolders,
     reveal, highlight, expandAll, collapseAll,
     refreshDir, refreshAll,
+    getSelected, clearSelected,
   };
 })();
 

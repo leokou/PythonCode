@@ -11,6 +11,7 @@ const {
   markdown, syntaxHighlighting, defaultHighlightStyle, bracketMatching,
   indentOnInput, foldGutter, foldKeymap, highlightSelectionMatches, searchKeymap,
   autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap,
+  ViewPlugin, Decoration,
 } = window.CodeMirrorBundle;
 
 const editorEl = document.getElementById("editor");
@@ -35,6 +36,15 @@ let _lastFocusArea = "editor";
 
 function currentTab() {
   return tabs.find((t) => t.id === activeTabId) || null;
+}
+
+/* 按窗口类型调度保存：Capture 窗口立即保存，其他窗口 debounce 后保存 */
+function scheduleOrSave(pageId, content) {
+  if (CFG.windowType === "capture") {
+    Storage.saveNow(pageId, content);
+  } else {
+    Storage.schedule(pageId, content);
+  }
 }
 
 function firstLineTitle(state) {
@@ -137,6 +147,9 @@ function renderPreview() {
   _renderPos = 0;
   previewEl.innerHTML = marked.parse(_renderDoc, { breaks: true, gfm: true });
 
+  /* 处理 ![[image.png]] Obsidian 图片嵌入（必须在 wikilink 之前，避免 ![[x]] 被 [[x]] 误匹配） */
+  _processImageEmbeds();
+
   /* 处理 [[wikilink]] 链接 */
   _processWikilinks();
 
@@ -144,6 +157,98 @@ function renderPreview() {
   _clearCrossHighlight();
 
   if (window.Outline && Outline.refresh) Outline.refresh();
+}
+
+/* ============ 预览区 ![[image]] Obsidian 图片嵌入处理 ============ */
+const _IMG_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+/* data URL 缓存：{filename: dataUrl}，避免重复请求后端 */
+const _embedImgCache = {};
+
+function _processImageEmbeds() {
+  const walker = document.createTreeWalker(previewEl, NodeFilter.SHOW_TEXT, null);
+  const textNodes = [];
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.nodeValue && /!\[\[/.test(node.nodeValue)) {
+      textNodes.push(node);
+    }
+  }
+
+  const pending = [];  /* 待异步解析的图片：[{img, name}] */
+
+  for (const textNode of textNodes) {
+    const text = textNode.nodeValue;
+    if (!/!\[\[/.test(text)) continue;
+    /* 匹配 ![[filename]] 或 ![[filename|alt]] */
+    const regex = /!\[\[([^\[\]|]+)(?:\|([^\[\]]+))?\]\]/g;
+    let lastIndex = 0;
+    const parent = textNode.parentNode;
+    const fragment = document.createDocumentFragment();
+    let hasMatch = false;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      hasMatch = true;
+      if (match.index > lastIndex) {
+        fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+      }
+      const filename = match[1].trim();
+      const alt = (match[2] || filename).trim();
+      if (_IMG_EXT_RE.test(filename)) {
+        const img = document.createElement("img");
+        img.className = "embed-image";
+        img.alt = alt;
+        img.setAttribute("data-embed-name", filename);
+        img.setAttribute("loading", "lazy");
+        /* 命中缓存直接设置 src，否则占位等待异步解析 */
+        if (_embedImgCache[filename]) {
+          img.src = _embedImgCache[filename];
+        } else {
+          img.style.opacity = "0.3";
+          pending.push({ img, name: filename });
+        }
+        fragment.appendChild(img);
+      } else {
+        /* 非图片，当作 wikilink 文本处理 */
+        const wl = document.createElement("span");
+        wl.className = "wikilink";
+        wl.setAttribute("data-wikilink", filename);
+        wl.textContent = alt;
+        fragment.appendChild(wl);
+      }
+      lastIndex = match.index + match[0].length;
+    }
+    if (hasMatch) {
+      if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+      }
+      parent.replaceChild(fragment, textNode);
+    }
+  }
+
+  /* 异步解析未命中的图片 data URL */
+  if (pending.length) _resolveEmbedImages(pending);
+}
+
+/* 异步从后端加载附件 data URL 并填充到 <img>（带缓存） */
+async function _resolveEmbedImages(pending) {
+  const a = (typeof pywebview !== "undefined" && pywebview.api) ? pywebview.api : null;
+  if (!a || !a.get_attachment_data_url) return;
+  for (const { img, name } of pending) {
+    /* 再次检查缓存（可能并发已加载） */
+    if (_embedImgCache[name]) {
+      img.src = _embedImgCache[name];
+      img.style.opacity = "";
+      continue;
+    }
+    try {
+      const res = await a.get_attachment_data_url(name);
+      if (res && res.ok && res.dataUrl) {
+        _embedImgCache[name] = res.dataUrl;
+        img.src = res.dataUrl;
+        img.style.opacity = "";
+      }
+    } catch (e) { /* ignore single image failure */ }
+  }
 }
 
 /* ============ 预览区 [[wikilink]] 处理 ============ */
@@ -196,6 +301,8 @@ function _processWikilinks() {
 
 /* ============ 跨区行高亮 ============ */
 let _lastHighlightedLine = -1;
+/* 光标驱动的滚动同步标志：防止 scroll 事件反向触发造成循环 */
+let _cursorSyncActive = false;
 
 function _clearCrossHighlight() {
   /* 清除预览区高亮 */
@@ -214,18 +321,70 @@ function _clearCrossHighlight() {
   _lastHighlightedLine = -1;
 }
 
-/* 高亮指定行（预览+编辑器） */
-function _highlightLine(lineNum) {
-  if (lineNum === _lastHighlightedLine) return;
+/* 通过 CodeMirror 的 domAtPos 定位指定行的 .cm-line 元素
+ * CodeMirror 6 虚拟化渲染，视口外的行不在 DOM 中，所以不能用 querySelectorAll(".cm-line")[n] */
+function _findEditorLineEl(lineNum) {
+  try {
+    const doc = view.state.doc;
+    if (lineNum < 1 || lineNum > doc.lines) return null;
+    const pos = doc.line(lineNum).from;
+    const info = view.domAtPos(pos);
+    let el = info.node;
+    if (el && el.nodeType === Node.TEXT_NODE) el = el.parentElement;
+    while (el && el !== view.dom) {
+      if (el.classList && el.classList.contains("cm-line")) return el;
+      el = el.parentElement;
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+/* 给编辑器指定行加高亮（先清除旧的） */
+function _highlightEditorLine(lineNum) {
+  try {
+    if (view && view.dom) {
+      view.dom.querySelectorAll(".cm-crossHighlightLine").forEach(el => {
+        el.classList.remove("cm-crossHighlightLine");
+      });
+    }
+  } catch (e) { /* ignore */ }
+  const lineEl = _findEditorLineEl(lineNum);
+  if (lineEl) lineEl.classList.add("cm-crossHighlightLine");
+}
+
+/* 获取编辑器光标行在视口中的相对位置（0=顶部, 1=底部） */
+function _getEditorCursorRatio() {
+  try {
+    const head = view.state.selection.main.head;
+    const block = view.lineBlockAt(head);
+    const clientH = view.scrollDOM.clientHeight;
+    if (clientH <= 0) return 0.2;
+    const y = block.top - view.scrollDOM.scrollTop;
+    return Math.max(0, Math.min(1, y / clientH));
+  } catch (e) { return 0.2; }
+}
+
+/* 获取预览区某块在视口中的相对位置（0=顶部, 1=底部） */
+function _getPreviewBlockRatio(block) {
+  if (!block) return 0.2;
+  const clientH = previewEl.clientHeight;
+  if (clientH <= 0) return 0.2;
+  const y = block.offsetTop - previewEl.scrollTop;
+  return Math.max(0, Math.min(1, y / clientH));
+}
+
+/* 高亮指定行（预览+编辑器）
+ * scrollTarget: 'preview' | 'editor' | undefined
+ *   'preview' → 编辑器光标移动：高亮两侧 + 把预览区滚到同一水平线
+ *   'editor'  → 预览区光标移动：高亮两侧 + 把编辑器滚到同一水平线
+ *   undefined → 只高亮，不滚动 */
+function _highlightLine(lineNum, scrollTarget) {
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
-  /* 高亮预览区对应 data-line 的块 */
-  const previewBlock = previewEl.querySelector(`[data-line="${lineNum}"]`);
-  if (previewBlock) {
-    previewBlock.classList.add("cross-highlight");
-  } else {
-    /* 找最近的 data-line */
+  /* 高亮预览区对应 data-line 的块（预览区不虚拟化，总是可以高亮） */
+  let previewBlock = previewEl.querySelector(`[data-line="${lineNum}"]`);
+  if (!previewBlock) {
     const allBlocks = previewEl.querySelectorAll("[data-line]");
     let bestBlock = null;
     let bestLine = 0;
@@ -236,19 +395,39 @@ function _highlightLine(lineNum) {
         bestBlock = b;
       }
     }
-    if (bestBlock) bestBlock.classList.add("cross-highlight");
+    previewBlock = bestBlock;
   }
+  if (previewBlock) previewBlock.classList.add("cross-highlight");
 
-  /* 高亮编辑器对应行 */
-  try {
-    const cmView = view;
-    if (cmView && cmView.dom) {
-      const lineEls = cmView.dom.querySelectorAll(".cm-line");
-      if (lineEls[lineNum - 1]) {
-        lineEls[lineNum - 1].classList.add("cm-crossHighlightLine");
-      }
+  if (scrollTarget === "editor") {
+    /* 预览区 → 编辑器：先获取预览区光标的相对位置，滚动编辑器到相同位置
+     * CodeMirror 虚拟化，目标行可能不在视口内，需先滚动再等待渲染后高亮 */
+    const ratio = _getPreviewBlockRatio(previewBlock);
+    _cursorSyncActive = true;
+    if (typeof scrollEditorToLine === "function") {
+      scrollEditorToLine(lineNum, ratio);
     }
-  } catch (e) { /* ignore */ }
+    /* 等待 CodeMirror 渲染目标行后再添加高亮 */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        _highlightEditorLine(lineNum);
+        setTimeout(() => { _cursorSyncActive = false; }, 200);
+      });
+    });
+  } else if (scrollTarget === "preview") {
+    /* 编辑器 → 预览区：编辑器行已在视口内（光标在那里），直接高亮
+     * 用编辑器光标的相对位置滚动预览区，使两侧对应行在同一水平线 */
+    const ratio = _getEditorCursorRatio();
+    _highlightEditorLine(lineNum);
+    _cursorSyncActive = true;
+    if (typeof scrollPreviewToLine === "function") {
+      scrollPreviewToLine(lineNum, ratio);
+    }
+    setTimeout(() => { _cursorSyncActive = false; }, 200);
+  } else {
+    /* 只高亮，不滚动：编辑器行如果在视口内则高亮 */
+    _highlightEditorLine(lineNum);
+  }
 }
 
 /* ============ 预览区链接点击 → 默认浏览器打开 / wikilink ============ */
@@ -284,70 +463,55 @@ previewEl.addEventListener("click", (e) => {
 /* 打开 [[wikilink]] 对应的文件到新页签 */
 async function _openWikilinkTab(filename) {
   const cleanName = filename.trim();
+  if (!cleanName) return;
 
-  /* 1. 先尝试在已打开的页签中查找 */
+  /* 1. 先尝试在已打开的页签中查找（标题精确匹配，忽略 .md 后缀） */
   for (const tab of tabs) {
-    if (tab.title && tab.title.toLowerCase() === cleanName.toLowerCase()) {
-      setActiveTab(tab.id);
-      toast("已切换到: " + cleanName, "ok");
+    if (tab.title) {
+      const t = tab.title.replace(/\.md$/i, "").toLowerCase();
+      if (t === cleanName.toLowerCase()) {
+        setActiveTab(tab.id);
+        toast("已切换到: " + cleanName, "ok");
+        return;
+      }
+    }
+  }
+
+  /* 2. 调用后端 open_wikilink：精确查找文件名，找不到则在 Capture 新建 */
+  if (typeof pywebview !== "undefined" && pywebview.api && pywebview.api.open_wikilink) {
+    try {
+      const res = await pywebview.api.open_wikilink(cleanName);
+      if (res && res.ok) {
+        addExternalTab({
+          content: res.content || "",
+          title: res.title || cleanName,
+          path: res.path,
+        });
+        if (res.created) {
+          toast("未找到文件，已在 Capture 新建: " + cleanName, "ok");
+        }
+        return;
+      } else {
+        toast("打开失败: " + ((res && res.msg) || "未知错误"), "err");
+        return;
+      }
+    } catch (e) {
+      toast("打开链接异常: " + e, "err");
       return;
     }
   }
 
-  /* 2. 尝试在工作区页面中查找 */
-  try {
-    const res = await Storage.getPages();
-    if (res && res.ok && res.pages) {
-      const matchPage = res.pages.find(p =>
-        (p.title && p.title.toLowerCase() === cleanName.toLowerCase()) ||
-        (p.title && p.title.toLowerCase().includes(cleanName.toLowerCase()))
-      );
-      if (matchPage) {
-        /* 创建新 tab 并加载页面内容 */
-        const contentRes = await Storage.restorePage(matchPage.id);
-        const content = (contentRes && contentRes.ok) ? contentRes.content : "";
-        const state = EditorState.create({ doc: content, extensions: editorExtensions });
-        const tab = {
-          id: ++tabSeq, pageId: matchPage.id, title: matchPage.title || cleanName,
-          status: "saved", state, editorScroll: 0, previewScroll: 0,
-        };
-        tabs.push(tab);
-        setActiveTab(tab.id);
-        toast("已打开: " + cleanName, "ok");
-        syncExplorerWithTab();
-        return;
-      }
-    }
-  } catch (e) { /* ignore */ }
-
-  /* 3. 回退：尝试用 search_workspace 搜索文件名 */
-  if (typeof pywebview !== "undefined" && pywebview.api) {
-    try {
-      const searchRes = await pywebview.api.search_workspace(cleanName);
-      if (searchRes && searchRes.ok && searchRes.results && searchRes.results.length > 0) {
-        const file = searchRes.results[0];
-        const tab = addExternalTab({
-          content: file.content || "",
-          title: file.title || cleanName,
-          path: file.path || file.file || cleanName,
-        });
-        toast("已打开: " + cleanName, "ok");
-        return;
-      }
-    } catch (e) { /* not available, ignore */ }
-  }
-
-  toast("未找到文件: " + cleanName, "err");
+  toast("无法打开链接（后端未就绪）", "err");
 }
 
 /* ============ 跨区行高亮：光标位置跟踪 ============ */
 
-/* 预览区光标变化 → 高亮编辑器对应行 */
+/* 预览区光标变化 → 高亮编辑器对应行 + 滚动编辑器到同一水平线 */
 previewEl.addEventListener("mouseup", () => {
   const block = _findCursorBlock();
   if (!block) return;
   const lineNum = parseInt(block.getAttribute("data-line"), 10);
-  _highlightLine(lineNum);
+  _highlightLine(lineNum, "editor");
 });
 
 previewEl.addEventListener("keyup", (e) => {
@@ -355,7 +519,7 @@ previewEl.addEventListener("keyup", (e) => {
     const block = _findCursorBlock();
     if (!block) return;
     const lineNum = parseInt(block.getAttribute("data-line"), 10);
-    _highlightLine(lineNum);
+    _highlightLine(lineNum, "editor");
   }
 });
 
@@ -447,133 +611,98 @@ function _mapPreviewCursorToEditor() {
 
 /* ============ 预览区键盘拦截：Enter / Ctrl+Z / Ctrl+Y ============ */
 
-/* 构建 markdown 行中「纯文本位置 → markdown 位置」的映射
- * 用于将预览区光标位置正确映射到 markdown 源码位置 */
-function _buildTextPosMap(markdownLine) {
-  const map = []; /* [mdPos] = plainTextPos | -1 (语法字符) */
-  let plainIdx = 0;
+/* 将预览区纯文本偏移映射为 markdown 源码位置
+ * 逐字符扫描 markdown，跳过语法标记，累计可见字符数 */
+function _mapPlainToMd(mdText, plainOffset) {
+  let plainCount = 0;
   let i = 0;
-  while (i < markdownLine.length) {
-    const ch = markdownLine[i];
-    const next2 = markdownLine.substring(i, i + 2);
 
+  while (i < mdText.length) {
+    if (plainCount >= plainOffset) return i;
+
+    const ch = mdText[i];
+    const next2 = mdText.substring(i, i + 2);
+
+    /* ** 或 __ 或 ~~ （双字符语法标记） */
     if (next2 === "**" || next2 === "__" || next2 === "~~") {
-      map.push(-1); map.push(-1); i += 2; continue;
-    }
-    if (ch === '`' || ch === '*' || ch === '_' || ch === '~') {
-      map.push(-1); i++; continue;
-    }
-    if (ch === '#') { map.push(-1); i++; continue; }
-
-    /* 行首列表标记 */
-    if (ch === '-' || ch === '*' || ch === '+') {
-      const lineStart = markdownLine.lastIndexOf('\n', i - 1) + 1;
-      if (i === lineStart || (markdownLine.substring(lineStart, i).match(/^\s+$/) && markdownLine[i - 1] !== ' ')) {
-        /* 简单处理：如果前面只有空格，可能是列表标记 */
-      }
-      /* 更精确：只在行首时视为语法 */
-      const prefix = markdownLine.substring(lineStart, i);
-      if (prefix.trimStart() === '' || /^\d+\.\s*$/.test(prefix)) {
-        map.push(-1); i++; continue;
-      }
-    }
-    if (ch === '>') {
-      const lineStart = markdownLine.lastIndexOf('\n', i - 1) + 1;
-      if (i === lineStart || markdownLine.substring(lineStart, i).trimStart() === '') {
-        map.push(-1); i++; continue;
-      }
-    }
-
-    /* 链接 [text](url) */
-    if (ch === '[') {
-      map.push(-1); i++;
-      while (i < markdownLine.length && markdownLine[i] !== ']') {
-        map.push(plainIdx++); i++;
-      }
-      if (i < markdownLine.length) { map.push(-1); i++; }
-      if (i < markdownLine.length && markdownLine[i] === '(') {
-        map.push(-1); i++;
-        while (i < markdownLine.length && markdownLine[i] !== ')') { map.push(-1); i++; }
-        if (i < markdownLine.length) { map.push(-1); i++; }
-      }
+      i += 2;
       continue;
     }
 
-    /* 图片 ![alt](url) */
-    if (ch === '!') {
-      map.push(-1); i++;
-      if (i < markdownLine.length && markdownLine[i] === '[') {
-        map.push(-1); i++;
-        while (i < markdownLine.length && markdownLine[i] !== ']') { map.push(-1); i++; }
-        if (i < markdownLine.length) { map.push(-1); i++; }
-        if (i < markdownLine.length && markdownLine[i] === '(') {
-          map.push(-1); i++;
-          while (i < markdownLine.length && markdownLine[i] !== ')') { map.push(-1); i++; }
-          if (i < markdownLine.length) { map.push(-1); i++; }
+    /* 单字符语法标记：` * _ ~ */
+    if (ch === "`" || ch === "*" || ch === "_" || ch === "~") {
+      i++;
+      continue;
+    }
+
+    /* 行首语法：# ## ### - * + > 1. 等 */
+    const atLineStart = (i === 0 || mdText[i - 1] === "\n");
+    if (atLineStart) {
+      /* 标题标记 # ## ### 等 + 空格 */
+      if (ch === "#") {
+        let j = i;
+        while (j < mdText.length && mdText[j] === "#") j++;
+        if (j < mdText.length && mdText[j] === " ") {
+          i = j + 1;
+          continue;
         }
       }
+      /* 列表标记 - * + 后跟空格 */
+      if ((ch === "-" || ch === "*" || ch === "+") && mdText[i + 1] === " ") {
+        i += 2;
+        continue;
+      }
+      /* 引用 > 后跟空格 */
+      if (ch === ">" && mdText[i + 1] === " ") {
+        i += 2;
+        continue;
+      }
+      /* 有序列表 1. 2. 等 */
+      const m = mdText.substring(i).match(/^(\d+\.)\s/);
+      if (m) {
+        i += m[0].length;
+        continue;
+      }
+    }
+
+    /* 链接 [text](url) — text 部分可见，其余跳过 */
+    if (ch === "[") {
+      let j = i + 1;
+      while (j < mdText.length && mdText[j] !== "]") j++;
+      if (j < mdText.length) {
+        const linkText = mdText.substring(i + 1, j);
+        if (plainCount + linkText.length >= plainOffset) {
+          return i + 1 + (plainOffset - plainCount);
+        }
+        plainCount += linkText.length;
+        i = j + 1;
+        if (i < mdText.length && mdText[i] === "(") {
+          while (i < mdText.length && mdText[i] !== ")") i++;
+          if (i < mdText.length) i++;
+        }
+        continue;
+      }
+    }
+
+    /* 图片 ![alt](url) — 整体跳过 */
+    if (ch === "!" && mdText[i + 1] === "[") {
+      let j = i + 2;
+      while (j < mdText.length && mdText[j] !== "]") j++;
+      if (j < mdText.length) j++;
+      if (j < mdText.length && mdText[j] === "(") {
+        while (j < mdText.length && mdText[j] !== ")") j++;
+        if (j < mdText.length) j++;
+      }
+      i = j;
       continue;
     }
 
-    /* 普通字符 */
-    map.push(plainIdx++);
+    /* 普通可见字符 */
+    plainCount++;
     i++;
   }
-  return map;
-}
 
-/* 从纯文本位置找到对应的 markdown 位置 */
-function _findMdPosFromPlainPos(mdLine, plainPos) {
-  const map = _buildTextPosMap(mdLine);
-  /* 找到第一个 >= plainPos 的纯文本位置 */
-  for (let i = 0; i < map.length; i++) {
-    if (map[i] >= plainPos) return i;
-  }
-  /* 如果没找到，返回行末 */
-  return map.length;
-}
-
-/* 从纯文本位置找到对应的 markdown 位置范围 [start, end]
- * 返回插入位置（在该位置插入字符后，纯文本会在 plainPos 处出现） */
-function _findInsertMdPosFromPlainPos(mdLine, plainPos) {
-  const map = _buildTextPosMap(mdLine);
-  /* 策略：在 plainPos 对应的 markdown 位置插入，
-   * 但如果该位置是语法字符，我们需要找到最近的安全位置 */
-  let targetMdPos = map.length;
-
-  /* 找到纯文本位置 == plainPos 的 markdown 位置 */
-  for (let i = 0; i < map.length; i++) {
-    if (map[i] === plainPos) {
-      targetMdPos = i;
-      break;
-    }
-    if (map[i] > plainPos) {
-      targetMdPos = i;
-      break;
-    }
-  }
-
-  /* 如果 targetMdPos 是语法字符，找到最近的纯文本边界 */
-  if (map[targetMdPos] === -1 && targetMdPos < map.length) {
-    /* 向前找最后一个纯文本位置 */
-    for (let j = targetMdPos - 1; j >= 0; j--) {
-      if (map[j] !== -1) {
-        targetMdPos = j + 1;
-        break;
-      }
-    }
-    /* 如果前面没找到，向后找第一个纯文本位置 */
-    if (map[targetMdPos] === -1) {
-      for (let j = targetMdPos + 1; j < map.length; j++) {
-        if (map[j] !== -1) {
-          targetMdPos = j;
-          break;
-        }
-      }
-    }
-  }
-
-  return targetMdPos;
+  return mdText.length;
 }
 
 /* 预览区 keydown 拦截：Enter / Ctrl+Z / Ctrl+Y */
@@ -679,7 +808,7 @@ function _doPreviewUndoRedo(type) {
     requestAnimationFrame(() => { syncing = false; });
 
     if (tab.pageId) {
-      Storage.schedule(tab.pageId, tab.state.doc.toString());
+      scheduleOrSave(tab.pageId, tab.state.doc.toString());
     } else if (tab.extPath) {
       Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
     }
@@ -701,23 +830,12 @@ function _doPreviewEnter(isSoftEnter) {
 
   _savePreviewHistory();
 
-  _previewEditing = true;
-  _skipPreviewRerender = true;
-
   const block = _findCursorBlock();
-  if (!block) {
-    _previewEditing = false;
-    _skipPreviewRerender = false;
-    return;
-  }
+  if (!block) return;
 
   const blockLine = parseInt(block.getAttribute("data-line"), 10);
   const doc = tab.state.doc;
-  if (blockLine > doc.lines) {
-    _previewEditing = false;
-    _skipPreviewRerender = false;
-    return;
-  }
+  if (blockLine > doc.lines) return;
 
   /* 获取当前块对应的 markdown 行范围 */
   const allBlocks = previewEl.querySelectorAll("[data-line]");
@@ -734,40 +852,95 @@ function _doPreviewEnter(isSoftEnter) {
   const plainOffset = _getCursorOffsetInBlock(block);
 
   /* 计算插入位置：将纯文本偏移映射为 markdown 偏移 */
-  const mdInsertOffset = _findInsertMdPosFromPlainPos(mdBlockText, plainOffset);
+  const mdInsertOffset = _mapPlainToMd(mdBlockText, plainOffset);
   const absInsertPos = fromPos + mdInsertOffset;
 
-  /* 构建插入文本 */
+  /* 构建插入文本：硬换行用 \n，软换行用 "  \n" */
   const insertText = isSoftEnter ? "  \n" : "\n";
 
-  /* 只插入换行符，不替换任何内容 → 保留所有 markdown 语法 */
+  /* 硬换行时，删除光标前的尾部空格（与 marked breaks 行为一致，
+   * 确保 markdown 与 innerText 字符位置对应，避免后续 diff 同步错位） */
+  let deleteFrom = absInsertPos;
+  if (!isSoftEnter) {
+    let checkPos = absInsertPos - 1;
+    while (checkPos >= fromPos && doc.sliceString(checkPos, checkPos + 1) === " ") {
+      checkPos--;
+    }
+    deleteFrom = checkPos + 1;
+  }
+
+  _previewEditing = true;
+  _skipPreviewRerender = true;
+
+  /* 在 markdown 中插入换行符（删除尾部空格） */
   view.dispatch({
-    changes: { from: absInsertPos, to: absInsertPos, insert: insertText },
-    selection: { anchor: absInsertPos + insertText.length },
+    changes: { from: deleteFrom, to: absInsertPos, insert: insertText },
+    selection: { anchor: deleteFrom + insertText.length },
   });
   tab.state = view.state;
 
-  const savedScrollTop = previewEl.scrollTop;
-
-  requestAnimationFrame(() => {
-    renderPreview();
-    syncing = true;
-    previewEl.scrollTop = savedScrollTop;
+  /* 直接在 DOM 中插入 <br>，不重新渲染整个预览区
+   * （marked 会把单个 \n 渲染成 <br>，仍是同一个段落，data-line 不变。
+   *  重新渲染会导致 _placeCursorAtLineStart 找不到下一个块，光标跑到段落开头） */
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) {
     _previewEditing = false;
     _skipPreviewRerender = false;
+    return;
+  }
 
-    /* 光标放到新行开头 */
-    const newLineNum = blockLine + 1;
-    _placeCursorAtLineStart(newLineNum);
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
 
-    requestAnimationFrame(() => { syncing = false; });
-
-    if (tab.pageId) {
-      Storage.schedule(tab.pageId, tab.state.doc.toString());
-    } else if (tab.extPath) {
-      Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
+  /* 硬换行时，同步删除 DOM 中光标前的尾部空格（与 markdown 操作一致） */
+  if (!isSoftEnter && deleteFrom < absInsertPos) {
+    const node = range.startContainer;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const offset = range.startOffset;
+      const text = node.nodeValue;
+      let delEnd = offset;
+      let delStart = delEnd;
+      while (delStart > 0 && text[delStart - 1] === " ") delStart--;
+      if (delStart < delEnd) {
+        node.deleteData(delStart, delEnd - delStart);
+        range.setStart(node, delStart);
+        range.collapse(true);
+      }
     }
-  });
+  }
+
+  const br = document.createElement("br");
+  range.insertNode(br);
+
+  /* 光标移动到 <br> 之后 */
+  const newRange = document.createRange();
+  newRange.setStartAfter(br);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+
+  /* 更新 _oldBlock 状态，避免下次 input 事件错误同步 */
+  _oldBlockLine = blockLine;
+  const newDoc = tab.state.doc;
+  let newEndLine = newDoc.lines;
+  for (const b of allBlocks) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl > blockLine) { newEndLine = bl - 1; break; }
+  }
+  const newFromPos = newDoc.line(blockLine).from;
+  const newToPos = (newEndLine <= newDoc.lines) ? newDoc.line(newEndLine).to : newDoc.length;
+  _oldBlockMarkdown = newDoc.sliceString(newFromPos, newToPos);
+  _oldBlockPlainText = block.innerText;
+
+  _previewEditing = false;
+  _skipPreviewRerender = false;
+
+  /* 触发保存 */
+  if (tab.pageId) {
+    scheduleOrSave(tab.pageId, tab.state.doc.toString());
+  } else if (tab.extPath) {
+    Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
+  }
 }
 
 /* 在指定行的起始位置放置光标（不滚动） */
@@ -879,18 +1052,63 @@ function _restoreCursorFromEditorSilently() {
   /* 注意：不调用 scrollIntoView 避免跳动 */
 }
 
-/* 从 markdown 位置反查纯文本位置 */
-function _findPlainOffsetFromMdPos(mdLine, mdOffset) {
-  const map = _buildTextPosMap(mdLine);
-  if (mdOffset >= map.length) {
-    /* 超过范围，返回最后一个纯文本位置 */
-    let lastPlain = 0;
-    for (let i = 0; i < map.length; i++) {
-      if (map[i] !== -1) lastPlain = map[i] + 1;
+/* 从 markdown 位置反查纯文本位置（反向映射） */
+function _findPlainOffsetFromMdPos(mdText, mdOffset) {
+  let plainCount = 0;
+  let i = 0;
+  while (i < mdOffset && i < mdText.length) {
+    const ch = mdText[i];
+    const next2 = mdText.substring(i, i + 2);
+
+    if (next2 === "**" || next2 === "__" || next2 === "~~") { i += 2; continue; }
+    if (ch === "`" || ch === "*" || ch === "_" || ch === "~") { i++; continue; }
+
+    const atLineStart = (i === 0 || mdText[i - 1] === "\n");
+    if (atLineStart) {
+      if (ch === "#") {
+        let j = i;
+        while (j < mdText.length && mdText[j] === "#") j++;
+        if (j < mdText.length && mdText[j] === " ") { i = j + 1; continue; }
+      }
+      if ((ch === "-" || ch === "*" || ch === "+") && mdText[i + 1] === " ") { i += 2; continue; }
+      if (ch === ">" && mdText[i + 1] === " ") { i += 2; continue; }
+      const m = mdText.substring(i).match(/^(\d+\.)\s/);
+      if (m) { i += m[0].length; continue; }
     }
-    return lastPlain;
+
+    if (ch === "[") {
+      let j = i + 1;
+      while (j < mdText.length && mdText[j] !== "]") j++;
+      if (j < mdText.length) {
+        if (i + 1 + (j - i - 1) > mdOffset) {
+          return plainCount + (mdOffset - i - 1);
+        }
+        plainCount += (j - i - 1);
+        i = j + 1;
+        if (i < mdText.length && mdText[i] === "(") {
+          while (i < mdText.length && mdText[i] !== ")") i++;
+          if (i < mdText.length) i++;
+        }
+        continue;
+      }
+    }
+
+    if (ch === "!" && mdText[i + 1] === "[") {
+      let j = i + 2;
+      while (j < mdText.length && mdText[j] !== "]") j++;
+      if (j < mdText.length) j++;
+      if (j < mdText.length && mdText[j] === "(") {
+        while (j < mdText.length && mdText[j] !== ")") j++;
+        if (j < mdText.length) j++;
+      }
+      i = j;
+      continue;
+    }
+
+    plainCount++;
+    i++;
   }
-  return map[mdOffset] !== -1 ? map[mdOffset] : 0;
+  return plainCount;
 }
 
 /* ============ 预览区普通输入同步（保留 Markdown 语法） ============ */
@@ -948,14 +1166,6 @@ function _syncPreviewToEditor() {
 
   if (blockLine > doc.lines) return;
 
-  /* 如果没有保存的旧状态，用旧方法（全文本替换） */
-  if (_oldBlockMarkdown === null || _oldBlockLine !== blockLine) {
-    _oldBlockLine = blockLine;
-    _oldBlockMarkdown = doc.line(blockLine).slice();
-    _oldBlockPlainText = newPlainText;
-    return;
-  }
-
   /* 计算 markdown 行的范围 */
   const allBlocks = previewEl.querySelectorAll("[data-line]");
   let endLine = doc.lines;
@@ -966,6 +1176,14 @@ function _syncPreviewToEditor() {
   const fromPos = doc.line(blockLine).from;
   const toPos = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
   const currentMarkdown = doc.sliceString(fromPos, toPos);
+
+  /* 如果没有保存的旧状态，初始化整个块的基准（而非仅当前行） */
+  if (_oldBlockMarkdown === null || _oldBlockLine !== blockLine) {
+    _oldBlockLine = blockLine;
+    _oldBlockMarkdown = currentMarkdown;
+    _oldBlockPlainText = newPlainText;
+    return;
+  }
 
   /* 如果 markdown 没变，说明是其他块的编辑，跳过 */
   if (currentMarkdown === _oldBlockMarkdown) {
@@ -996,7 +1214,7 @@ function _syncPreviewToEditor() {
     });
 
     if (tab.pageId) {
-      Storage.schedule(tab.pageId, tab.state.doc.toString());
+      scheduleOrSave(tab.pageId, tab.state.doc.toString());
     } else if (tab.extPath) {
       Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
     }
@@ -1217,7 +1435,7 @@ function _doFullReplace(newText, tab) {
   });
 
   if (tab.pageId) {
-    Storage.schedule(tab.pageId, newText);
+    scheduleOrSave(tab.pageId, newText);
   } else if (tab.extPath) {
     Storage.scheduleExternal(tab.extPath, newText);
   }
@@ -1324,22 +1542,31 @@ async function previewCut() {
   _syncPreviewToEditor();
 }
 
+/* 向预览区光标位置插入纯文本（避免 HTML 格式污染 contenteditable） */
+function _insertPlainTextToPreview(text) {
+  if (!text) return;
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : document.createRange();
+  range.deleteContents();
+  const textNode = document.createTextNode(text);
+  range.insertNode(textNode);
+  /* 移动光标到插入文本末尾 */
+  range.setStartAfter(textNode);
+  range.setEndAfter(textNode);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  _syncPreviewToEditor();
+}
+
+/* 右键菜单粘贴：从 paste 事件无法获取，尝试 navigator.clipboard 回退 */
 async function previewPaste() {
   const sel = window.getSelection();
   if (!sel) return;
   try {
     const text = await navigator.clipboard.readText();
     if (!text) return;
-    const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : document.createRange();
-    range.deleteContents();
-    const textNode = document.createTextNode(text);
-    range.insertNode(textNode);
-    /* 移动光标到插入文本末尾 */
-    range.setStartAfter(textNode);
-    range.setEndAfter(textNode);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    _syncPreviewToEditor();
+    _insertPlainTextToPreview(text);
   } catch (e) {
     toast("粘贴失败，请使用 Ctrl+V", "err");
   }
@@ -1353,7 +1580,9 @@ function previewSelectAll() {
   sel.addRange(range);
 }
 
-/* 预览区原生快捷键支持：Ctrl+C/V/X/A */
+/* 预览区原生快捷键支持：Ctrl+C/X/A
+ * 注意：Ctrl+V 不在此处理，让 paste 事件正常触发，
+ * 由 document 的 paste 捕获处理器统一处理图片上传和文本粘贴 */
 previewEl.addEventListener("keydown", async (e) => {
   if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
   const key = e.key.toLowerCase();
@@ -1369,9 +1598,6 @@ previewEl.addEventListener("keydown", async (e) => {
       e.preventDefault();
       await previewCut();
     }
-  } else if (key === "v") {
-    e.preventDefault();
-    await previewPaste();
   } else if (key === "a") {
     e.preventDefault();
     previewSelectAll();
@@ -1380,6 +1606,86 @@ previewEl.addEventListener("keydown", async (e) => {
 
 /* ============ CodeMirror 6 编辑器（单 view，多 tab 共享） ============ */
 let view;
+
+/* ============ 编辑器 [[wikilink]] 装饰 + 自动补全 ============ */
+
+/* 装饰：给编辑器中的 [[filename]] / [[filename|display]] 加上 cm-wikilink 样式 */
+const _wlDeco = Decoration.mark({ class: "cm-wikilink" });
+/* 装饰：未闭合的 [[filename 也加上 cm-wikilink-unfinished 样式（输入中） */
+const _wlDecoUnfinished = Decoration.mark({ class: "cm-wikilink cm-wikilink-unfinished" });
+
+const wikilinkPlugin = ViewPlugin.fromClass(class {
+  constructor(v) { this.decorations = this._build(v); }
+  update(u) {
+    if (u.docChanged || u.viewportChanged || u.selectionSet) {
+      this.decorations = this._build(u.view);
+    }
+  }
+  _build(v) {
+    const decos = [];
+    const completeRe = /\[\[([^\[\]\n|]+)(?:\|([^\[\]\n]+))?\]\]/g;
+    const openRe = /\[\[([^\[\]\n|]+)$/gm;
+    for (const { from, to } of v.visibleRanges) {
+      const text = v.state.doc.sliceString(from, to);
+      let m;
+      completeRe.lastIndex = 0;
+      while ((m = completeRe.exec(text)) !== null) {
+        decos.push(_wlDeco.range(from + m.index, from + m.index + m[0].length));
+      }
+      /* 未闭合的 [[filename（光标可能在其中） */
+      openRe.lastIndex = 0;
+      while ((m = openRe.exec(text)) !== null) {
+        const start = from + m.index;
+        const end = from + m.index + m[0].length;
+        /* 跳过被完整匹配覆盖的范围 */
+        let overlap = false;
+        for (const d of decos) {
+          if (d.from <= start && d.to >= end) { overlap = true; break; }
+        }
+        if (!overlap) {
+          decos.push(_wlDecoUnfinished.range(start, end));
+        }
+      }
+    }
+    return Decoration.set(decos, true);
+  }
+}, { decorations: v => v.decorations });
+
+/* 自动补全：输入 [[ 后弹出候选 .md 文件列表 */
+async function wikilinkCompletionSource(ctx) {
+  const before = ctx.matchBefore(/\[\[[^\]\[|]*$/);
+  if (!before) return null;
+  const prefix = before.text.slice(2);
+  let options = [];
+  try {
+    if (typeof pywebview !== "undefined" && pywebview.api && pywebview.api.list_md_files) {
+      const res = await pywebview.api.list_md_files(prefix, 30);
+      if (res && res.ok && res.items) {
+        options = res.items.map(it => ({
+          label: it.name,
+          type: "file",
+          apply: (v, completion, from, to) => {
+            /* closeBrackets 可能已在光标后自动插入 ]]，需检测避免重复 */
+            const after = v.state.doc.sliceString(to, to + 2);
+            const insert = (after === "]]") ? it.name : (it.name + "]]");
+            v.dispatch({
+              changes: { from, to, insert },
+              selection: { anchor: from + insert.length },
+            });
+          },
+          detail: "Wiki Link",
+        }));
+      }
+    }
+  } catch (e) { /* ignore */ }
+  if (options.length === 0) return null;
+  return {
+    from: before.from + 2,
+    to: ctx.pos,
+    options: options,
+    validFor: /^\[\[[^\]\[|]*$/,
+  };
+}
 
 const editorExtensions = [
   lineNumbers(),
@@ -1391,19 +1697,20 @@ const editorExtensions = [
   foldGutter(),
   bracketMatching(),
   closeBrackets(),
-  autocompletion(),
+  autocompletion({ override: [wikilinkCompletionSource] }),
   rectangularSelection(),
   crosshairCursor(),
   indentOnInput(),
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
   highlightSelectionMatches(),
+  wikilinkPlugin,
   keymap.of([
+    ...completionKeymap,
     ...closeBracketsKeymap,
     ...defaultKeymap,
     ...searchKeymap,
     ...historyKeymap,
     ...foldKeymap,
-    ...completionKeymap,
     indentWithTab,
   ]),
   markdown(),
@@ -1442,9 +1749,9 @@ const editorExtensions = [
         if (!_skipPreviewRerender) {
           renderPreview();
         }
-        /* 自动保存：编辑内容变化 → 5 秒 debounce 后保存到 Tab 文件 */
+        /* 自动保存：Capture 立即保存，其他窗口 3 秒 debounce 后保存到 Tab 文件 */
         if (tab.pageId) {
-          Storage.schedule(tab.pageId, update.state.doc.toString());
+          scheduleOrSave(tab.pageId, update.state.doc.toString());
         } else if (tab.external && tab.extPath) {
           /* 外部文件：直接覆盖原文件 */
           Storage.scheduleExternal(tab.extPath, update.state.doc.toString());
@@ -1462,27 +1769,27 @@ const editorExtensions = [
 
 view = new EditorView({ parent: editorEl, extensions: editorExtensions });
 
-/* 初始化编辑器光标跟踪（跨区行高亮） */
+/* 初始化编辑器光标跟踪（跨区行高亮 + 滚动同步预览区到同一水平线） */
 (function initCursorTracking() {
   view.dom.addEventListener("keyup", (e) => {
     if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Home" || e.key === "End") {
       const head = view.state.selection.main.head;
       const doc = view.state.doc;
       const lineNum = doc.lineAt(head).number;
-      _highlightLine(lineNum);
+      _highlightLine(lineNum, "preview");
     }
   });
   view.dom.addEventListener("mouseup", () => {
     const head = view.state.selection.main.head;
     const doc = view.state.doc;
     const lineNum = doc.lineAt(head).number;
-    _highlightLine(lineNum);
+    _highlightLine(lineNum, "preview");
   });
   view.dom.addEventListener("focus", () => {
     const head = view.state.selection.main.head;
     const doc = view.state.doc;
     const lineNum = doc.lineAt(head).number;
-    _highlightLine(lineNum);
+    _highlightLine(lineNum, "preview");
   });
   let _cursorTrackTimer = null;
   view.dom.addEventListener("click", () => {
@@ -1491,7 +1798,7 @@ view = new EditorView({ parent: editorEl, extensions: editorExtensions });
       const head = view.state.selection.main.head;
       const doc = view.state.doc;
       const lineNum = doc.lineAt(head).number;
-      _highlightLine(lineNum);
+      _highlightLine(lineNum, "preview");
     }, 50);
   });
 })();
@@ -1689,22 +1996,27 @@ function findPreviewBlockForLine(line) {
   return best;
 }
 
-function scrollPreviewToLine(line) {
+function scrollPreviewToLine(line, ratio) {
   const b = findPreviewBlockForLine(line);
   if (b) {
-    previewEl.scrollTop = Math.max(0, b.offsetTop - previewEl.clientHeight * 0.2);
+    /* ratio: 目标行在视口中的目标相对位置（0=顶部, 1=底部），默认 0.2 */
+    const r = (typeof ratio === "number") ? Math.max(0, Math.min(1, ratio)) : 0.2;
+    previewEl.scrollTop = Math.max(0, b.offsetTop - previewEl.clientHeight * r);
   }
 }
 
-function scrollEditorToLine(line) {
+function scrollEditorToLine(line, ratio) {
   const doc = view.state.doc;
   if (line < 1 || line > doc.lines) return;
   const block = view.lineBlockAt(doc.line(line).from);
-  view.scrollDOM.scrollTop = Math.max(0, block.top - 4);
+  /* ratio: 目标行在视口中的目标相对位置，与本侧光标位置一致以实现平行 */
+  const r = (typeof ratio === "number") ? Math.max(0, Math.min(1, ratio)) : 0.2;
+  const offset = view.scrollDOM.clientHeight * r;
+  view.scrollDOM.scrollTop = Math.max(0, block.top - offset);
 }
 
 view.scrollDOM.addEventListener("scroll", () => {
-  if (syncing) return;
+  if (syncing || _cursorSyncActive) return;
   syncing = true;
   const pos = view.lineBlockAtHeight(view.scrollDOM.scrollTop).from;
   const line = view.state.doc.lineAt(pos).number;
@@ -1713,7 +2025,7 @@ view.scrollDOM.addEventListener("scroll", () => {
 });
 
 previewEl.addEventListener("scroll", () => {
-  if (syncing) return;
+  if (syncing || _cursorSyncActive) return;
   syncing = true;
   const blocks = previewEl.querySelectorAll("[data-line]");
   const viewTop = previewEl.scrollTop + 10;
@@ -1752,6 +2064,20 @@ function findImageItem(cd) {
   return null;
 }
 
+/* 判断当前焦点/选区是否在预览区内 */
+function _isFocusInPreview() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  let node = sel.anchorNode;
+  if (!node) return false;
+  if (node === previewEl) return true;
+  while (node && node !== document.body) {
+    if (node === previewEl) return true;
+    node = node.parentNode;
+  }
+  return false;
+}
+
 async function uploadAndInsert(imgItem) {
   setStatus("正在上传图片到 PicGo…");
   try {
@@ -1759,13 +2085,18 @@ async function uploadAndInsert(imgItem) {
     const dataUrl = await blobToDataURL(blob);
     const res = await pywebview.api.upload_image(dataUrl);
     if (res.ok) {
-      view.focus();
-      const insert = res.markdown + "\n";
-      const pos = view.state.selection.main.head;
-      view.dispatch({
-        changes: { from: pos, insert },
-        selection: { anchor: pos + insert.length },
-      });
+      /* 焦点在预览区 → 插入到预览区光标所在块末尾 */
+      if (_isFocusInPreview()) {
+        _insertImageToPreview(res);
+      } else {
+        view.focus();
+        const insert = res.markdown + "\n";
+        const pos = view.state.selection.main.head;
+        view.dispatch({
+          changes: { from: pos, insert },
+          selection: { anchor: pos + insert.length },
+        });
+      }
       toast("图片已上传：已插入 " + res.url, "ok");
       setStatus("上传成功：" + res.url);
     } else {
@@ -1778,14 +2109,189 @@ async function uploadAndInsert(imgItem) {
   }
 }
 
-/* 捕获阶段统一拦截：焦点在编辑器内/外都能上传图片，文字粘贴放行 */
+/* 预览区插入图片：在光标所在块末尾插入图片 markdown，重新渲染预览区 */
+function _insertImageToPreview(res) {
+  const tab = currentTab();
+  if (!tab) {
+    /* 回退：插入到编辑器 */
+    view.focus();
+    const insert = res.markdown + "\n";
+    const pos = view.state.selection.main.head;
+    view.dispatch({
+      changes: { from: pos, insert },
+      selection: { anchor: pos + insert.length },
+    });
+    return;
+  }
+
+  const block = _findCursorBlock();
+  const doc = tab.state.doc;
+
+  /* 找不到块或空文档 → 插入到文档末尾 */
+  let insertPos;
+  if (!block) {
+    insertPos = doc.length;
+  } else {
+    const blockLine = parseInt(block.getAttribute("data-line"), 10);
+    if (blockLine > doc.lines) {
+      insertPos = doc.length;
+    } else {
+      /* 计算块末尾在 markdown 中的位置 */
+      const allBlocks = previewEl.querySelectorAll("[data-line]");
+      let endLine = doc.lines;
+      for (const b of allBlocks) {
+        const bl = parseInt(b.getAttribute("data-line"), 10);
+        if (bl > blockLine) { endLine = bl - 1; break; }
+      }
+      insertPos = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
+    }
+  }
+
+  /* 块末尾插入：空行 + 图片 + 空行（保证 marked 渲染为独立段落） */
+  const insertText = "\n\n" + res.markdown + "\n";
+
+  _previewEditing = true;
+  _skipPreviewRerender = true;
+
+  view.dispatch({
+    changes: { from: insertPos, to: insertPos, insert: insertText },
+    selection: { anchor: insertPos + insertText.length },
+  });
+  tab.state = view.state;
+
+  /* 重新渲染预览区（图片是块级元素，重新渲染保证 data-line 正确） */
+  const savedScrollTop = previewEl.scrollTop;
+
+  requestAnimationFrame(() => {
+    renderPreview();
+    previewEl.scrollTop = savedScrollTop;
+    _previewEditing = false;
+    _skipPreviewRerender = false;
+
+    /* 重置 _oldBlock 状态（下次输入会重新初始化） */
+    _oldBlockMarkdown = null;
+    _oldBlockLine = -1;
+
+    /* 光标放到图片所在块之后 */
+    const imgEl = previewEl.querySelector(`img[src="${res.url}"]`);
+    if (imgEl) {
+      const imgBlock = imgEl.closest("[data-line]");
+      if (imgBlock) {
+        _placeCursorAtBlockEnd(imgBlock);
+      }
+    }
+
+    if (tab.pageId) {
+      scheduleOrSave(tab.pageId, tab.state.doc.toString());
+    } else if (tab.extPath) {
+      Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
+    }
+  });
+}
+
+/* 捕获阶段统一拦截：
+ * - 优先处理 text/html 富文本（网页复制）→ 解析图片保存附件 + 生成 Obsidian Markdown
+ * - 图片粘贴（截图）→ 保存为附件 + 生成 ![[...]] 引用
+ * - 预览区文本粘贴 → 插入纯文本（避免 HTML 格式污染 contenteditable）
+ * - 编辑器文本粘贴 → 放行给 CodeMirror 原生处理 */
 document.addEventListener("paste", (e) => {
-  const imgItem = findImageItem(e.clipboardData);
-  if (!imgItem) return;
-  e.preventDefault();
-  e.stopPropagation();
-  uploadAndInsert(imgItem);
+  const cd = e.clipboardData;
+  /* 1. 优先处理 HTML 富文本（网页复制场景） */
+  if (cd && cd.types && Array.from(cd.types).indexOf("text/html") >= 0) {
+    const html = cd.getData("text/html");
+    if (html && html.trim()) {
+      e.preventDefault();
+      e.stopPropagation();
+      pasteHtmlContent(html, cd);
+      return;
+    }
+  }
+  /* 2. 图片（截图 / 图片文件复制） */
+  const imgItem = findImageItem(cd);
+  if (imgItem) {
+    e.preventDefault();
+    e.stopPropagation();
+    pasteClipboardImage(imgItem);
+    return;
+  }
+  /* 3. 预览区文本粘贴：插入纯文本，阻止浏览器插入 HTML 格式 */
+  if (_isFocusInPreview()) {
+    const text = cd ? cd.getData("text/plain") : "";
+    if (text) {
+      e.preventDefault();
+      _insertPlainTextToPreview(text);
+    }
+  }
 }, true);
+
+/* HTML 富文本粘贴：发送给后端 paste_html → 保存图片 → 返回 Obsidian Markdown */
+async function pasteHtmlContent(html, cd) {
+  setStatus("正在解析粘贴内容…");
+  const a = (typeof pywebview !== "undefined" && pywebview.api) ? pywebview.api : null;
+  if (!a || !a.paste_html) {
+    /* 回退：剥离 HTML 标签，粘贴纯文本 */
+    const text = cd ? cd.getData("text/plain") : html.replace(/<[^>]+>/g, "");
+    if (text) _insertPasteText(text);
+    setStatus("已粘贴纯文本");
+    return;
+  }
+  try {
+    const res = await a.paste_html(html);
+    if (res && res.ok && res.markdown) {
+      _insertPasteText(res.markdown);
+      const ic = res.imageCount || 0;
+      setStatus(ic > 0 ? "已粘贴：" + ic + " 张图片 + 文本" : "已粘贴文本");
+      if (ic > 0) toast("已保存 " + ic + " 张图片到附件", "ok");
+    } else {
+      /* 后端解析失败 → 回退到纯文本（图片失败不影响文字粘贴） */
+      const text = cd ? cd.getData("text/plain") : html.replace(/<[^>]+>/g, "");
+      if (text) _insertPasteText(text);
+      setStatus((res && res.msg) || "HTML 粘贴失败，已粘贴纯文本");
+    }
+  } catch (err) {
+    const text = cd ? cd.getData("text/plain") : "";
+    if (text) _insertPasteText(text);
+    toast("HTML 粘贴出错：" + err, "err");
+    setStatus("粘贴出错");
+  }
+}
+
+/* 图片粘贴（截图）：优先保存为附件，失败回退到 PicGo 上传 */
+async function pasteClipboardImage(imgItem) {
+  setStatus("正在保存图片…");
+  const a = (typeof pywebview !== "undefined" && pywebview.api) ? pywebview.api : null;
+  if (a && a.paste_clipboard_image) {
+    try {
+      const res = await a.paste_clipboard_image();
+      if (res && res.ok && res.markdown) {
+        _insertPasteText(res.markdown);
+        toast("图片已保存到附件", "ok");
+        setStatus("图片已保存");
+        return;
+      }
+      /* 剪贴板无位图（可能是图片文件项），尝试 PicGo 上传 */
+    } catch (err) {
+      /* 回退到 PicGo */
+    }
+  }
+  /* 回退：PicGo 上传（保留原有行为） */
+  uploadAndInsert(imgItem);
+}
+
+/* 统一文本插入：编辑器光标处 / 预览区光标处 */
+function _insertPasteText(text) {
+  if (!text) return;
+  if (_isFocusInPreview()) {
+    _insertPlainTextToPreview(text);
+  } else {
+    view.focus();
+    const sel = view.state.selection.main;
+    view.dispatch({
+      changes: { from: sel.from, to: sel.to, insert: text },
+      selection: { anchor: sel.from + text.length },
+    });
+  }
+}
 
 /* ============ 标签页管理 ============ */
 function updateTabName(tab) {
@@ -1911,8 +2417,9 @@ function renderTabs() {
 }
 
 /* 新建 Tab：先建内存 tab，再异步创建对应 Markdown 文件 */
+const NEW_PAGE_DEFAULT = "# \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 function addTab() {
-  const state = EditorState.create({ doc: "", extensions: editorExtensions });
+  const state = EditorState.create({ doc: NEW_PAGE_DEFAULT, extensions: editorExtensions });
   const tab = {
     id: ++tabSeq, pageId: null, title: "", status: "saved",
     state, editorScroll: 0, previewScroll: 0,
@@ -1924,10 +2431,10 @@ function addTab() {
       tab.pageId = res.page.id;
       tab.file = res.page.file;
       syncExplorerWithTab();
-      /* 创建期间可能已输入内容：走 debounce 保存，保持灰色直到 5 秒后落盘 */
+      /* 创建期间可能已输入内容：Capture 立即保存，其他窗口 3 秒 debounce 后落盘 */
       const content = tab.state.doc.toString();
       if (content.trim()) {
-        Storage.schedule(tab.pageId, content);
+        scheduleOrSave(tab.pageId, content);
         scheduleRename(tab);
       }
     }
@@ -2253,6 +2760,11 @@ document.getElementById("btn-save").addEventListener("click", () => saveCurrent(
 document.getElementById("btn-sync").addEventListener("click", () => saveCurrent(false));
 
 document.addEventListener("keydown", (e) => {
+  /* Ctrl+S / Cmd+S：手动保存 */
+  if (e.key === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    saveCurrent(true);
+  }
   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     saveCurrent(true);

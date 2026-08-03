@@ -86,6 +86,13 @@
   font-weight: 600;
 }
 
+/* 多选选中状态 */
+.exp-row.exp-selected {
+  background: rgba(124, 58, 237, 0.15);
+  outline: 1.5px solid var(--accent-strong, #7c3aed);
+  outline-offset: -1.5px;
+}
+
 .exp-del {
   flex: 0 0 auto;
   border: none;

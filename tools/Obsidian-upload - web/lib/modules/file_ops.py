@@ -316,6 +316,48 @@ def move_item(path, dest_dir):
     return True, "已移动到 %s" % os.path.basename(dst), target
 
 
+def batch_delete(paths):
+    """批量删除多个文件/文件夹到回收站。返回 (ok, msg, count)。
+
+    逐个调用 delete_file，统计成功数。
+    """
+    if not paths:
+        return False, "没有选择文件", 0
+    ok_count = 0
+    for p in paths:
+        ok, _ = delete_file(p)
+        if ok:
+            ok_count += 1
+    if ok_count == len(paths):
+        return True, "已批量删除 %d 个文件到回收站" % ok_count, ok_count
+    elif ok_count > 0:
+        return True, "已删除 %d/%d 个文件" % (ok_count, len(paths)), ok_count
+    else:
+        return False, "删除失败", 0
+
+
+def batch_move(paths, dest_dir):
+    """批量移动多个文件/文件夹到目标目录。返回 (ok, msg, count)。
+
+    逐个调用 move_item，统计成功数。
+    """
+    if not paths:
+        return False, "没有选择文件", 0
+    if not dest_dir or not os.path.isdir(dest_dir):
+        return False, "目标目录不存在", 0
+    ok_count = 0
+    for p in paths:
+        ok, _, _ = move_item(p, dest_dir)
+        if ok:
+            ok_count += 1
+    if ok_count == len(paths):
+        return True, "已批量移动 %d 个文件" % ok_count, ok_count
+    elif ok_count > 0:
+        return True, "已移动 %d/%d 个文件" % (ok_count, len(paths)), ok_count
+    else:
+        return False, "移动失败", 0
+
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "copy":

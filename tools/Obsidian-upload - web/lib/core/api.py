@@ -36,6 +36,9 @@ from lib.modules import (
 # 方法调用时 main 已完全加载，全局状态均已定义。
 from lib.core import main as _main
 
+# 新建页面的默认内容（# 标题 + 空行模板）
+NEW_PAGE_DEFAULT_CONTENT = "# \n" + "\n" * 20
+
 
 class Api:
     """每个窗口独立的 js_api（inbox/flash/log 三份实例，编辑状态互不共享）。
@@ -75,7 +78,17 @@ class Api:
             "defaultSavePath": settings_store.get_default_save_path(self.cfg),
             "layout": layout_store.load_layout(self.window_type),
             "theme": theme_store.get_theme(),
+            "attachmentsDir": self._attachments_dir(),
         }
+
+    def _attachments_dir(self):
+        """取附件目录（供前端解析 ![[image]] 预览用）。"""
+        try:
+            from lib.backend import image_handler
+            return image_handler.attachments_dir(self.cfg, _main.log_dir())
+        except Exception as e:
+            log_error("获取附件目录失败: %s" % e)
+            return ""
 
     # ---- 三栏布局：读取 / 保存宽度比例与目录可见性 ----
     def get_layout(self):
@@ -200,6 +213,87 @@ class Api:
             log_error("工作区搜索失败(%s): %s" % (keyword, e))
             return {"ok": False, "results": [], "count": 0, "msg": "搜索失败"}
 
+    def list_md_files(self, prefix="", limit=50):
+        """列出工作区内 .md 文件名（用于 [[wikilink]] 自动补全）。
+
+        prefix: 文件名前缀过滤（大小写不敏感）；limit: 最多返回数量。
+        返回 {ok, items:[{name, path}], count}。
+        跳过隐藏目录（.obsidian/.git/node_modules 等）。
+        """
+        try:
+            roots = [f["path"] for f in workspace_store.folders()]
+            prefix_lower = (prefix or "").strip().lower()
+            skip_dirs = {".obsidian", ".git", ".trash", "node_modules", "__pycache__"}
+            seen = set()
+            items = []
+            for root in roots:
+                if not root or not os.path.isdir(root):
+                    continue
+                for dirpath, dirnames, filenames in os.walk(root):
+                    dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith(".")]
+                    for fn in filenames:
+                        if not fn.lower().endswith(".md"):
+                            continue
+                        name = fn[:-3]
+                        name_lower = name.lower()
+                        if prefix_lower and not name_lower.startswith(prefix_lower):
+                            continue
+                        full = os.path.join(dirpath, fn)
+                        norm = os.path.normcase(full)
+                        if norm in seen:
+                            continue
+                        seen.add(norm)
+                        items.append({"name": name, "path": full})
+                        if len(items) >= limit:
+                            return {"ok": True, "items": items, "count": len(items)}
+            return {"ok": True, "items": items, "count": len(items)}
+        except Exception as e:
+            log_error("列出 .md 文件失败(%s): %s" % (prefix, e))
+            return {"ok": False, "items": [], "count": 0, "msg": "列出文件失败"}
+
+    def open_wikilink(self, filename):
+        """点击 [[filename]] 时调用：按文件名精确查找 .md 文件。
+
+        找到 → 返回 {ok, content, title, path, exists:True}
+        未找到 → 在 Capture 目录新建空 .md 文件 → 返回 {ok, content:"", title, path, exists:False, created:True}
+        """
+        try:
+            clean = (filename or "").strip()
+            if not clean:
+                return {"ok": False, "msg": "文件名为空"}
+            roots = [f["path"] for f in workspace_store.folders()]
+            skip_dirs = {".obsidian", ".git", ".trash", "node_modules", "__pycache__"}
+            target_lower = clean.lower()
+            for root in roots:
+                if not root or not os.path.isdir(root):
+                    continue
+                for dirpath, dirnames, filenames in os.walk(root):
+                    dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith(".")]
+                    for fn in filenames:
+                        if not fn.lower().endswith(".md"):
+                            continue
+                        name = fn[:-3]
+                        if name.lower() == target_lower:
+                            full = os.path.join(dirpath, fn)
+                            res = file_explorer.open_file(full)
+                            if res.get("ok"):
+                                res["exists"] = True
+                                return res
+            # 未找到：在 Capture 目录新建文件
+            cap_dir = os.path.dirname(capture_store.capture_file_path(self.cfg))
+            page_store.ensure_dir(cap_dir)
+            safe_name = page_store.sanitize_filename(clean) or clean
+            new_path = page_store.unique_file(cap_dir, safe_name)
+            with open(new_path, "w", encoding="utf-8") as f:
+                f.write(NEW_PAGE_DEFAULT_CONTENT)
+            history_store.record_edit(new_path)
+            log_info("Wikilink 新建文件: %s" % new_path)
+            return {"ok": True, "content": NEW_PAGE_DEFAULT_CONTENT, "title": clean, "path": new_path,
+                    "exists": False, "created": True}
+        except Exception as e:
+            log_error("open_wikilink 失败(%s): %s" % (filename, e))
+            return {"ok": False, "msg": "打开链接失败：%s" % e}
+
     # ---- 收藏夹：收藏列表 / 添加 / 移除 / 上下移动 ----
     def favorites_list(self):
         try:
@@ -285,6 +379,18 @@ class Api:
         log_info("资源管理器移动: %s -> %s (%s)" % (path, new_path, msg))
         return {"ok": ok, "msg": msg, "path": new_path}
 
+    def explorer_batch_delete(self, paths):
+        """批量删除多个文件到回收站。paths 是路径列表。"""
+        ok, msg, count = file_ops.batch_delete(paths)
+        log_info("资源管理器批量删除: %d 个文件 (%s)" % (count, msg))
+        return {"ok": ok, "msg": msg, "count": count}
+
+    def explorer_batch_move(self, paths, dest_dir):
+        """批量移动多个文件到目标目录。paths 是路径列表。"""
+        ok, msg, count = file_ops.batch_move(paths, dest_dir)
+        log_info("资源管理器批量移动: %d 个文件 -> %s (%s)" % (count, dest_dir, msg))
+        return {"ok": ok, "msg": msg, "count": count}
+
     def explorer_new_folder(self, path):
         """在指定目录内新建文件夹。"""
         ok, msg, new_path = file_ops.create_folder(path)
@@ -317,7 +423,7 @@ class Api:
             base = page_store.sanitize_filename(title) or page_store.untitled_name()
             path = page_store.unique_file(d, base)
             with open(path, "w", encoding="utf-8") as f:
-                f.write("")
+                f.write(NEW_PAGE_DEFAULT_CONTENT)
             page = {
                 "id": self._new_page_id(),
                 "window_type": self.window_type,
@@ -577,6 +683,106 @@ class Api:
         except Exception as e:
             log_error("图片处理异常: %s" % e)
             return {"ok": False, "msg": "图片处理失败：%s" % e}
+
+    # ---- 富文本粘贴：解析 HTML → 保存图片 → 返回 Obsidian Markdown ----
+    def paste_html(self, content):
+        """解析剪贴板 HTML 富文本，提取图片保存为附件，返回 Obsidian Markdown。
+
+        content: HTML 字符串（来自前端 paste 事件的 text/html）。
+        返回 {"ok": bool, "markdown": str, "imageCount": int, "msg": str}。
+
+        流程：JS clipboard html → 本方法 → clipboard_parser 解析 →
+        image_handler 保存图片 → html_converter 转 Markdown → 返回。
+        图片失败不影响文字粘贴。
+        """
+        try:
+            from lib.backend import clipboard_parser, html_converter, image_handler
+            html = content or ""
+            if not html.strip():
+                return {"ok": False, "markdown": "", "imageCount": 0, "msg": "无 HTML 内容"}
+            nodes = clipboard_parser.parse_html(html)
+            if not nodes:
+                return {"ok": False, "markdown": "", "imageCount": 0, "msg": "HTML 解析无内容"}
+            att_dir = self._attachments_dir()
+            if not att_dir:
+                return {"ok": False, "markdown": "", "imageCount": 0, "msg": "附件目录不可用"}
+            # 保存所有图片（按 src 去重）
+            image_map = {}
+            image_nodes = [n for n in nodes if n["type"] == "image"]
+            for node in image_nodes:
+                src = node.get("src", "")
+                if src in image_map:
+                    continue
+                fn = image_handler.save_image(src, att_dir, _main.log_dir())
+                if fn:
+                    image_map[src] = fn
+            md = html_converter.nodes_to_markdown(nodes, image_map)
+            if not md.strip():
+                return {"ok": False, "markdown": "", "imageCount": len(image_map),
+                        "msg": "转换后无内容"}
+            log_info("paste_html 成功(%s): %d 节点, %d/%d 图片已保存"
+                     % (self.window_type, len(nodes), len(image_map), len(image_nodes)))
+            return {"ok": True, "markdown": md, "imageCount": len(image_map), "msg": ""}
+        except Exception as e:
+            log_error("paste_html 失败: %s" % e)
+            return {"ok": False, "markdown": "", "imageCount": 0,
+                    "msg": "HTML 粘贴失败：%s" % e}
+
+    # ---- 截图粘贴：剪贴板位图 → 附件 → Obsidian Markdown 引用 ----
+    def paste_clipboard_image(self):
+        """保存剪贴板位图（截图）为附件，返回 Obsidian Markdown 引用。
+
+        返回 {"ok": bool, "markdown": str, "msg": str}。
+        处理 CF_BITMAP/CF_DIB/CF_DIBV5（Pillow ImageGrab）。
+        """
+        try:
+            from lib.backend import image_handler
+            att_dir = self._attachments_dir()
+            if not att_dir:
+                return {"ok": False, "markdown": "", "msg": "附件目录不可用"}
+            fn = image_handler.save_clipboard_bitmap(att_dir, _main.log_dir())
+            if fn:
+                log_info("paste_clipboard_image 成功(%s): %s" % (self.window_type, fn))
+                return {"ok": True, "markdown": "![[%s]]" % fn, "msg": ""}
+            return {"ok": False, "markdown": "", "msg": "剪贴板没有图片"}
+        except Exception as e:
+            log_error("paste_clipboard_image 失败: %s" % e)
+            return {"ok": False, "markdown": "", "msg": "图片保存失败：%s" % e}
+
+    # ---- 附件 data URL：供预览区 ![[image]] 渲染（WebView2 跨域 file:// 兜底）----
+    def get_attachment_data_url(self, filename):
+        """读取附件文件并返回 data URL（base64），供预览区 <img> 加载。
+
+        filename: 附件文件名（不含路径）。返回 {"ok": bool, "dataUrl": str}。
+        跨域 file:// 在 pywebview HTTP 模式下不可用，改用 data URL 保证预览。
+        """
+        try:
+            if not filename:
+                return {"ok": False, "dataUrl": ""}
+            # 安全：只取文件名，禁止路径穿越
+            safe = os.path.basename(filename)
+            if safe != filename:
+                return {"ok": False, "dataUrl": ""}
+            att_dir = self._attachments_dir()
+            if not att_dir:
+                return {"ok": False, "dataUrl": ""}
+            path = os.path.join(att_dir, safe)
+            if not os.path.isfile(path):
+                return {"ok": False, "dataUrl": ""}
+            import base64
+            ext = os.path.splitext(safe)[1].lower()
+            mime = {
+                ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                ".gif": "image/gif", ".webp": "image/webp", ".bmp": "image/bmp",
+                ".svg": "image/svg+xml",
+            }.get(ext, "application/octet-stream")
+            with open(path, "rb") as f:
+                data = f.read()
+            data_url = "data:%s;base64,%s" % (mime, base64.b64encode(data).decode("ascii"))
+            return {"ok": True, "dataUrl": data_url}
+        except Exception as e:
+            log_error("get_attachment_data_url 失败(%s): %s" % (filename, e))
+            return {"ok": False, "dataUrl": ""}
 
     # ---- 保存：按窗口类型分派目标（保留原有聚合逻辑） ----
     def save(self, content, hide=True):

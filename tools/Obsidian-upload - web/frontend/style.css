@@ -606,6 +606,7 @@ body.resizing { cursor: col-resize; user-select: none; }
 #editor .cm-scroller::-webkit-scrollbar-track { background: transparent; }
 
 .preview-body img { max-width: 100%; border-radius: 6px; }
+.preview-body img.embed-image { transition: opacity 0.2s; display: block; margin: 8px 0; }
 .preview-body h1, .preview-body h2, .preview-body h3 {
   margin: 18px 0 10px;
   border-bottom: 1px solid var(--border-color);
@@ -635,6 +636,19 @@ body.resizing { cursor: col-resize; user-select: none; }
 .preview-body .wikilink:hover {
   background: rgba(255, 200, 0, 0.2);
   text-decoration: underline;
+}
+/* 编辑器区 [[wikilink]] 装饰样式 */
+.cm-wikilink {
+  color: var(--accent, #7c3aed);
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 3px;
+  padding: 0 1px;
+  font-weight: 500;
+}
+.cm-wikilink-unfinished {
+  background: rgba(255, 200, 0, 0.12);
+  border-bottom: 1px dashed rgba(255, 200, 0, 0.5);
+  font-weight: 400;
 }
 .preview-body code {
   background: var(--code-bg);
@@ -813,7 +827,7 @@ body.resizing { cursor: col-resize; user-select: none; }
 .modal-card {
   width: 380px;
   max-width: 88%;
-  background: var(--toast-bg);
+  background: var(--bg-preview);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   box-shadow: var(--shadow);

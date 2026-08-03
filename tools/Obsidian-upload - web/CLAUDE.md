@@ -37,6 +37,9 @@ Obsidian-upload - web/
 │   │   ├── storage.py      聚合追加保存（save_note / save_daily_log）
 │   │   ├── markdown.py     聚合格式 / obsidian:// 打开 / 调试日志
 │   │   ├── uploader.py     剪贴板图片 → PicGo → R2 → Markdown 链接
+│   │   ├── clipboard_parser.py 剪贴板 HTML 解析（SAX 式遍历，DOM 顺序提取 text/image 节点）
+│   │   ├── html_converter.py   节点列表 → Obsidian Markdown（![[filename]] 附件引用）
+│   │   ├── image_handler.py    图片保存（base64 解码 / 网络下载 / 剪贴板位图 → attachments/）
 │   │   ├── capture.py      Capture 窗口配置 + 聚合保存路径（config.json 的 capture_file）
 │   │   └── search_engine.py 工作区内容搜索（逐行增量匹配、limit 截断）
 │   └── modules/            功能模块层
@@ -187,12 +190,15 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 | 模块 | 职责 |
 |------|------|
 | `lib/core/main.py` | 入口：四窗口 + 设置 / 工具箱 / 画布窗口 + js_api + 托盘 + 单实例 + 看门狗；**禁止写业务** |
-| `lib/core/api.py` | Api / SettingsApi / ToolApi；通过 `_main` 访问 main.py 全局状态 |
+| `lib/core/api.py` | Api / SettingsApi / ToolApi；通过 `_main` 访问 main.py 全局状态；`list_md_files(prefix)` 列出工作区 .md 文件（wikilink 自动补全）；`open_wikilink(filename)` 按文件名精确查找 .md 文件；`paste_html(content)` 解析 HTML 富文本保存图片返回 Obsidian Markdown；`paste_clipboard_image()` 保存剪贴板位图为附件；`get_attachment_data_url(filename)` 读取附件返回 base64 data URL（预览区图片渲染跨域兜底） |
 | `lib/core/settings.py` | settings.json 读写 |
 | `lib/core/window_manager.py` | 热键调起窗口的强制前台聚焦（AttachThreadInput + 模拟 Alt） |
 | `lib/backend/storage.py` | 聚合追加保存（save_note / save_daily_log） |
 | `lib/backend/markdown.py` | 聚合格式 / obsidian:// 打开 / 调试日志 |
 | `lib/backend/uploader.py` | 剪贴板 → PicGo HTTP API → R2 → Markdown 链接（取 `result[0]`） |
+| `lib/backend/clipboard_parser.py` | 剪贴板 HTML 富文本解析（SAX 式遍历，按 DOM 顺序提取 text/image 节点，支持 data-src/data-original 等懒加载属性） |
+| `lib/backend/html_converter.py` | 节点列表 → Obsidian Markdown（图片→`![[filename]]` 附件引用，标题→`#` 前缀，列表→`-` 前缀，链接→`[text](url)`） |
+| `lib/backend/image_handler.py` | 图片保存到 attachments/ 目录（base64 解码 / 网络 URL 下载 / 剪贴板位图 CF_BITMAP/CF_DIB，命名 `Pasted-image-yyyyMMdd-HHmmss`，重名自动 -001/-002） |
 | `lib/backend/capture.py` | Capture 窗口配置（WINDOW_DEF）+ 聚合保存路径（capture_file） |
 | `lib/backend/search_engine.py` | 工作区搜索（逐行增量匹配、文件名/内容命中、2MB 以上跳过内容搜索） |
 | `lib/modules/pages.py` | pages.json + Tab 独立文件管理（覆盖写 / 重命名 / 启动恢复 / 内存缓存 + 2s debounce 写盘） |
@@ -245,6 +251,7 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib --hidden-import=lib.core --hidden-import=lib.backend --hidden-import=lib.modules ^
   --hidden-import=lib.core.api --hidden-import=lib.core.main --hidden-import=lib.core.window_manager --hidden-import=lib.core.settings ^
   --hidden-import=lib.backend.storage --hidden-import=lib.backend.markdown --hidden-import=lib.backend.uploader ^
+  --hidden-import=lib.backend.clipboard_parser --hidden-import=lib.backend.html_converter --hidden-import=lib.backend.image_handler ^
   --hidden-import=lib.backend.capture --hidden-import=lib.backend.search_engine ^
   --hidden-import=lib.modules.pages --hidden-import=lib.modules.file_assoc --hidden-import=lib.modules.layout_store ^
   --hidden-import=lib.modules.history --hidden-import=lib.modules.workspace --hidden-import=lib.modules.file_tree ^
@@ -445,5 +452,252 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 - **必须**：长时间运行不泄漏（句柄 / 缓存有释放路径）。
 
 ---
+
+## 十二、编辑区与预览区联动机制
+
+### 1. 跨区行高亮（黄色高亮）
+
+- 编辑区和预览区同时高亮光标所在行，编辑器用 `.cm-crossHighlightLine`（黄色背景），预览区用 `.cross-highlight`。
+- 高亮触发时机：
+  - 编辑器：方向键（keyup）、鼠标点击（mouseup/click）、聚焦（focus）
+  - 预览区：方向键（keyup）、鼠标点击（mouseup）
+- 编辑区高亮必须用 `view.domAtPos(pos)` 定位 `.cm-line` 元素，**禁止**用 `querySelectorAll(".cm-line")[n]`（CodeMirror 6 虚拟化渲染，视口外的行不在 DOM 中，索引会越界）。
+
+### 2. 光标驱动的双向滚动同步
+
+- 编辑器光标移动 → 预览区滚动到对应行
+- 预览区光标移动 → 编辑器滚动到对应行
+- 同步策略：**相对位置同步**（非固定偏移），使光标所在行在对侧视口中出现在**相同**的相对高度。
+
+关键函数：
+| 函数 | 用途 |
+|------|------|
+| `_getEditorCursorRatio()` | 获取编辑器光标行在视口中的相对位置（0=顶部, 1=底部） |
+| `_getPreviewBlockRatio(block)` | 获取预览区块在视口中的相对位置 |
+| `scrollPreviewToLine(line, ratio)` | 预览区滚动到指定行，`ratio` 控制目标行在视口位置 |
+| `scrollEditorToLine(line, ratio)` | 编辑器滚动到指定行，`ratio` 控制目标行在视口位置 |
+| `_highlightLine(lineNum, scrollTarget)` | 高亮两侧 + 滚动同步（`scrollTarget: 'preview'['editor'`） |
+
+### 3. 防循环机制
+
+- `_cursorSyncActive` 标志：光标驱动的滚动同步期间置 `true`，200ms 后释放，防止 scroll 事件反向触发造成循环。
+- 滚动条拖拽走的原有滚动同步（`syncing` 标志 + `syncing` 变量），与光标驱动同步互斥。
+
+### 4. 预览区编辑同步
+
+- 预览区 `contenteditable="true"`，用户可在预览区直接编辑。
+- 编辑内容通过 `_syncPreviewToEditor()` 同步回编辑器，核心逻辑：保存旧块纯文本 → 计算 diff → 映射到 markdown 源码位置 → 插入/删除对应字符。
+- `_previewEditing` 标志防止循环同步，`_skipPreviewRerender` 用于 Enter 等操作时跳过预览重新渲染。
+
+### 5. 预览区图片粘贴上传
+
+- 预览区图片粘贴通过 `document` 的 `paste` 捕获处理器（`capture: true`）统一处理。
+- 检测焦点/选区是否在预览区内：`_isFocusInPreview()` 遍历 `anchorNode` 的父节点链直到 `previewEl`。
+- 图片上传流程：`uploadAndInsert()` →
+  - 焦点在编辑器 → 保持原行为，插入到编辑器光标位置
+  - 焦点在预览区 → `_insertImageToPreview(res)`：在光标所在 block 的 markdown 末尾插入 `\n\n![alt](url)\n`，重渲染预览区，光标放到图片所在块末尾，重置 `_oldBlock` 状态
+- **预览区文本粘贴**：由同上 paste 处理器拦截，用 `clipboardData.getData("text/plain")` 插入纯文本（`_insertPlainTextToPreview`），阻止浏览器插入 HTML 格式污染 contenteditable。
+- 预览区 keydown 处理器**不拦截 Ctrl+V**（`preventDefault` 会阻止 paste 事件触发），让 paste 事件正常传播到 document 捕获处理器。
+- 预览区右键菜单「粘贴」沿用 `navigator.clipboard.readText()` 回退方案（paste 事件无法从右键菜单获取）。
+
+### 6. 预览区 Enter 键处理
+
+- 预览区 Enter 由 `_doPreviewEnter(isSoftEnter)` 处理：
+  - 获取光标所在 block 的 data-line → 计算块在 markdown 中的范围 → 用 `_mapPlainToMd` 将纯文本偏移映射为 markdown 位置 → 在 markdown 中插入 `\n`（硬换行）或 `  \n`（软换行）
+  - **硬换行时删除光标前的尾部空格**：与 marked `breaks: true` 行为一致，保证 markdown 与 innerText 字符位置对应，避免后续 diff 同步错位
+  - **不重新渲染预览区**：直接在 DOM 光标位置插入 `<br>`，光标放到 `<br>` 之后（若重新渲染，marked 将 `\n` 渲染为同一段落内的 `<br>`，data-line 不变，`_placeCursorAtLineStart` 找不到下一个块，光标会跑到段落开头）
+  - 更新 `_oldBlock` 基准状态，让后续输入能通过 diff 精确同步
+
+### 7. 已知陷阱
+
+- **预览区→编辑器方向**：编辑器行可能不在视口内（CodeMirror 虚拟化），必须先 `scrollEditorToLine` 使目标行进入视口，再等双重 `requestAnimationFrame` 等待 CodeMirror 渲染完成后，才能用 `_findEditorLineEl` 定位并加高亮类。
+- **编辑器高亮定位**：`_findEditorLineEl` 用 `view.domAtPos(pos)` 定位，得到的可能是文本节点，需向上遍历找 `.cm-line` 元素。
+- **`_highlightLine` 取消 `if (lineNum !== _lastHighlightedLine)` 跳过**：跨区切换时，同一行号需要重新执行高亮+滚动（因为 scrollTarget 不同）。
+- **`_clearCrossHighlight` 必须先清再设**：不允许先给新行加高亮再清旧的，否则同一行号会短暂消失。
+- **预览区图片粘贴必须通过捕获阶段**：`document.addEventListener("paste", ..., true)` 必须在捕获阶段拦截，否则 `previewEl` 的 keydown 或 contenteditable 默认行为可能先消化事件导致图片丢失。
+- **预览区粘贴纯文本**：`navigator.clipboard.readText()` 在 pywebview 环境中不可靠，必须用 `e.clipboardData.getData("text/plain")` 直接读取。
+- **预览区 Enter 不重新渲染**：标记 `_skipPreviewRerender = true` 阻止 updateListener 中的 `renderPreview()` 回调，避免 marked 重新解析导致 data-line 错位。
+
+---
+
+## 十二、Obsidian Wikilink 双链支持
+
+### 1. 编辑器高亮（ViewPlugin）
+
+- 文件：`frontend/script.js` 的 `wikilinkPlugin`（ViewPlugin）
+- 扫描编辑器可见区域，给 `[[filename]]` / `[[filename|display]]` 加 `.cm-wikilink` 样式（紫色文字 + 浅紫背景）
+- 未闭合的 `[[filename`（输入中）加 `.cm-wikilink-unfinished` 样式（浅黄背景 + 黄色虚线下划线）
+- 依赖：`cm6.min.js` 导出的 `ViewPlugin`/`Decoration`（已手动添加 `window.CodeMirrorBundle`）
+
+### 2. 自动补全（`[[` 触发）
+
+- 文件：`frontend/script.js` 的 `wikilinkCompletionSource`（异步补全源）
+- 检测到 `[[` 前缀时调用 `pywebview.api.list_md_files(prefix)` 获取候选 .md 文件列表
+- 选中后自定义 `apply` 函数：检测光标后是否已有 `]]`（避免 `closeBrackets` 重复闭合）
+- 注册方式：`autocompletion({ override: [wikilinkCompletionSource] })`
+- 补全 keymap 必须在 `defaultKeymap` 之前注册（否则 Enter/Arrow 被默认快捷键拦截）
+
+### 3. 预览区点击打开
+
+- 文件：`frontend/script.js` 的 `_processWikilinks()` / `_openWikilinkTab(filename)`
+- 解析 `[[filename]]` 和 `[[filename|display]]` 为 `<a class="wikilink">` 链接
+- 点击时调用 `pywebview.api.open_wikilink(filename)`：
+  - 精确匹配文件名（大小写不敏感）→ 读取文件内容在新页签打开
+  - 未找到 → 在 `A📥 收集（Capture）` 目录新建空 .md 文件并打开
+
+### 4. 资源管理器右键「复制双链」
+
+- 文件：`frontend/js/workspace.js` 的 `showFileContextMenu()`
+- 菜单项「复制双链」在「收藏」下方，复制内容 `[[文件名]]`（调用 `fileBase(path)` 自动去 `.md` 后缀）
+
+### 5. 后端 API
+
+- `api.py` → `list_md_files(prefix="", limit=50)`：遍历工作区文件夹，返回匹配前缀的 .md 文件名列表（跳过 `.obsidian`/`.git`/`node_modules` 等隐藏目录）
+- `api.py` → `open_wikilink(filename)`：按文件名精确搜索工作区 .md 文件，返回 `{content, title, path, exists}`；未找到时在 Capture 目录新建文件，返回 `{content:"", title, path, exists:False, created:True}`
+
+> 编辑器与预览区的 wikilink 样式统一在 `frontend/style.css` 中定义。
+
+---
+
+## 十三、剪贴板富文本粘贴（网页复制 → Obsidian Markdown）
+
+### 1. 整体流程
+
+```
+浏览器 Ctrl+C → 剪贴板含 text/html + text/plain
+  ↓
+前端 paste 事件捕获（document.capture 阶段）
+  ↓
+检测 clipboardData.types 包含 text/html
+  ↓
+e.preventDefault() + pywebview.api.paste_html(html)
+  ↓
+Python 后端：clipboard_parser 解析 → image_handler 保存图片 → html_converter 转 Markdown
+  ↓
+返回 {ok, markdown, imageCount}
+  ↓
+前端 _insertPasteText() 插入编辑器/预览区光标处
+```
+
+### 2. 前端 paste 优先级
+
+`frontend/script.js` 的 `document.addEventListener("paste", ..., true)` 捕获阶段拦截：
+
+1. **text/html 富文本**（网页复制）→ `pasteHtmlContent()` → 后端 `paste_html` → 保存图片返回 Obsidian Markdown
+2. **图片文件/剪贴板位图**（截图）→ `pasteClipboardImage()` → 后端 `paste_clipboard_image` → 保存附件 → 失败回退 PicGo 上传
+3. **预览区文本粘贴** → 插入纯文本（避免 HTML 污染 contenteditable）
+4. **编辑器文本粘贴** → 放行给 CodeMirror 原生处理
+
+### 3. 后端 API
+
+| API | 参数 | 返回 | 说明 |
+|-----|------|------|------|
+| `paste_html(content)` | HTML 字符串 | `{ok, markdown, imageCount, msg}` | 解析 HTML 保存图片，返回 Obsidian Markdown；图片失败不影响文字 |
+| `paste_clipboard_image()` | 无 | `{ok, markdown, msg}` | Pillow ImageGrab 保存剪贴板截图 |
+| `get_attachment_data_url(filename)` | 文件名 | `{ok, dataUrl}` | 读取附件返回 base64 data URL（预览区图片渲染跨域兜底） |
+
+### 4. 图片保存规则
+
+- 目录：`{default_save_path}/attachments/`（或 config.json 的 `attachments_dir`）
+- 命名：`Pasted-image-yyyyMMdd-HHmmss.png`，重名自动 `-001`、`-002`
+- 图片来源分派：
+  - `data:image/...;base64,...` → 解码保存（情况 A）
+  - `http(s)://...` → requests 下载保存（情况 B）
+  - `blob:` → 无法下载，跳过（浏览器内部引用）
+  - `CF_BITMAP/CF_DIB` → Pillow 保存（情况 C）
+- 失败降级：图片保存失败不影响文字粘贴
+
+### 5. 预览区 ![[image]] 渲染
+
+- `_processImageEmbeds()` 在 `renderPreview()` 中被调用（在 wikilink 处理之前，避免 `![[x]]` 被 `[[x]]` 误匹配）
+- 首次加载通过 `get_attachment_data_url` 异步获取 base64 data URL（缓存到 `_embedImgCache`）
+- 图片加载完成前透明度 0.3，加载后恢复原值，过渡动画 0.2s
+
+### 6. 模块依赖
+
+```
+clipboard_parser.py（无依赖，纯标准库 html.parser）
+  ↓
+html_converter.py（无依赖，只做字符串拼接）
+  ↓
+image_handler.py（依赖 PIL / requests）
+  ↓
+api.py（编排三个模块，暴露给前端）
+```
+
+> 所有模块均不依赖 UI，可独立测试。测试用例覆盖：网页复制、多图片顺序、base64 图片、纯文本回退、blob URL 跳过、混合失败降级。
+
+---
+
+## 十四、资源管理区文件多选与批量操作
+
+### 1. 多选状态管理
+
+- 文件：`frontend/explorer.js`
+- 状态变量：
+  - `selectedPaths`（`Map<norm(path), rawPath>`）— 当前选中的文件路径集合
+  - `_lastClickedPath` — 最近一次点击的文件路径（Shift 范围选择锚点 + Ctrl 首次点击回溯）
+- 暴露方法：`getSelected()` 返回路径数组、`clearSelected()` 清空多选
+
+### 2. Ctrl+Click 多选
+
+- `click` 事件中检测 `e.ctrlKey || e.metaKey`
+- **关键逻辑**：如果 `selectedPaths` 为空但 `_lastClickedPath` 存在（之前普通点击打开过文件），先把 `_lastClickedPath` 加入多选，再 toggle 当前文件。确保 Ctrl 开始多选时第一个点过的文件也被包含。
+- 不打开文件，只切换选中状态
+
+### 3. Shift+Click 范围选择
+
+- 无锚点（`_lastClickedPath` 为 null）时，选中当前文件作为锚点
+- 有锚点时，在同一个父目录下计算锚点与当前点击之间的范围，选中范围内所有文件
+- 不打开文件，只选中范围
+
+### 4. 右键菜单多选模式
+
+- `contextmenu` 事件中调用 `getSelected()` 获取多选路径列表
+- 多选模式（`paths.length > 1`）：
+  - **不调用 `setActive()`**（`setActive` 内部会 `clearSelected()` 清空多选）
+  - 直接传递 `paths` 给 `onFileContext` 回调
+- 单文件模式：走原有逻辑，`clearSelected()` → `setActive()`
+
+### 5. 工作区右键菜单路由
+
+- 文件：`frontend/js/workspace.js` → `showFileContextMenu(path, x, y, paths)`
+- 多选模式（`paths && paths.length > 1`）：
+  - 只显示两个菜单项：「批量移动（N 个文件）」和「批量删除（N 个文件）」
+  - 批量删除带 `danger: true` 标记
+- 单文件模式：显示完整菜单（收藏、复制双链、资源管理器、VSCode、重命名等）
+- **关键陷阱**：`onFileContext` 回调必须传递第4个参数 `paths`，否则 `showFileContextMenu` 始终走单文件模式
+
+### 6. 批量后端操作
+
+- 文件：`lib/modules/file_ops.py`
+- `batch_delete(paths)`：循环调用 `delete_file`，逐个移到回收站，统计成功数
+- `batch_move(paths, dest_dir)`：循环调用 `move_item`，逐个移动到目标目录，统计成功数
+- 返回 `(ok, msg, count)`
+
+### 7. 前端批量删除实现
+
+- 文件：`frontend/js/workspace.js` → `batchDeleteFile(paths)`
+- 显示确认对话框 → 循环调用 `pywebview.api.explorer_delete(path)` 逐个删除 → 刷新所有被删文件所在父目录 → 刷新历史 → 清空多选
+- 不依赖 `explorer_batch_delete`（pywebview 参数传递可能有问题），改为逐个调用已知可用的 `explorer_delete`
+
+### 8. 前端批量移动实现
+
+- 文件：`frontend/js/workspace.js` → `batchMoveFile(paths)`
+- 弹出目标目录选择对话框 → 调用 `pywebview.api.explorer_batch_move(paths, destDir)` → 刷新所有源目录和目标目录 → 刷新历史 → 清空多选
+
+### 9. 多选样式
+
+- 文件：`frontend/explorer.css`
+- `.exp-row.exp-selected`：紫色半透明背景 + 紫色轮廓边框
+- 通过 `updateSelectedUI()` 统一更新：先清除所有 `.exp-selected` 类，再根据 `selectedPaths` 重新添加
+
+### 10. 已知陷阱
+
+- **`click` 事件 `e.button` 检查**：`click` 事件处理函数开头必须加 `if (e.button !== 0) return;`，避免右键/中键触发 `click` 导致多选状态被意外修改
+- **`e.preventDefault()`**：Ctrl/Shift 分支必须调用 `e.preventDefault()`，阻止浏览器默认行为（文本选中、链接打开等）干扰多选
+- **路径标准化**：`selectedPaths` 用 `Map<norm(path), rawPath>` 存储，norm 函数做大小写不敏感标准化。右键检查时 `selectedPaths.has(norm(item.path))` 匹配，`getSelected()` 返回原始路径数组
+- **右键回调参数传递**：`Explorer.init` 的 `onFileContext` 回调签名必须是 `(path, x, y, paths)` 四个参数，缺少第4个参数会导致多选模式永远无法触发
+- **`_lastClickedPath` 回溯**：Ctrl 首次点击时 `selectedPaths` 为空，需要把 `_lastClickedPath`（之前普通点击的锚点）加入多选，否则之前点过的文件不会出现在批量操作中
 
 > 本规范为强制性执行标准。所有 AI 辅助开发必须严格遵守。如有特殊需求，需与团队评审并修改本规范。

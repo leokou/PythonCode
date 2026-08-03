@@ -122,8 +122,9 @@ window.ContextMenu = (() => {
     });
     overlay.querySelector('[data-act="cancel"]').addEventListener("click", closeModal);
     overlay.querySelector('[data-act="ok"]').addEventListener("click", () => {
+      const fn = onConfirm;
       closeModal();
-      if (onConfirm) onConfirm();
+      if (fn) fn();
     });
   }
 
