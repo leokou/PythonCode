@@ -224,7 +224,7 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 
 ## 八、热键稳定性要求
 
-- 热键：`Alt+S`（Inbox）/ `Alt+E`（FlashNote）/ `Alt+J`（Daily Log）/ `Alt+D`（Capture）。
+- 热键：`Alt+E`（Inbox）/ `Alt+S`（FlashNote）/ `Alt+R`（Daily Log）/ `Alt+D`（Capture）。
 - 实现：`RegisterHotKey` 系统级热键（非键盘钩子）→ 隐藏消息窗口（独立线程）→ `WM_HOTKEY` 置 `threading.Event`（零阻塞）→ 工作线程消费 → 窗口显示+置顶+聚焦。
 - 看门狗：30 秒存活检测 + 2 分钟强制重注册。
 - **重注册必须在热键线程内执行**（`WM_APP_REBIND` 消息触发），禁止跨线程直接调用 `RegisterHotKey`/`UnregisterHotKey`（会 1408 错误）。
@@ -364,7 +364,7 @@ config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）�
 
 **功能**：
 - ✅ 四窗口正常（Inbox / FlashNote / Log / Capture）
-- ✅ 热键正常（Alt+S/E/J/D）
+- ✅ 热键正常（Alt+E/S/R/D）
 - ✅ 自动保存正常
 - ✅ 图片上传正常
 - ✅ 历史记录正常

@@ -88,6 +88,39 @@ body { display: flex; flex-direction: column; }
 }
 .set-path-save:hover { filter: brightness(1.12); }
 .set-path-save:active { transform: translateY(1px); }
+/* ---- 主题：四个窗口页签 ---- */
+.set-theme-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0;
+}
+.set-theme-tab {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+  margin-bottom: -1px;
+  user-select: none;
+}
+.set-theme-tab:hover {
+  color: var(--text-color);
+  background: var(--bg-2);
+}
+.set-theme-tab.active {
+  color: var(--accent);
+  background: var(--bg-main);
+  border-color: var(--border-color);
+  border-bottom-color: var(--bg-main);
+}
 /* 主题设置：窗口主题独占一行，编辑区 + 预览并排 */
 .set-theme-row {
   display: grid;

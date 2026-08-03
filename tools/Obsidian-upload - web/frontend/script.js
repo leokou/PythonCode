@@ -2430,7 +2430,13 @@ function addTab() {
     if (res && res.ok && res.page) {
       tab.pageId = res.page.id;
       tab.file = res.page.file;
-      syncExplorerWithTab();
+      /* 刷新父目录使新文件出现在资源管理器中，再高亮定位 */
+      if (window.Explorer && Explorer.refreshDir) {
+        const dir = tab.file.substring(0, tab.file.lastIndexOf("\\"));
+        Explorer.refreshDir(dir).then(() => syncExplorerWithTab());
+      } else {
+        syncExplorerWithTab();
+      }
       /* 创建期间可能已输入内容：Capture 立即保存，其他窗口 3 秒 debounce 后落盘 */
       const content = tab.state.doc.toString();
       if (content.trim()) {
@@ -2459,6 +2465,28 @@ function addExternalTab(file) {
 
 /* 工作区/搜索打开文件：读取内容 → 新建外部 Tab → 可选定位到指定行 */
 async function openWorkspaceFile(path, line) {
+  /* 如果该文件已在某个页签中打开，直接切换到该页签 */
+  const existing = tabs.find((t) => {
+    const tp = t.extPath || t.file || "";
+    return tp.toLowerCase() === path.toLowerCase();
+  });
+  if (existing) {
+    setActiveTab(existing.id);
+    if (line && line >= 1) {
+      requestAnimationFrame(() => {
+        const doc = existing.state.doc;
+        const ln = Math.min(line, doc.lines);
+        if (ln >= 1) {
+          const pos = doc.line(ln).from;
+          view.dispatch({ selection: { anchor: pos }, scrollIntoView: true });
+          scrollEditorToLine(ln);
+          scrollPreviewToLine(ln);
+        }
+        view.focus();
+      });
+    }
+    return;
+  }
   try {
     const res = await pywebview.api.open_history_file(path);
     if (!res || !res.ok) {
@@ -2760,8 +2788,8 @@ document.getElementById("btn-save").addEventListener("click", () => saveCurrent(
 document.getElementById("btn-sync").addEventListener("click", () => saveCurrent(false));
 
 document.addEventListener("keydown", (e) => {
-  /* Ctrl+S / Cmd+S：手动保存 */
-  if (e.key === "s" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+  /* Ctrl+E / Cmd+E：手动保存（原 Ctrl+S，已互换） */
+  if (e.key === "e" && (e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
     e.preventDefault();
     saveCurrent(true);
   }
@@ -2826,6 +2854,57 @@ function cleanEmptyLines() {
   toast("已删除全部空行", "ok");
 }
 
+/* 定位行数：主题弹窗输入行号，光标快速定位到指定行 */
+function goToLineDialog() {
+  view.focus();
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "modal-overlay";
+  overlay.innerHTML =
+    `<div class="modal-card">` +
+      `<div class="modal-title">📍 定位行数</div>` +
+      `<div class="modal-msg">请输入要跳转的行号（1 ~ ${view.state.doc.lines}）：</div>` +
+      `<input class="modal-input" id="goto-line-input" value="" placeholder="行号" spellcheck="false" type="number" min="1" max="${view.state.doc.lines}">` +
+      `<div class="modal-btns">` +
+        `<button class="btn-modal neutral" data-act="cancel">取消</button>` +
+        `<button class="btn-modal success" data-act="ok">定位</button>` +
+      `</div>` +
+    `</div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener("mousedown", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  const input = overlay.querySelector("#goto-line-input");
+  const submit = () => {
+    const lineStr = input.value.trim();
+    overlay.remove();
+    if (!lineStr) return;
+    const lineNum = parseInt(lineStr, 10);
+    if (isNaN(lineNum) || lineNum < 1) {
+      toast("请输入有效的行号（正整数）", "err");
+      return;
+    }
+    const doc = view.state.doc;
+    if (lineNum > doc.lines) {
+      toast("文档只有 " + doc.lines + " 行，无法定位到第 " + lineNum + " 行", "err");
+      return;
+    }
+    const line = doc.line(lineNum);
+    view.dispatch({
+      selection: { anchor: line.from },
+      scrollIntoView: true,
+    });
+    toast("已定位到第 " + lineNum + " 行", "ok");
+  };
+  overlay.querySelector('[data-act="cancel"]').addEventListener("click", () => overlay.remove());
+  overlay.querySelector('[data-act="ok"]').addEventListener("click", submit);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") submit();
+    if (e.key === "Escape") overlay.remove();
+  });
+  setTimeout(() => { input.focus(); input.select(); }, 50);
+}
+
 /* Python 端（ToolApi.run_tool）通过 evaluate_js 调用的统一入口 */
 window.__runTool = function (toolId) {
   if (toolId === "clean_empty_lines") {
@@ -2871,6 +2950,9 @@ window.__runTool = function (toolId) {
         toast("导入出错：" + err, "err");
       });
     }
+  } else if (toolId === "go_to_line") {
+    /* 定位行数：弹窗输入行号，光标快速定位到指定行 */
+    goToLineDialog();
   }
 };
 

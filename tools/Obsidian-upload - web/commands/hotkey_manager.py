@@ -282,7 +282,7 @@ class HotkeyManager:
             mods, vk = parsed
             hid = self._next_id
             self._next_id += 1
-            if USER32.RegisterHotKey(self._hwnd, hid, mods | MOD_NOREPEAT, vk):
+            if USER32.RegisterHotKey(self._hwnd, hid, mods, vk):
                 self._id_map[name] = hid
                 self._id_rev[hid] = name
                 self._events[name] = threading.Event()

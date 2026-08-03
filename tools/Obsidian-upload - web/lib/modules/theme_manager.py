@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""主题系统：settings.json 的 theme 字段（window / editor / preview 三组独立主题）。
+"""主题系统：per-window 主题（四个窗口各自独立设置 window / editor / preview 三组主题）。
 
 - window   窗口主题：覆盖 theme.css 的全局变量（工具栏/Tab/按钮/面板/背景）
 - editor   编辑区主题：定义 --cm-* 变量，script.js 的 EditorView.theme 用 var() 引用
@@ -7,16 +7,27 @@
 
 主题本体是 web/themes/<类型>/<id>.css 文件；本模块只负责主题配置的读取/保存/校验。
 新增主题：在 web/themes/<类型>/ 添加同名 CSS 文件，并在下方 THEMES 登记即可。
+
+存储结构（settings.json）：
+  {
+    "theme_flash": {"window": "...", "editor": "...", "preview": "..."},
+    "theme_inbox": {"window": "...", "editor": "...", "preview": "..."},
+    ...
+  }
+  旧版单套 theme 字段会在首次读取时自动迁移。
 """
 import json
 import os
 
 from lib.core.settings import settings_path
 
-DEFAULT_THEME = {
-    "window": "github-light",
-    "editor": "github-light",
-    "preview": "github",
+WINDOW_TYPES = ("flash", "inbox", "log", "capture")
+
+DEFAULT_PER_WINDOW = {
+    "flash":   {"window": "github-light", "editor": "github-light", "preview": "github"},
+    "inbox":   {"window": "github-light", "editor": "github-light", "preview": "github"},
+    "log":     {"window": "github-light", "editor": "github-light", "preview": "github"},
+    "capture": {"window": "github-light", "editor": "github-light", "preview": "github"},
 }
 
 # 可用主题（id -> 显示名）。id 与 web/themes/<类型>/<id>.css 文件名一致。
@@ -146,25 +157,72 @@ def _save(data):
         return False
 
 
-def get_theme():
-    """返回当前主题 {window, editor, preview}，缺失或非法值回退默认。"""
-    data = _load().get("theme") or {}
+def _migrate_if_needed(data):
+    """将旧版单套 theme 迁移到 per-window 格式。"""
+    old_theme = data.get("theme")
+    if not isinstance(old_theme, dict):
+        return data
+    # 旧格式：{"window": "...", "editor": "...", "preview": "..."}
+    if any(k in old_theme for k in ("window", "editor", "preview")):
+        migrated = {}
+        for wt in WINDOW_TYPES:
+            entry = {}
+            for kind in ("window", "editor", "preview"):
+                v = old_theme.get(kind)
+                entry[kind] = v if (v and v in _IDS[kind]) else DEFAULT_PER_WINDOW[wt][kind]
+            migrated[wt] = entry
+        # 删除旧字段，写入新字段
+        del data["theme"]
+        for wt in WINDOW_TYPES:
+            data["theme_" + wt] = migrated[wt]
+        _save(data)
+    return data
+
+
+def _get_per_window(data):
+    """从 data 中提取 per-window 主题 dict，缺失则用默认值。"""
     out = {}
-    for kind in ("window", "editor", "preview"):
-        v = data.get(kind) if isinstance(data, dict) else None
-        out[kind] = v if (v and v in _IDS[kind]) else DEFAULT_THEME[kind]
+    for wt in WINDOW_TYPES:
+        entry = data.get("theme_" + wt)
+        if not isinstance(entry, dict):
+            entry = DEFAULT_PER_WINDOW[wt]
+        validated = {}
+        for kind in ("window", "editor", "preview"):
+            v = entry.get(kind)
+            validated[kind] = v if (v and v in _IDS[kind]) else DEFAULT_PER_WINDOW[wt][kind]
+        out[wt] = validated
     return out
 
 
-def save_theme(window=None, editor=None, preview=None):
-    """保存主题选择，非法值回退默认。返回 (ok, msg, theme)。"""
+def get_theme(window_type=None):
+    """返回指定窗口的主题 {window, editor, preview}。
+    
+    如果 window_type 为 None，返回所有窗口的主题 dict。
+    """
     data = _load()
-    t = data.setdefault("theme", {})
-    for kind, val in (("window", window), ("editor", editor), ("preview", preview)):
+    data = _migrate_if_needed(data)
+    per_window = _get_per_window(data)
+    if window_type is None:
+        return per_window
+    return per_window.get(window_type, DEFAULT_PER_WINDOW.get(window_type, DEFAULT_PER_WINDOW["flash"]))
+
+
+def save_theme(window_type, window_theme=None, editor=None, preview=None):
+    """保存指定窗口的主题选择，非法值回退默认。返回 (ok, msg, theme_for_window)。"""
+    if window_type not in WINDOW_TYPES:
+        window_type = "flash"
+    data = _load()
+    data = _migrate_if_needed(data)
+    key = "theme_" + window_type
+    entry = data.get(key)
+    if not isinstance(entry, dict):
+        entry = dict(DEFAULT_PER_WINDOW.get(window_type, DEFAULT_PER_WINDOW["flash"]))
+    for kind, val in (("window", window_theme), ("editor", editor), ("preview", preview)):
         if val is None:
             continue
         val = str(val).strip()
-        t[kind] = val if val in _IDS[kind] else DEFAULT_THEME[kind]
+        entry[kind] = val if val in _IDS[kind] else DEFAULT_PER_WINDOW[window_type][kind]
+    data[key] = entry
     if not _save(data):
-        return False, "主题写入失败", get_theme()
-    return True, "主题已保存", get_theme()
+        return False, "主题写入失败", get_theme(window_type)
+    return True, "主题已保存", get_theme(window_type)

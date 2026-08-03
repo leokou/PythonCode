@@ -1,4 +1,4 @@
-/* LeoDiary Capture —— 主题管理器（窗口 / 编辑区 / Markdown 预览三套独立主题）
+/* LeoDiary Capture —— 主题管理器（per-window，每个窗口独立设置三套主题）
  *
  * 设计：主题 CSS 懒加载（由 ThemeLoader 按需注入），每套 CSS 以
  *   body[data-*-theme="id"] 选择器作用域。切换主题时先加载对应 CSS 再设置 data 属性。
@@ -6,6 +6,8 @@
  * 同步方案：save_theme 只保存到文件 + 本地应用，不调用 evaluate_js 广播。
  * 各窗口通过 2 秒轮询 get_theme() 检测变化并同步应用，彻底避免
  * pywebview evaluate_js 与 JS→Python 调用链并发导致的 _jsApiCallback 冲突。
+ *
+ * 每个窗口根据 CFG.windowType 读取自己的主题配置。
  */
 "use strict";
 
@@ -54,8 +56,8 @@ const ThemeManager = (() => {
     document.body.setAttribute("data-preview-theme", current.preview);
   }
 
-  /* 从后端读取最新主题并应用（轮询调用）。
-   * 先通过 ThemeLoader 加载对应 CSS，再设置 data 属性使主题生效。 */
+  /* 从后端读取当前窗口的主题并应用（轮询调用）。
+   * 后端根据当前窗口的 window_type 返回对应的主题配置。 */
   async function load() {
     const a = api();
     if (!a || !a.get_theme) return;

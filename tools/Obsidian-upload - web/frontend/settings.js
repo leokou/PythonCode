@@ -1,5 +1,6 @@
 /* settings.js —— 设置窗口前端逻辑
- * 功能：读取当前默认保存路径、修改保存路径、三套主题选择（窗口/编辑区/预览），保存后立即生效。
+ * 功能：读取当前默认保存路径、修改保存路径、per-window 主题（四窗口四套独立主题），
+ *       保存后立即生效。
  */
 "use strict";
 
@@ -93,6 +94,37 @@ msInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveMsConfig();
 });
 
+/* ---- 主题：四个窗口页签切换 ---- */
+const tabsContainer = document.getElementById("theme-tabs");
+let currentWindowType = "flash";   // 当前激活的页签
+
+/* 所有 per-window 主题数据，格式：{ flash: {window,editor,preview}, inbox: {...}, ... } */
+let allThemeData = {};
+
+tabsContainer.addEventListener("click", (e) => {
+  const btn = e.target.closest(".set-theme-tab");
+  if (!btn) return;
+  const wt = btn.dataset.window;
+  if (!wt || wt === currentWindowType) return;
+  // 保存当前页签的选中值到 allThemeData
+  saveCurrentTabValues();
+  // 切换激活状态
+  document.querySelectorAll(".set-theme-tab").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  currentWindowType = wt;
+  // 加载新页签的主题
+  applyTabTheme(allThemeData[wt]);
+});
+
+function saveCurrentTabValues() {
+  if (!allThemeData[currentWindowType]) {
+    allThemeData[currentWindowType] = {};
+  }
+  allThemeData[currentWindowType].window = themeSelects.window.value;
+  allThemeData[currentWindowType].editor = themeSelects.editor.value;
+  allThemeData[currentWindowType].preview = themeSelects.preview.value;
+}
+
 /* 填充三套主题下拉框选项 */
 function fillThemeOptions(themes) {
   for (const kind of Object.keys(themeSelects)) {
@@ -110,8 +142,8 @@ function fillThemeOptions(themes) {
 /* 初始化标志：防止 applyCurrentTheme 逐个设置值时触发 change 事件导致错误保存 */
 let _initing = false;
 
-/* 根据后端返回的当前主题设置各下拉框选中值（不触发 change 事件） */
-function applyCurrentTheme(theme) {
+/* 根据主题数据设置各下拉框选中值（不触发 change 事件） */
+function applyTabTheme(theme) {
   if (!theme) return;
   _initing = true;
   try {
@@ -120,10 +152,6 @@ function applyCurrentTheme(theme) {
     if (theme.preview) themeSelects.preview.value = theme.preview;
   } finally {
     _initing = false;
-  }
-  /* 初始化完成后手动在设置窗口预览主题 */
-  if (window.ThemeManager) {
-    try { window.ThemeManager.apply(theme); } catch (e) {}
   }
 }
 
@@ -134,7 +162,14 @@ async function loadThemes() {
     const res = await a.get_themes();
     if (res && res.ok) {
       fillThemeOptions(res.themes);
-      applyCurrentTheme(res.theme);
+      // res.allThemes: { flash: {window,editor,preview}, inbox: {...}, ... }
+      allThemeData = res.allThemes || {};
+      // 默认显示 FlashNote 页签
+      currentWindowType = "flash";
+      document.querySelectorAll(".set-theme-tab").forEach((b) => {
+        b.classList.toggle("active", b.dataset.window === "flash");
+      });
+      applyTabTheme(allThemeData.flash);
     }
   } catch (e) { /* ignore */ }
 }
@@ -161,10 +196,12 @@ pathInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveSettings();
 });
 
-/* ---- 主题提交按钮：点击后保存并立即应用到所有窗口 ---- */
+/* ---- 主题提交按钮：保存当前页签的主题并应用到当前窗口 ---- */
 const themeSubmitBtn = document.getElementById("btn-theme-submit");
 
 async function submitTheme() {
+  // 保存当前页签的选中值
+  saveCurrentTabValues();
   const theme = {
     window: themeSelects.window.value,
     editor: themeSelects.editor.value,
@@ -176,9 +213,9 @@ async function submitTheme() {
     return;
   }
   try {
-    const res = await a.save_theme(theme.window, theme.editor, theme.preview);
+    const res = await a.save_theme(currentWindowType, theme.window, theme.editor, theme.preview);
     if (res && res.ok) {
-      toast("主题已应用", "ok");
+      toast("主题已应用到 " + currentWindowType, "ok");
       /* 在后端广播之外，本窗口也立即应用 */
       if (window.ThemeManager) {
         try { window.ThemeManager.apply(res.theme); } catch (e) {}

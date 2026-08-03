@@ -71,11 +71,11 @@ DEFAULT_CONFIG = {
 
 # 四个窗口的定义：key / 窗口标题 / 触发热键
 # 标题同时用于：Win32 窗口标题、浏览器 <title>、左上角品牌名（js_api.get_config 下发）
-# 热键：Alt+E=FlashNote / Alt+S=My-Inbox / Alt+J=日志 / Alt+D=Capture
+# 热键：Alt+E=Inbox / Alt+S=FlashNote / Alt+R=日志 / Alt+D=Capture
 WINDOW_DEFS = [
-    {"key": "inbox", "title": "📥 My-Inbox", "hotkey": "alt+s"},
-    {"key": "flash", "title": "🧠 FlashNote", "hotkey": "alt+e"},
-    {"key": "log", "title": "📅 日志记录", "hotkey": "alt+j"},
+    {"key": "inbox", "title": "📦 Inbox", "hotkey": "alt+e"},
+    {"key": "flash", "title": "🧠 FlashNote", "hotkey": "alt+s"},
+    {"key": "log", "title": "📅 日志记录", "hotkey": "alt+r"},
     capture_store.WINDOW_DEF,
 ]
 

@@ -56,6 +56,14 @@
       "icon": "✅",
       "iconSize": 64,
       "order": 6
+    },
+    {
+      "id": "go_to_line",
+      "name": "📍 定位行数",
+      "desc": "输入行号，编辑器快速定位到指定行",
+      "icon": "📍",
+      "iconSize": 64,
+      "order": 7
     }
   ]
 }

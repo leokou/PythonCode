@@ -29,7 +29,7 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 - **自定义功能区**：工具箱里勾选工具后，图标即显示在保存按钮左侧（单行、可拖拽排序），点击快捷执行，无需打开工具箱
 - **保存/同步纯图标按钮**：底部右侧「💾 保存」/「⟳ 同步」精简为纯图标（悬停显示说明）
 - **托盘常驻**：点窗口 X 隐藏到后台继续运行（隐藏不退出程序）；托盘右键「退出程序」结束所有 Obsidian-upload 实例（不会残留后台进程）
-- **全局热键**：`Alt+S` / `Alt+E` / `Alt+J` / `Alt+D` 呼出四个窗口（RegisterHotKey 系统级热键，看门狗守护）
+- **全局热键**：`Alt+E` / `Alt+S` / `Alt+R` / `Alt+D` 呼出四个窗口（RegisterHotKey 系统级热键，看门狗守护）
 - **单实例保护**：多次启动只会激活已有窗口，不会重复运行
 - **结构化日志**：app.log 全链路记录热键、窗口、上传、保存生命周期
 
@@ -39,9 +39,9 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 
 | 窗口 | 快捷键 | 保存目标 |
 |------|--------|----------|
-| 📥 My-Inbox | `Alt+S` | 保存 Inbox → `D:\Obsidian\LeoDiary\My-Inbox.md` |
-| 🧠 FlashNote | `Alt+E` | 保存 FlashNote → `D:\Obsidian\LeoDiary\🧠 FlashNote.md` |
-| 📅 日志记录 | `Alt+J` | 保存日志 → `log_dir\yyyy-MM-dd 周X.md`（按日期自动命名，追加不覆盖） |
+| 📥 My-Inbox | `Alt+E` | 保存 Inbox → `D:\Obsidian\LeoDiary\My-Inbox.md` |
+| 🧠 FlashNote | `Alt+S` | 保存 FlashNote → `D:\Obsidian\LeoDiary\🧠 FlashNote.md` |
+| 📅 日志记录 | `Alt+R` | 保存日志 → `log_dir\yyyy-MM-dd 周X.md`（按日期自动命名，追加不覆盖） |
 | 📥 Capture | `Alt+D` | 保存 Capture → `D:\Obsidian\LeoDiary\A📥 收集（Capture）\Capture.md` |
 
 ## 保存机制说明
@@ -213,7 +213,7 @@ Capture → capture_file 所在目录（默认 D:\Obsidian\LeoDiary\A📥 收集
 全局热键采用 **RegisterHotKey 系统级热键**（非键盘钩子），由 Windows 统一裁决，任何程序前台运行时都可可靠触发：
 
 ```
-用户按键 Alt+S / Alt+E / Alt+J / Alt+D
+用户按键 Alt+E / Alt+S / Alt+R / Alt+D
      ↓
 RegisterHotKey 注册的热键（系统级，id 从 0xC000 起）
      ↓
@@ -234,9 +234,9 @@ WM_HOTKEY 消息循环 → 仅置位 threading.Event（零阻塞）
 日志可观察到：
 ```
 [INFO] 热键管理器已启动（RegisterHotKey，4 个热键，30秒检测 + 2分钟强制重置）
-[INFO] 热键 inbox (alt+s) 注册成功
-[INFO] 热键 flash (alt+e) 注册成功
-[INFO] 热键 log (alt+j) 注册成功
+[INFO] 热键 inbox (alt+e) 注册成功
+[INFO] 热键 flash (alt+s) 注册成功
+[INFO] 热键 log (alt+r) 注册成功
 [INFO] 热键 capture (alt+d) 注册成功
 ```
 
@@ -300,7 +300,7 @@ frontend/themes/
 ## 使用流程
 
 1. 双击 `Obsidian-upload.exe`（无需管理员权限，首次启动自动注册热键）
-2. `Alt+S` / `Alt+E` / `Alt+J` / `Alt+D` 呼出对应窗口（或点击托盘图标）
+2. `Alt+E` / `Alt+S` / `Alt+R` / `Alt+D` 呼出对应窗口（或点击托盘图标）
 3. 输入 Markdown，`Ctrl+V` 粘贴图片自动上传 Cloudflare R2
 4. **预览区编辑**：直接在右侧预览区点击编辑，修改自动同步回编辑区；右键菜单支持复制/剪切/粘贴/全选
 5. 内容自动保存到 Tab 文件；点「保存」额外追加到聚合文件
@@ -314,9 +314,9 @@ frontend/themes/
 
 | 按键 | 功能 |
 |------|------|
-| `Alt+S` | 呼出/置顶 Inbox 窗口 |
-| `Alt+E` | 呼出/置顶 FlashNote 窗口 |
-| `Alt+J` | 呼出/置顶 Daily Log 窗口 |
+| `Alt+E` | 呼出/置顶 Inbox 窗口 |
+| `Alt+S` | 呼出/置顶 FlashNote 窗口 |
+| `Alt+R` | 呼出/置顶 Daily Log 窗口 |
 | `Alt+D` | 呼出/置顶 Capture 窗口 |
 | `Ctrl+W` | 关闭当前标签页（锁定标签不可关闭） |
 | `Ctrl+V` | 剪贴板图片 → 上传 → 插入 `![](URL)`（文字则正常粘贴） |

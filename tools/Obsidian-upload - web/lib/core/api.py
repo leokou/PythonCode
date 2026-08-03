@@ -70,14 +70,14 @@ class Api:
                 "capture": capture_store.WINDOW_DEF["saveLabel"],
             }[self.window_type],
             "hotkeyHint": {
-                "inbox": "Alt+S 呼出窗口",
-                "flash": "Alt+E 呼出窗口",
-                "log": "Alt+J 呼出窗口",
+                "inbox": "Alt+E 呼出窗口",
+                "flash": "Alt+S 呼出窗口",
+                "log": "Alt+R 呼出窗口",
                 "capture": capture_store.WINDOW_DEF["hotkeyHint"],
             }[self.window_type],
             "defaultSavePath": settings_store.get_default_save_path(self.cfg),
             "layout": layout_store.load_layout(self.window_type),
-            "theme": theme_store.get_theme(),
+            "theme": theme_store.get_theme(self.window_type),
             "attachmentsDir": self._attachments_dir(),
         }
 
@@ -103,13 +103,13 @@ class Api:
         log_info("三栏布局已保存(%s): %s" % (self.window_type, layout))
         return {"ok": True}
 
-    # ---- 主题：读取 / 保存（窗口 / 编辑区 / 预览 三套独立主题） ----
+    # ---- 主题：读取 / 保存（per-window，每个窗口独立） ----
     def get_theme(self):
-        return theme_store.get_theme()
+        return theme_store.get_theme(self.window_type)
 
     def save_theme(self, window_theme=None, editor=None, preview=None):
-        ok, msg, theme = theme_store.save_theme(window_theme, editor, preview)
-        log_info("主题已保存: %s" % theme)
+        ok, msg, theme = theme_store.save_theme(self.window_type, window_theme, editor, preview)
+        log_info("主题已保存 (%s): %s" % (self.window_type, theme))
         return {"ok": ok, "msg": msg, "theme": theme}
 
     # ---- 历史记录 ----
@@ -928,19 +928,19 @@ class SettingsApi:
         log_info("设置窗口: 默认保存路径已更新: %s" % p)
         return {"ok": True, "path": p}
 
-    # ---- 主题：选项列表 / 读取 / 保存（保存后广播所有编辑器窗口） ----
+    # ---- 主题：选项列表 / 读取 / 保存（per-window 四个页签） ----
     def get_themes(self):
         return {"ok": True,
                 "themes": theme_store.get_theme_options(),
-                "theme": theme_store.get_theme()}
+                "allThemes": theme_store.get_theme()}
 
-    def get_theme(self):
-        return theme_store.get_theme()
+    def get_theme(self, window_type="flash"):
+        return theme_store.get_theme(window_type)
 
-    def save_theme(self, window_theme=None, editor=None, preview=None):
-        ok, msg, theme = theme_store.save_theme(window_theme, editor, preview)
-        log_info("设置窗口: 主题已保存: %s" % theme)
-        return {"ok": ok, "msg": msg, "theme": theme}
+    def save_theme(self, window_type="flash", window_theme=None, editor=None, preview=None):
+        ok, msg, theme = theme_store.save_theme(window_type, window_theme, editor, preview)
+        log_info("设置窗口: 主题已保存 (%s): %s" % (window_type, theme))
+        return {"ok": ok, "msg": msg, "theme": theme, "windowType": window_type}
 
     # ---- To Do Microsoft 同步：读取 / 保存 client_id（用户覆盖内置值） ----
     def get_microsoft_config(self):
@@ -1117,7 +1117,7 @@ class ToolApi:
 
     # ---- 主题（工具箱窗口只读，保证窗口主题一致） ----
     def get_theme(self):
-        return theme_store.get_theme()
+        return theme_store.get_theme("flash")
 
     # ---- 前端（编辑器窗口）：保存功能区拖动排序 ----
     def save_pinned_order(self, order_ids):

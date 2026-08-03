@@ -28,6 +28,14 @@
 
     <div class="set-section">
       <label class="set-label">主题</label>
+      <!-- 四个窗口页签 -->
+      <div class="set-theme-tabs" id="theme-tabs">
+        <button class="set-theme-tab active" data-window="flash">🧠 FlashNote</button>
+        <button class="set-theme-tab" data-window="inbox">📦 Inbox</button>
+        <button class="set-theme-tab" data-window="log">🗓 日志记录</button>
+        <button class="set-theme-tab" data-window="capture">📥 Capture</button>
+      </div>
+      <!-- 主题选择器（当前激活的页签） -->
       <div class="set-theme-row">
         <label class="set-theme-item set-theme-full">窗口主题
           <select id="set-theme-window"></select>
@@ -40,9 +48,9 @@
         </label>
       </div>
       <div class="set-theme-actions">
-        <button class="set-theme-submit" id="btn-theme-submit">应用主题</button>
+        <button class="set-theme-submit" id="btn-theme-submit">应用主题到当前窗口</button>
       </div>
-      <div class="set-hint">三套主题独立选择、互不影响；点击「应用主题」后立即生效并同步到所有窗口，重启保持。</div>
+      <div class="set-hint">四个窗口可分别设置不同的主题，点击「应用主题到当前窗口」后立即生效并保存，重启保持。</div>
     </div>
 
     <div class="set-section">
