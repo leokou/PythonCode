@@ -607,6 +607,23 @@ class Api:
         log_info("前端调试: %s" % msg)
         return True
 
+    # ---- 在默认浏览器中打开 URL ----
+    def open_url(self, url):
+        """用系统默认浏览器打开 URL（http/https 协议）。"""
+        import webbrowser
+        if not url or not isinstance(url, str):
+            return {"ok": False, "msg": "无效的 URL"}
+        url = url.strip()
+        if not url.startswith(("http://", "https://", "mailto:", "tel:")):
+            return {"ok": False, "msg": "不支持的协议：%s" % url}
+        try:
+            webbrowser.open(url)
+            log_info("已在浏览器打开: %s" % url)
+            return {"ok": True}
+        except Exception as e:
+            log_error("打开 URL 失败(%s): %s" % (url, e))
+            return {"ok": False, "msg": "打开失败：%s" % e}
+
     # ---- 打开工具箱窗口 ----
     def open_tools(self):
         if _main._tools_window is not None:
@@ -619,6 +636,28 @@ class Api:
             _main._safe_show_window(_main._canvas_window)
             log_info("打开画布窗口（来源: %s）" % self.window_type)
         return True
+
+    # ---- 打开 To Do 任务窗口（复用 tools/to-do 模块） ----
+    def open_todo(self):
+        from lib.modules import todo_window
+        ok = todo_window.show()
+        log_info("打开 To Do 窗口（来源: %s，成功: %s）" % (self.window_type, ok))
+        return ok
+
+    # ---- 导入当前页签 Markdown 到 Drawnix 画布（思维导图） ----
+    def import_markdown_to_canvas(self, md_text):
+        try:
+            if _main._canvas_server is None:
+                raise RuntimeError("画布 HTTP 服务未启动")
+            # markdown 文本交给 Drawnix 官方 parseMarkdownToDrawnix 解析为思维导图
+            _main._canvas_server.submit_import({"markdown": md_text or ""})
+            if _main._canvas_window is not None:
+                _main._safe_show_window(_main._canvas_window)
+            log_info("导入 Markdown 到画布成功（来源: %s）" % self.window_type)
+            return {"ok": True, "msg": "已导入到画布"}
+        except Exception as e:
+            log_error("导入 Markdown 到画布失败: %s" % e)
+            return {"ok": False, "msg": "导入失败：%s" % e}
 
     # ---- 功能区：获取 / 排序 勾选工具（转发到 ToolApi） ----
     def get_pinned_tools(self):
@@ -696,6 +735,35 @@ class SettingsApi:
         ok, msg, theme = theme_store.save_theme(window_theme, editor, preview)
         log_info("设置窗口: 主题已保存: %s" % theme)
         return {"ok": ok, "msg": msg, "theme": theme}
+
+    # ---- To Do Microsoft 同步：读取 / 保存 client_id（用户覆盖内置值） ----
+    def get_microsoft_config(self):
+        """返回 To Do 微软同步配置：用户覆盖优先，否则内置默认。"""
+        override = settings_store.get_microsoft_config()
+        builtin_client, builtin_tenant = "", "consumers"
+        try:
+            p = _main.resource_path(os.path.join("tools", "to-do", "config.json"))
+            if os.path.isfile(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    ms = (json.load(f) or {}).get("microsoft") or {}
+                builtin_client = ms.get("client_id") or ""
+                builtin_tenant = ms.get("tenant") or "consumers"
+        except Exception:
+            pass
+        return {
+            "ok": True,
+            "client_id": override.get("client_id") or builtin_client,
+            "tenant": override.get("tenant") or builtin_tenant,
+            "has_override": bool(override.get("client_id")),
+            "builtin_client_id": builtin_client,
+        }
+
+    def save_microsoft_config(self, client_id=None, tenant=None):
+        """保存用户自定义 Microsoft client_id（空字符串 = 恢复内置默认）。"""
+        if not settings_store.save_microsoft_config(client_id, tenant):
+            return {"ok": False, "msg": "配置写入失败"}
+        log_info("设置窗口: To Do Microsoft 配置已更新")
+        return {"ok": True}
 
 
 class ToolApi:

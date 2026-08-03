@@ -48,3 +48,29 @@ def get_default_save_path(cfg=None):
     if cfg and cfg.get("default_save_path"):
         return cfg["default_save_path"]
     return DEFAULT_SAVE_PATH
+
+
+def get_microsoft_config():
+    """读取 settings.json 中的 microsoft 覆盖配置（可能不存在，返回空字典）。"""
+    return load_settings().get("microsoft") or {}
+
+
+def save_microsoft_config(client_id=None, tenant=None):
+    """保存 microsoft 配置到 settings.json（保留其他字段）。
+
+    client_id 传空字符串表示清除自定义值，回退到内置默认。
+    """
+    try:
+        os.makedirs(os.path.dirname(settings_path()), exist_ok=True)
+        data = load_settings()
+        ms = dict(data.get("microsoft") or {})
+        if client_id is not None:
+            ms["client_id"] = (client_id or "").strip()
+        if tenant is not None:
+            ms["tenant"] = (tenant or "").strip()
+        data["microsoft"] = ms
+        with open(settings_path(), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False

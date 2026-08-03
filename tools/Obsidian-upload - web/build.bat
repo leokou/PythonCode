@@ -27,6 +27,7 @@ pyinstaller --noconfirm --clean ^
   --exclude-module numpy ^
   --exclude-module cryptography ^
   --exclude-module PIL._avif ^
+  --paths tools\to-do ^
   --hidden-import=pystray ^
   --hidden-import=webview ^
   --hidden-import=webview.platforms.edgechromium ^
@@ -59,12 +60,15 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib.modules.favorites ^
   --hidden-import=lib.modules.theme_manager ^
   --hidden-import=lib.modules.canvas_server ^
+  --hidden-import=lib.modules.todo_window ^
+  --hidden-import=msal ^
   --collect-submodules=pystray ^
   --collect-submodules=lib ^
   --add-data "frontend;frontend" ^
   --add-data "tools\drawnix;tools\drawnix" ^
   --add-data "tools\clean_empty_lines;tools\clean_empty_lines" ^
-  --add-data "tools\tools.json;tools\tools.json" ^
+  --add-data "tools\to-do;tools\to-do" ^
+  --add-data "tools\tools.json;tools" ^
   --add-data "config/config.json;config" ^
   --add-data "commands;commands" ^
   --add-data "app.ico;." ^

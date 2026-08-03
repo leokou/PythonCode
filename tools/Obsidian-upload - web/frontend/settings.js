@@ -13,6 +13,9 @@ const themeSelects = {
   preview: document.getElementById("set-theme-preview"),
 };
 
+const msInput = document.getElementById("set-ms-client-id");
+const msSaveBtn = document.getElementById("btn-ms-save");
+
 let toastTimer = null;
 function toast(msg, kind) {
   toastEl.textContent = msg;
@@ -53,6 +56,42 @@ async function loadSettings() {
     }
   } catch (e) { /* ignore */ }
 }
+
+/* ---- To Do Microsoft 同步配置 ---- */
+async function loadMsConfig() {
+  const a = api();
+  if (!a || !a.get_microsoft_config) return;
+  try {
+    const res = await a.get_microsoft_config();
+    if (res && res.ok) {
+      msInput.value = res.client_id || "";
+      msInput.placeholder = res.has_override
+        ? "已使用自定义客户端 ID"
+        : (res.builtin_client_id ? "内置默认（可留空）" : "未配置，留空则 Microsoft 同步不可用");
+    }
+  } catch (e) { /* ignore */ }
+}
+
+async function saveMsConfig() {
+  const a = api();
+  if (!a) { toast("非桌面环境，无法保存", "err"); return; }
+  const v = msInput.value.trim();
+  try {
+    const res = await a.save_microsoft_config(v);
+    if (res && res.ok) {
+      toast(v ? "Microsoft 客户端 ID 已保存（重启程序后生效）" : "已恢复内置默认", "ok");
+    } else {
+      toast((res && res.msg) || "保存失败", "err");
+    }
+  } catch (e) {
+    toast("保存出错：" + e, "err");
+  }
+}
+
+msSaveBtn.addEventListener("click", saveMsConfig);
+msInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveMsConfig();
+});
 
 /* 填充三套主题下拉框选项 */
 function fillThemeOptions(themes) {
@@ -160,5 +199,6 @@ themeSubmitBtn.addEventListener("click", submitTheme);
     await waitForApi();
   } catch (e) { /* ignore */ }
   await loadSettings();
+  await loadMsConfig();
   await loadThemes();
 })();

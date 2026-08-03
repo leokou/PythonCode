@@ -45,6 +45,7 @@ body { display: flex; flex-direction: column; }
   flex-direction: column;
   gap: 22px;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .set-label {

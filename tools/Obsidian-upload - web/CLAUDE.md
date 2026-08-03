@@ -15,6 +15,7 @@
 - **不大范围重构**：为小需求不修改大量无关代码、不重写历史模块。
 - **不堆积 main.py**：业务逻辑必须落到 lib/backend 或 lib/modules，main.py 只做编排。
 - **不改变技术栈**：禁止用 Tkinter / PyQt / AutoHotkey 替代 Web UI；旧入口 `Obsidian-upload.py`（Tkinter）已删除，禁止恢复。
+- **不随意修改 to-do 模块**：`tools/to-do/` 是独立子模块，无用户明确指令**禁止修改**其中任何文件（auth / api / sync / ui 等）。该模块登录状态持久化机制经过多轮调试才稳定，改动极易引入回归。**尤其警惕"保存"相关逻辑**（`token_cache.json` / `login_state.json` / `save_cache()` / `is_logged_in()`），这是多轮调试才稳定的核心机制，任何改动都可能导致「每次重启都要重新登录」的回归。
 - **新增功能原则**：独立模块 / 可插拔 / 低耦合 / 复用已有能力 / 不依赖 UI 与网络（便于独立测试）。
 
 ---
@@ -50,7 +51,8 @@ Obsidian-upload - web/
 │       ├── file_assoc.py   文件关联打开 + 单实例文件转发
 │       ├── history.py      历史记录持久化（record_open / record_edit / rename / move_path / remove_tree）
 │       ├── favorites.py    收藏夹
-│       └── canvas_server.py 画布本地 HTTP 服务（Drawnix ES Module 需 HTTP 加载，127.0.0.1 随机端口，随启动/随退出）
+│       ├── canvas_server.py 画布本地 HTTP 服务（Drawnix ES Module 需 HTTP 加载，127.0.0.1 随机端口，随启动/随退出）
+│       └── todo_window.py   To Do 窗口编排（复用 tools/to-do 独立模块，hidden 预创建 + show 复用 + 退出销毁）
 ├── frontend/              前端资源（原 web/ 目录）
 │   ├── editor.html / settings.html / tools.html
 │   ├── script.js / storage.js / tab-manager.js / explorer.js / context-menu.js / settings.js / tools.js
@@ -64,7 +66,7 @@ Obsidian-upload - web/
 │   ├── app_utils.py        窗口置顶、屏幕居中、错误弹窗、pick_folder（不用 Tkinter）
 │   ├── hotkey_manager.py   RegisterHotKey 系统级热键 + 看门狗（30秒检测 + 2分钟强制重注册）
 │   └── performance.py      性能监控（mark/measure/log，写 performance.log）
-├── tools/                  工具插件目录（tools.json + clean_empty_lines/ + drawnix/，保持原位）
+├── tools/                  工具插件目录（tools.json + clean_empty_lines/ + drawnix/ + to-do/，保持原位）
 ├── config/config.json      内嵌配置文件
 ├── scripts/make_icon.py    生成 app.ico
 ├── spec/                   PyInstaller spec 输出目录
@@ -107,6 +109,7 @@ sys.modules.setdefault('lib.core.main', sys.modules[__name__])
 - `web` → `frontend`（前端资源根目录）
 - `config.json` → `config/config.json`（运行时配置）
 - PyInstaller 打包：`--add-data "frontend;frontend"`、`--add-data "config/config.json;config"`
+- **tools.json 是单文件**：必须 `--add-data "tools\tools.json;tools"`（分号后是**目录**）。若写成 `;tools\tools.json`，PyInstaller 会把目标当目录嵌套成 `tools\tools.json\tools.json`，`resource_path("tools/tools.json")` 读不到，`ToolApi._load()` 静默回退 → 新增的内置工具永远合并不进用户配置。
 
 ---
 
@@ -122,6 +125,11 @@ sys.modules.setdefault('lib.core.main', sys.modules[__name__])
 pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内部状态（`_jsApiCallback` 冲突）。
 - 主题同步**禁止**用 Python `evaluate_js` 广播。
 - 改用 JS 端轮询：`frontend/js/theme-manager.js` 每 2 秒调用 `get_theme()` 检测变化并同步 apply（最多 2 秒延迟）。
+
+### 3. Drawnix 画布桥接陷阱（canvas-bridge.js）
+- 导入链路：工具箱「🖼️ 导入画布」→ `Api.import_markdown_to_canvas(content)` → `_main._canvas_server.submit_import({"markdown": md})` → 画布内 `canvas-bridge.js` 每 2 秒轮询 `GET /api/import` 一次性消费（读后清空，兼容旧 `{"data":...}` 字段）。
+- **IndexedDB 存对象禁止 JSON 序列化**：localforage 的 IndexedDB driver 可直接存/取 JS 对象，向 Drawnix 写数据必须 `store.put(data, CONTENT_KEY)` 传对象；若传 `JSON.stringify` 字符串，Drawnix 读回 `e.children` 为 undefined → `undefined.forEach` 白屏。
+- 解析用 Drawnix 官方解析器：动态 `import('/assets/dist-CikEzr4-.js')` 的 `parseMarkdownToDrawnix(md)`（根节点 `type:'mindmap'` + `isRoot:true`，节点 `el.points=[[0,0]]`），外包 `{children:[el], viewport:{zoom:1}, theme:{themeColorMode:'default'}}` 写入。
 
 ---
 
@@ -158,6 +166,20 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 - 工具勾选与排序 → `%APPDATA%\Obsidian-upload\tools.json`（字段 `pinned` + `pinned_order`）。
 - 性能日志 → `%APPDATA%\Obsidian-upload\performance.log`（启动耗时 / 模块加载 / 文件扫描 / 保存耗时，由 `commands/performance.py` 写入）。
 
+### To Do（tools/to-do）同步配置
+
+- To Do 是独立模块（`tools/to-do/`），通过 `lib/modules/todo_window.py` 接入工具箱「✅ To Do」。
+- **Microsoft 同步必须配置 `tools/to-do/config.json` 的 `microsoft.client_id`**（Azure 应用注册的应用客户端 ID）。未配置时登录/同步报 `未配置 Microsoft client_id`。
+- 配置项：`enabled` / `client_id` / `tenant`（个人账号 `consumers`）/ `scopes`（`Tasks.ReadWrite`、`offline_access`）/ `token_cache_file`。
+- 登录链路：UI「Microsoft 登录」= 交互式（系统浏览器 OAuth），失败自动回退设备码流（`ms_device_start` / `ms_device_wait`）；令牌缓存不保存密码。
+- 同步：`SyncEngine` 双向同步（拉取 LWW + 推送 upsert/软删除），个人账号下 Graph 可能只返回内置列表（`GET /me/todo/lists` 静默丢弃自建列表）——实测确认，如需支持需额外记录列表注册表。
+- **数据目录**：源码运行写入 `tools/to-do/data/`；打包（EXE）运行由 `todo_window._redirect_exe_data_paths` 重定向到 `%APPDATA%\Obsidian-upload\todo\`（`_MEIPASS` 临时目录退出即删，禁止存放数据）。
+- **登录状态持久化（警惕陷阱）**：to-do 模块的登录状态保存经过多轮调试才稳定，关键机制如下，修改时务必全部保持：
+  1. pywebview 对 `file://` 协议**不注入 JS API**——`todo_window.create()` 和 `to-do/main.py` 中 `url` 必须传文件路径（非 `file:///`），pywebview 会自动启动 HTTP 服务器并注入 `window.pywebview.api`。
+  2. 前端 `boot()` 在 API 就绪前执行会静默失败——必须 `window.events.loaded` 回调中 `evaluate_js('boot()')` 强制启动 + 前端 `waitForApi()` 轮询双保险。
+  3. 双保险持久化：`token_cache.json`（MSAL 令牌）+ `login_state.json`（显式状态文件），两者缺一不可。`is_logged_in()` 以状态文件为主、MSAL 验证为辅。
+  4. `save_cache()` 必须同时写入令牌缓存和登录状态文件。
+
 ---
 
 ## 七、模块职责清单（精简版）
@@ -184,6 +206,7 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 | `lib/modules/history.py` | 历史记录（record_open / record_edit / query / search / rename / move_path / remove / remove_tree / flush） |
 | `lib/modules/favorites.py` | 收藏夹 |
 | `lib/modules/canvas_server.py` | 画布本地 HTTP 服务（Drawnix 是 Vite/React 的 ES Module 应用，file:// 会被 CORS 拦截，必须 HTTP 承载 tools/drawnix 产物；127.0.0.1 随机端口，start()/stop()，随程序启停） |
+| `lib/modules/todo_window.py` | To Do 窗口编排（复用 tools/to-do 独立模块：hidden 预创建 + show 复用 + 退出销毁，Microsoft 适配器失败降级本地模式） |
 | `commands/logger.py` | 结构化日志（app.log，持久句柄 + 目录缓存，flush 退出落盘） |
 | `commands/performance.py` | 性能监控（mark/measure/log/time_call，写 performance.log） |
 | `commands/app_utils.py` | 窗口置顶 / 居中 / 错误弹窗 / pick_folder（ctypes SHBrowseForFolderW，不用 Tkinter） |
@@ -227,13 +250,15 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib.modules.history --hidden-import=lib.modules.workspace --hidden-import=lib.modules.file_tree ^
   --hidden-import=lib.modules.file_explorer --hidden-import=lib.modules.file_ops ^
   --hidden-import=lib.modules.favorites --hidden-import=lib.modules.theme_manager ^
-  --hidden-import=lib.modules.canvas_server ^
+  --hidden-import=lib.modules.canvas_server --hidden-import=lib.modules.todo_window ^
+  --hidden-import=msal ^
   --collect-submodules=pystray ^
   --collect-submodules=lib ^
   --add-data "frontend;frontend" ^
   --add-data "tools\drawnix;tools\drawnix" ^
   --add-data "tools\clean_empty_lines;tools\clean_empty_lines" ^
-  --add-data "tools\tools.json;tools\tools.json" ^
+  --add-data "tools\to-do;tools\to-do" ^
+  --add-data "tools\tools.json;tools" ^
   --add-data "config/config.json;config" ^
   --add-data "commands;commands" ^
   --add-data "app.ico;." ^

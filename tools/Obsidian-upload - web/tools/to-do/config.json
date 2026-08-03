@@ -1,0 +1,23 @@
+{
+  "app_name": "Leo Todo",
+  "data_dir": "data",
+  "db_file": "data/todo.db",
+  "attachments_dir": "data/attachments",
+  "log_file": "data/todo.log",
+  "image_exts": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+  "default_project": "",
+  "microsoft": {
+    "enabled": true,
+    "client_id": "212c455a-4e65-43bf-8987-88d226e3c5fc",
+    "tenant": "consumers",
+    "scopes": ["Tasks.ReadWrite", "offline_access"],
+    "redirect_uri": "http://localhost",
+    "timeout": 30,
+    "token_cache_file": "data/token_cache.json",
+    "max_attachment_mb": 10
+  },
+  "sync": {
+    "auto_sync_on_start": true,
+    "attachment_limit_per_task": 50
+  }
+}

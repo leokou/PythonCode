@@ -44,6 +44,16 @@
       </div>
       <div class="set-hint">三套主题独立选择、互不影响；点击「应用主题」后立即生效并同步到所有窗口，重启保持。</div>
     </div>
+
+    <div class="set-section">
+      <label class="set-label" for="set-ms-client-id">Microsoft To Do 客户端 ID</label>
+      <div class="set-path-row">
+        <input type="text" id="set-ms-client-id" class="set-input" spellcheck="false"
+               placeholder="Azure 应用客户端 ID，留空使用内置默认">
+        <button class="set-path-save" id="btn-ms-save">保存</button>
+      </div>
+      <div class="set-hint">用于工具箱「✅ To Do」的 Microsoft 同步。把本程序发给他人后，对方可在设置里填入自己注册的应用 ID（使用自己的微软账号）。注册指引：portal.azure.com → 应用注册 → 新注册 → 支持的账户类型选「仅个人 Microsoft 账户」→ 平台「移动和桌面应用程序」→ 添加委派权限 Tasks.ReadWrite、offline_access → 复制「应用程序(客户端) ID」粘贴到此处。</div>
+    </div>
   </main>
 
   <div id="toast" class="toast hidden"></div>

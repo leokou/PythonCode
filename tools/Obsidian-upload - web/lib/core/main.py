@@ -49,6 +49,7 @@ from lib.modules import (
     theme_manager as theme_store,
     favorites as favorites_store,
     canvas_server,
+    todo_window,
 )
 
 APP_TITLE = "LeoDiary Capture"
@@ -454,16 +455,16 @@ def main():
         settings_html = os.path.abspath(resource_path(os.path.join("frontend", "settings.html")))
         if not os.path.exists(settings_html):
             log_error("找不到设置界面: %s" % settings_html)
-        stx, sty = get_center_position(620, 500)
+        stx, sty = get_center_position(720, 640)
         settings_win = webview.create_window(
             SETTINGS_TITLE,
             url=settings_html,
             js_api=SettingsApi(cfg),
-            width=620,
-            height=500,
+            width=720,
+            height=640,
             x=stx,
             y=sty,
-            min_size=(520, 400),
+            min_size=(600, 480),
             hidden=True,
         )
 
@@ -528,6 +529,9 @@ def main():
     except Exception as e:
         log_error("创建画布窗口失败: %s" % e)
         # 画布创建失败不阻塞主流程
+
+    # ---- To Do 窗口（复用 tools/to-do 模块，hidden 预创建，失败不阻塞） ----
+    todo_window.create()
 
     # ---- 热键回调：呼出对应窗口并置顶 + 聚焦编辑器 ----
     _perf_mark("windows_created")
@@ -662,6 +666,7 @@ def main():
                 _settings_window.destroy()
             if _canvas_window is not None:
                 _canvas_window.destroy()
+            todo_window.close()
         except Exception:
             pass
         try:

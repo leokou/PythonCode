@@ -39,6 +39,23 @@
       "icon": "⬇️",
       "iconSize": 64,
       "order": 4
+    },
+    {
+      "id": "canvas_import",
+      "name": "🖼️ 导入画布",
+      "desc": "导入当前页签到 Drawnix 画布",
+      "icon": "🖼️",
+      "iconSize": 64,
+      "order": 5,
+      "pinned": true
+    },
+    {
+      "id": "todo",
+      "name": "✅ To Do",
+      "desc": "打开 Leo Todo 任务管理（微软 To Do 同步）",
+      "icon": "✅",
+      "iconSize": 64,
+      "order": 6
     }
   ]
 }

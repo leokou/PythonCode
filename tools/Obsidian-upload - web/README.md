@@ -24,7 +24,8 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 - **目录导航**：当前文档标题章节大纲，点击跳转编辑区+预览区
 - **文件关联打开**：用 EXE 直接打开 `.md/.txt/.json` 等文本文件，以页签形式进入
 - **设置窗口**：右上角「⚙️」修改默认保存地址 + 三组独立主题（窗口 20 套 / 编辑区 30 套 / 预览 40 套），立即生效、重启保持
-- **工具箱**：右上角「🛠️」插件式工具窗口（当前内置：画布 / 删除空行 / 查找 / 页面顶部 / 页面底部）
+- **工具箱**：右上角「🛠️」插件式工具窗口（当前内置：画布 / 导入画布 / 删除空行 / 查找 / 页面顶部 / 页面底部 / ✅ To Do）
+- **To Do 任务管理**：独立窗口（工具箱「✅ To Do」入口），SQLite 本地存储 + Microsoft To Do 双向同步；支持任务 CRUD、项目/标签/优先级分类、附件管理、自动同步；Microsoft 登录状态持久化，重启免重新登录
 - **自定义功能区**：工具箱里勾选工具后，图标即显示在保存按钮左侧（单行、可拖拽排序），点击快捷执行，无需打开工具箱
 - **保存/同步纯图标按钮**：底部右侧「💾 保存」/「⟳ 同步」精简为纯图标（悬停显示说明）
 - **托盘常驻**：点窗口 X 隐藏到后台继续运行（隐藏不退出程序）；托盘右键「退出程序」结束所有 Obsidian-upload 实例（不会残留后台进程）
@@ -256,8 +257,9 @@ WM_HOTKEY 消息循环 → 仅置位 threading.Event（零阻塞）
 - 入口：顶部「🛠️ 工具箱」按钮，独立窗口
 - 插件式：每个工具一个独立目录（`tools\<工具名>\`，含 `config.json` + `index.js`）
 - 工具列表与排序存于 `tools\tools.json`（用户配置在 `%APPDATA%\Obsidian-upload\tools.json`，勾选状态与功能区排序也保存在此）
-- 当前内置：**🎨 画布**（Drawnix 开源白板：思维导图/流程图/自由画）、**🧹 删除空行**（清理 Markdown 连续空行）、**🔍 查找**（编辑器查找面板）、**⬆️ 页面顶部**（滚动到第一行）、**⬇️ 页面底部**（滚动到最后一行）
+- 当前内置：**🎨 画布**（Drawnix 开源白板：思维导图/流程图/自由画）、**🖼️ 导入画布**（把当前页签 Markdown 一键导入画布生成思维导图）、**🧹 删除空行**（清理 Markdown 连续空行）、**🔍 查找**（编辑器查找面板）、**⬆️ 页面顶部**（滚动到第一行）、**⬇️ 页面底部**（滚动到最后一行）
 - **画布**：点击「🎨 画布」→ 独立窗口打开 Drawnix 白板。Drawnix 是 Vite/React 构建的 ES Module 应用，`file://` 直开会被浏览器 CORS 拦截白屏，程序用 `lib/modules/canvas_server.py` 在 `127.0.0.1` 随机端口起本地 HTTP 服务承载 `tools\drawnix\` 构建产物（随程序启动、随退出关闭），并放开浏览器下载以支持导出 PNG/JSON
+- **导入画布**：点击「🖼️ 导入画布」（或功能区图标）→ 把当前编辑器页签的 Markdown 内容经 `Api.import_markdown_to_canvas` 提交给本地画布服务（`canvas_server.submit_import`），画布内嵌桥接 JS 轮询消费后用 Drawnix 官方 `parseMarkdownToDrawnix` 解析成思维导图渲染；若画布窗口未打开会自动打开
 - **自定义功能区**：卡片右上角勾选框 → 勾选后该工具图标出现在编辑器底部「保存」按钮左侧，点击快捷执行；图标可拖拽自定义顺序；取消勾选即从功能区移除
 
 ```
@@ -503,13 +505,15 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib.modules.history --hidden-import=lib.modules.workspace --hidden-import=lib.modules.file_tree ^
   --hidden-import=lib.modules.file_explorer --hidden-import=lib.modules.file_ops ^
   --hidden-import=lib.modules.favorites --hidden-import=lib.modules.theme_manager ^
-  --hidden-import=lib.modules.canvas_server ^
+  --hidden-import=lib.modules.canvas_server --hidden-import=lib.modules.todo_window ^
+  --hidden-import=msal ^
   --collect-submodules=pystray ^
   --collect-submodules=lib ^
   --add-data "frontend;frontend" ^
   --add-data "tools\drawnix;tools\drawnix" ^
   --add-data "tools\clean_empty_lines;tools\clean_empty_lines" ^
-  --add-data "tools\tools.json;tools\tools.json" ^
+  --add-data "tools\to-do;tools\to-do" ^
+  --add-data "tools\tools.json;tools" ^
   --add-data "config/config.json;config" ^
   --add-data "commands;commands" ^
   --add-data "app.ico;." ^
