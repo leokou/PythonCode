@@ -1,0 +1,30 @@
+/* 窗口主题 —— 莫斯雾 Mos Fog */
+body[data-window-theme="mos-fog"] {
+  --bg-main: #ECEFF1;        /* 窗口主背景 */
+  --bg-editor: #FFFFFF;      /* 编辑区背景 */
+  --bg-preview: #FAFBFC;     /* 预览区背景 */
+  --bg-2: #ECEFF1;           /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #CFD8DC;           /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #E5E8EA;       /* 悬浮背景 */
+  --text-color: #37474F;     /* 普通正文 */
+  --title-color: #263238;    /* 标题文字 */
+  --h1-color: #263238;       /* 一级标题 */
+  --text-dim: #607D8B;       /* 辅助文字 */
+  --border-color: #B0BEC5;   /* 边框 */
+  --quote-color: #78909C;    /* 引用竖线 */
+  --scroll-thumb: #90A4AE;   /* 滚动条 */
+  --accent: #455A64;         /* 强调色（主按钮/选中态） */
+  --accent-strong: #37474F;  /* 强调色加深 */
+  --accent-soft: rgba(69,90,100,.10);   /* 当前行高亮（带透明度） */
+  --accent-gutter: rgba(69,90,100,.16); /* 当前行行号高亮（带透明度） */
+  --hover-overlay: rgba(0,0,0,.05);     /* 图标按钮悬浮（带透明度） */
+  --success: #2E7D32;        /* 成功色 */
+  --error: #C62828;          /* 错误色 */
+  --code-bg: #ECEFF1;        /* 代码块背景 */
+  --code-text: #37474F;      /* 代码块文字 */
+  --toast-bg: #37474F;       /* Toast 提示背景 */
+  --shadow: 0 6px 24px rgba(40,50,60,.08);          /* 阴影 box-shadow */
+  --glass-bg: rgba(255,255,255,.82);               /* 玻璃面板背景（带透明度） */
+  --glass-border: rgba(176,190,197,.7);            /* 玻璃面板边框（带透明度） */
+  --glass-shadow: 0 6px 24px rgba(40,50,60,.08);    /* 玻璃面板阴影 box-shadow */
+}

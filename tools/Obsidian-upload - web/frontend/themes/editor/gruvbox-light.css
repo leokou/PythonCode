@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Gruvbox Light */
+body[data-editor-theme="gruvbox-light"] {
+  --cm-bg: #FBF1C7;              /* 编辑器背景 */
+  --cm-fg: #3C3836;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #F2E5BC;       /* 行号栏背景 */
+  --cm-gutter-fg: #928374;       /* 行号文字 */
+  --cm-gutter-border: #D5C4A1;   /* 行号栏右边框 */
+  --cm-active-line: #F2E5BC;     /* 当前行高亮 */
+  --cm-active-line-gutter: #EBDBB2;  /* 当前行号高亮 */
+  --cm-cursor: #B57614;          /* 光标颜色 */
+  --cm-selection: rgba(181,118,20,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(175,58,3,.25);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #EBDBB2;         /* 折叠按钮背景 */
+  --cm-fold-border: #D5C4A1;     /* 折叠按钮边框 */
+  --cm-fold-fg: #3C3836;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="gruvbox-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="gruvbox-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="gruvbox-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="gruvbox-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="gruvbox-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="gruvbox-light"] #editor .cm-selectionBackground,
+body[data-editor-theme="gruvbox-light"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="gruvbox-light"] #editor .tok-heading { color: #9D0006; font-weight: 700; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-strong { color: #B57614; font-weight: 700; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-emphasis { color: #8F3F71; font-style: italic; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-monospace { color: #427B58; background: #EBDBB2; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-link { color: #076678; text-decoration: underline; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-url { color: #076678; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-quote { color: #928374; font-style: italic; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-list { color: #AF3A03; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-keyword { color: #AF3A03; font-weight: 700; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-string { color: #79740E; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-number { color: #8F3F71; }
+body[data-editor-theme="gruvbox-light"] #editor .tok-comment { color: #928374; font-style: italic; }
+body[data-editor-theme="gruvbox-light"] #editor .cm-formatting { color: #928374; }

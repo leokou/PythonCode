@@ -1,0 +1,49 @@
+/* LeoDiary Capture —— 主题变量（护眼浅色 Light）
+ *
+ * 统一管理颜色，不写死在结构样式里。
+ * 未来如需深色主题：新建 theme-dark.css 覆盖下列变量即可（切换 link 引用或给根元素加 class）。
+ */
+:root {
+  /* 背景 */
+  --bg-main: #F7F6F2;        /* 窗口主背景（暖米白，护眼） */
+  --bg-editor: #FAF9F5;      /* 编辑区背景 */
+  --bg-preview: #FFFFFF;     /* 预览区背景 */
+  --bg-2: #F0EEE8;           /* 顶栏/底栏/面板标题 */
+  --bg-3: #ECE9E1;           /* 标签页/滚动条/下拉 */
+  --hover-bg: #F0EDE5;       /* 悬浮背景 */
+
+  /* 文字 */
+  --text-color: #333333;     /* 普通正文 */
+  --title-color: #222222;    /* 标题文字 */
+  --h1-color: #1F2937;       /* 一级标题 */
+  --text-dim: #777777;       /* 辅助文字 */
+
+  /* 边框与分割线 */
+  --border-color: #D8D5CC;
+  --quote-color: #B0ACA1;    /* 引用竖线（柔和灰） */
+  --scroll-thumb: #C9C4B8;
+
+  /* 强调色（主按钮/选中态） */
+  --accent: #5B8FF9;
+  --accent-strong: #4A7EF0;
+  --accent-soft: rgba(91, 143, 249, .12);   /* 当前行高亮 */
+  --accent-gutter: rgba(91, 143, 249, .18); /* 当前行行号高亮 */
+  --hover-overlay: rgba(0, 0, 0, .07);      /* 图标按钮悬浮 */
+
+  /* 状态色 */
+  --success: #2E7D32;
+  --error: #C62828;
+
+  /* 代码 */
+  --code-bg: #F3F4F6;
+  --code-text: #374151;
+
+  /* 其他 */
+  --toast-bg: #FFFFFF;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .12);
+
+  /* 玻璃半透明面板（搜索条件弹窗等） */
+  --glass-bg: rgba(255, 255, 255, .88);
+  --glass-border: rgba(0, 0, 0, .10);
+  --glass-shadow: 0 8px 28px rgba(0, 0, 0, .14);
+}

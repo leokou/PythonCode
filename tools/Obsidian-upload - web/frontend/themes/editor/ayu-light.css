@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Ayu Light */
+body[data-editor-theme="ayu-light"] {
+  --cm-bg: #FAFAFA;              /* 编辑器背景 */
+  --cm-fg: #61676C;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #F0F0F0;       /* 行号栏背景 */
+  --cm-gutter-fg: #ABB0B6;       /* 行号文字 */
+  --cm-gutter-border: #E0E0E0;   /* 行号栏右边框 */
+  --cm-active-line: #F0F0F0;     /* 当前行高亮 */
+  --cm-active-line-gutter: #E8E8E8;  /* 当前行号高亮 */
+  --cm-cursor: #F07171;          /* 光标颜色 */
+  --cm-selection: rgba(57,158,230,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(242,174,73,.28);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #F0F0F0;         /* 折叠按钮背景 */
+  --cm-fold-border: #D9D9D9;     /* 折叠按钮边框 */
+  --cm-fold-fg: #61676C;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="ayu-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="ayu-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="ayu-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="ayu-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="ayu-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="ayu-light"] #editor .cm-selectionBackground,
+body[data-editor-theme="ayu-light"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="ayu-light"] #editor .tok-heading { color: #F07171; font-weight: 700; }
+body[data-editor-theme="ayu-light"] #editor .tok-strong { color: #E6BA7E; font-weight: 700; }
+body[data-editor-theme="ayu-light"] #editor .tok-emphasis { color: #A37ACC; font-style: italic; }
+body[data-editor-theme="ayu-light"] #editor .tok-monospace { color: #55B4D4; background: #F0F0F0; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="ayu-light"] #editor .tok-link { color: #399EE6; text-decoration: underline; }
+body[data-editor-theme="ayu-light"] #editor .tok-url { color: #399EE6; }
+body[data-editor-theme="ayu-light"] #editor .tok-quote { color: #ABB0B6; font-style: italic; }
+body[data-editor-theme="ayu-light"] #editor .tok-list { color: #F2AE49; }
+body[data-editor-theme="ayu-light"] #editor .tok-keyword { color: #F2AE49; font-weight: 700; }
+body[data-editor-theme="ayu-light"] #editor .tok-string { color: #86B300; }
+body[data-editor-theme="ayu-light"] #editor .tok-number { color: #A37ACC; }
+body[data-editor-theme="ayu-light"] #editor .tok-comment { color: #ABB0B6; font-style: italic; }
+body[data-editor-theme="ayu-light"] #editor .cm-formatting { color: #ABB0B6; }

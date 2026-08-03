@@ -1,0 +1,37 @@
+/* 编辑器主题 —— GitHub Light */
+body[data-editor-theme="github-light"] {
+  --cm-bg: #FFFFFF;              /* 编辑器背景 */
+  --cm-fg: #24292F;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #FFFFFF;       /* 行号栏背景 */
+  --cm-gutter-fg: #6E7781;       /* 行号文字 */
+  --cm-gutter-border: #D0D7DE;   /* 行号栏右边框 */
+  --cm-active-line: rgba(246,248,250,.6);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(246,248,250,.9);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #24292F;          /* 光标颜色 */
+  --cm-selection: rgba(175,184,193,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(255,220,0,.45);     /* 搜索匹配高亮 */
+  --cm-fold-bg: #FFFFFF;         /* 折叠按钮背景 */
+  --cm-fold-border: #D0D7DE;     /* 折叠按钮边框 */
+  --cm-fold-fg: #6E7781;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="github-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="github-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="github-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="github-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="github-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="github-light"] #editor .cm-selectionBackground,
+body[data-editor-theme="github-light"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="github-light"] #editor .tok-heading { color: #0550AE; font-weight: 700; }
+body[data-editor-theme="github-light"] #editor .tok-strong { color: #CF222E; font-weight: 700; }
+body[data-editor-theme="github-light"] #editor .tok-emphasis { color: #CF222E; font-style: italic; }
+body[data-editor-theme="github-light"] #editor .tok-monospace { color: #0550AE; background: #EFF1F3; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="github-light"] #editor .tok-link { color: #0969DA; text-decoration: underline; }
+body[data-editor-theme="github-light"] #editor .tok-url { color: #0969DA; }
+body[data-editor-theme="github-light"] #editor .tok-quote { color: #6E7781; font-style: italic; }
+body[data-editor-theme="github-light"] #editor .tok-list { color: #CF222E; }
+body[data-editor-theme="github-light"] #editor .tok-keyword { color: #CF222E; font-weight: 700; }
+body[data-editor-theme="github-light"] #editor .tok-string { color: #0A3069; }
+body[data-editor-theme="github-light"] #editor .tok-number { color: #0550AE; }
+body[data-editor-theme="github-light"] #editor .tok-comment { color: #6E7781; font-style: italic; }
+body[data-editor-theme="github-light"] #editor .cm-formatting { color: #6E7781; }

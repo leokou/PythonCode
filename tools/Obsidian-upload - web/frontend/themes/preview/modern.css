@@ -1,0 +1,30 @@
+/* 预览主题 —— Modern Startup */
+body[data-preview-theme="modern"] .preview-body {
+  background: #FFFFFF;
+  color: #1A1A2E;
+  font-family: "Inter", -apple-system, sans-serif;
+  line-height: 1.7;
+  padding: 28px;
+}
+body[data-preview-theme="modern"] .preview-body h1 { color: #16213E; font-size: 30px; border-bottom: none; padding-bottom: 8px; padding-left: 12px; border-left: 4px solid #0F3460; }
+body[data-preview-theme="modern"] .preview-body h2 { color: #16213E; font-size: 24px; border-bottom: none; }
+body[data-preview-theme="modern"] .preview-body h3 { color: #16213E; font-size: 20px; }
+body[data-preview-theme="modern"] .preview-body h4,
+body[data-preview-theme="modern"] .preview-body h5,
+body[data-preview-theme="modern"] .preview-body h6 { color: #16213E; }
+body[data-preview-theme="modern"] .preview-body a { color: #E94560; text-decoration: none; }
+body[data-preview-theme="modern"] .preview-body strong { color: #0F3460; }
+body[data-preview-theme="modern"] .preview-body em { color: #1A1A2E; }
+body[data-preview-theme="modern"] .preview-body code { background: #F0F0F5; color: #E94560; padding: 2px 6px; border-radius: 6px; font-size: 0.9em; }
+body[data-preview-theme="modern"] .preview-body pre { background: #F0F0F5; border: 1px solid #E0E0EC; border-radius: 6px; padding: 14px; overflow-x: auto; }
+body[data-preview-theme="modern"] .preview-body pre code { background: none; padding: 0; color: #E94560; }
+body[data-preview-theme="modern"] .preview-body blockquote { border-left: 4px solid #E94560; background: #FFF5F7; color: #1A1A2E; padding: 8px 12px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+body[data-preview-theme="modern"] .preview-body table { border-collapse: collapse; margin: 16px 0; }
+body[data-preview-theme="modern"] .preview-body th { background: #F0F0F5; color: #16213E; border: 1px solid #E0E0EC; padding: 8px 12px; }
+body[data-preview-theme="modern"] .preview-body td { border: 1px solid #E0E0EC; padding: 8px 12px; }
+body[data-preview-theme="modern"] .preview-body hr { border: none; border-top: 1px solid #E0E0EC; margin: 16px 0; }
+body[data-preview-theme="modern"] .preview-body ul,
+body[data-preview-theme="modern"] .preview-body ol { padding-left: 24px; }
+body[data-preview-theme="modern"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="modern"] .preview-body img { max-width: 100%; border-radius: 6px; }
+body[data-preview-theme="modern"] .preview-body::-webkit-scrollbar-thumb { background: #C5C5D6; }

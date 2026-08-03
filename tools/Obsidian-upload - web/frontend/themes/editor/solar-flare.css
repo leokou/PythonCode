@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 太阳耀斑 Solar Flare（浅色版） */
+body[data-editor-theme="solar-flare"] {
+  --cm-bg: #FFFBF0;              /* 编辑器背景 */
+  --cm-fg: #3D2F0A;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #FBF3E0;       /* 行号栏背景 */
+  --cm-gutter-fg: #A5883D;       /* 行号文字 */
+  --cm-gutter-border: #E8D8B0;   /* 行号栏右边框 */
+  --cm-active-line: rgba(255,160,0,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(255,160,0,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #E65100;          /* 光标颜色 */
+  --cm-selection: rgba(255,160,0,.5);        /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(255,100,0,.22);    /* 搜索匹配高亮 */
+  --cm-fold-bg: #FBF3E0;         /* 折叠按钮背景 */
+  --cm-fold-border: #A5883D;     /* 折叠按钮边框 */
+  --cm-fold-fg: #8B6914;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="solar-flare"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="solar-flare"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="solar-flare"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="solar-flare"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="solar-flare"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="solar-flare"] #editor .cm-selectionBackground,
+body[data-editor-theme="solar-flare"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="solar-flare"] #editor .tok-heading { color: #E65100; font-weight: 700; }
+body[data-editor-theme="solar-flare"] #editor .tok-strong { color: #BF8800; font-weight: 700; }
+body[data-editor-theme="solar-flare"] #editor .tok-emphasis { color: #BF8800; font-style: italic; }
+body[data-editor-theme="solar-flare"] #editor .tok-monospace { color: #BF360C; background: #FCEDD8; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="solar-flare"] #editor .tok-link { color: #E65100; text-decoration: underline; }
+body[data-editor-theme="solar-flare"] #editor .tok-url { color: #E65100; }
+body[data-editor-theme="solar-flare"] #editor .tok-quote { color: #8B6914; font-style: italic; }
+body[data-editor-theme="solar-flare"] #editor .tok-list { color: #E65100; }
+body[data-editor-theme="solar-flare"] #editor .tok-keyword { color: #C62828; font-weight: 700; }
+body[data-editor-theme="solar-flare"] #editor .tok-string { color: #6A4C93; }
+body[data-editor-theme="solar-flare"] #editor .tok-number { color: #BF8800; }
+body[data-editor-theme="solar-flare"] #editor .tok-comment { color: #A89070; font-style: italic; }
+body[data-editor-theme="solar-flare"] #editor .cm-formatting { color: #8B6914; }

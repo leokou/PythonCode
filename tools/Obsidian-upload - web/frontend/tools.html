@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>LeoDiary Tools</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="tools.css">
+  <!-- 窗口主题 CSS 懒加载：由 js/theme-loader.js + js/theme-manager.js 动态注入 -->
+</head>
+<body>
+  <header class="tools-topbar">
+    <div class="tools-brand">
+      <span class="brand-dot"></span>
+      <span id="tools-title">LeoDiary Tools</span>
+    </div>
+    <span class="tools-sub">小工具集 · 拖动卡片可排序</span>
+  </header>
+
+  <main class="tools-body">
+    <div class="tool-grid" id="tool-grid"></div>
+  </main>
+
+  <footer class="tools-bottombar">
+    <span class="status" id="status">就绪 · 点击工具卡片即可执行</span>
+  </footer>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/theme-loader.js"></script>
+  <script src="js/theme-manager.js"></script>
+  <script src="tools.js"></script>
+</body>
+</html>

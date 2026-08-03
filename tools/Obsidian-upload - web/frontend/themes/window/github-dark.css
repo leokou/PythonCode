@@ -1,0 +1,30 @@
+/* 窗口主题 —— GitHub Dark */
+body[data-window-theme="github-dark"] {
+  --bg-main: #0D1117;        /* 窗口主背景 */
+  --bg-editor: #0D1117;      /* 编辑区背景 */
+  --bg-preview: #0D1117;     /* 预览区背景 */
+  --bg-2: #161B22;           /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #21262D;           /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #161B22;       /* 悬浮背景 */
+  --text-color: #C9D1D9;     /* 普通正文 */
+  --title-color: #F0F6FC;    /* 标题文字 */
+  --h1-color: #F0F6FC;       /* 一级标题 */
+  --text-dim: #8B949E;       /* 辅助文字 */
+  --border-color: #30363D;   /* 边框 */
+  --quote-color: #30363D;    /* 引用竖线 */
+  --scroll-thumb: #30363D;   /* 滚动条 */
+  --accent: #58A6FF;         /* 强调色（主按钮/选中态） */
+  --accent-strong: #79B8FF;  /* 强调色加深 */
+  --accent-soft: rgba(88,166,255,.18);   /* 当前行高亮（带透明度） */
+  --accent-gutter: rgba(88,166,255,.25); /* 当前行行号高亮（带透明度） */
+  --hover-overlay: rgba(255,255,255,.08); /* 图标按钮悬浮（带透明度） */
+  --success: #3FB950;        /* 成功色 */
+  --error: #F85149;          /* 错误色 */
+  --code-bg: #161B22;        /* 代码块背景 */
+  --code-text: #C9D1D9;      /* 代码块文字 */
+  --toast-bg: #21262D;       /* Toast 提示背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.4);            /* 阴影 box-shadow */
+  --glass-bg: rgba(30,30,46,.9);                  /* 玻璃面板背景（带透明度） */
+  --glass-border: rgba(48,54,61,.9);              /* 玻璃面板边框（带透明度） */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.4);      /* 玻璃面板阴影 box-shadow */
+}

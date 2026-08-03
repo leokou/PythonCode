@@ -1,0 +1,30 @@
+/* 窗口主题 —— Notion */
+body[data-window-theme="notion-light"] {
+  --bg-main: #FFFFFF;        /* 窗口主背景 */
+  --bg-editor: #FFFFFF;      /* 编辑区背景 */
+  --bg-preview: #FFFFFF;     /* 预览区背景 */
+  --bg-2: #F7F7F5;           /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #EDEDED;           /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #F1F1EF;       /* 悬浮背景 */
+  --text-color: #37352F;     /* 普通正文 */
+  --title-color: #1F1E1B;    /* 标题文字 */
+  --h1-color: #1F1E1B;       /* 一级标题 */
+  --text-dim: #787774;       /* 辅助文字 */
+  --border-color: #E9E9E7;   /* 边框 */
+  --quote-color: #E9E9E7;    /* 引用竖线 */
+  --scroll-thumb: #D3D3D1;   /* 滚动条 */
+  --accent: #2383E2;         /* 强调色（主按钮/选中态） */
+  --accent-strong: #1A6FC2;  /* 强调色加深 */
+  --accent-soft: rgba(35,131,226,.12);   /* 当前行高亮（带透明度） */
+  --accent-gutter: rgba(35,131,226,.18); /* 当前行行号高亮（带透明度） */
+  --hover-overlay: rgba(0,0,0,.06);      /* 图标按钮悬浮（带透明度） */
+  --success: #4D6B1C;        /* 成功色 */
+  --error: #E03E3E;          /* 错误色 */
+  --code-bg: #F7F7F5;        /* 代码块背景 */
+  --code-text: #37352F;      /* 代码块文字 */
+  --toast-bg: #2F2E2B;       /* Toast 提示背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.12);           /* 阴影 box-shadow */
+  --glass-bg: rgba(255,255,255,.9);               /* 玻璃面板背景（带透明度） */
+  --glass-border: rgba(233,233,231,.9);           /* 玻璃面板边框（带透明度） */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.12);     /* 玻璃面板阴影 box-shadow */
+}

@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Catppuccin Latte */
+body[data-editor-theme="catppuccin-latte"] {
+  --cm-bg: #EFF1F5;              /* 编辑器背景 */
+  --cm-fg: #4C4F69;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #E6E9EF;       /* 行号栏背景 */
+  --cm-gutter-fg: #9CA0B0;       /* 行号文字 */
+  --cm-gutter-border: #CCD0DA;   /* 行号栏右边框 */
+  --cm-active-line: #E6E9EF;     /* 当前行高亮 */
+  --cm-active-line-gutter: #CCD0DA;  /* 当前行号高亮 */
+  --cm-cursor: #4C4F69;          /* 光标颜色 */
+  --cm-selection: rgba(30,102,245,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(254,100,11,.25);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #CCD0DA;         /* 折叠按钮背景 */
+  --cm-fold-border: #ACB0BE;     /* 折叠按钮边框 */
+  --cm-fold-fg: #4C4F69;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="catppuccin-latte"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-selectionBackground,
+body[data-editor-theme="catppuccin-latte"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="catppuccin-latte"] #editor .tok-heading { color: #D20F39; font-weight: 700; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-strong { color: #DF8E1D; font-weight: 700; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-emphasis { color: #8839EF; font-style: italic; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-monospace { color: #179299; background: #CCD0DA; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-link { color: #1E66F5; text-decoration: underline; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-url { color: #1E66F5; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-quote { color: #9CA0B0; font-style: italic; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-list { color: #8839EF; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-keyword { color: #8839EF; font-weight: 700; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-string { color: #40A02B; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-number { color: #FE640B; }
+body[data-editor-theme="catppuccin-latte"] #editor .tok-comment { color: #9CA0B0; font-style: italic; }
+body[data-editor-theme="catppuccin-latte"] #editor .cm-formatting { color: #9CA0B0; }

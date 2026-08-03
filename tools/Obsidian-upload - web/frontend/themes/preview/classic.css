@@ -1,0 +1,30 @@
+/* 预览主题 —— Classic Academic */
+body[data-preview-theme="classic"] .preview-body {
+  background: #FFFFFF;
+  color: #000000;
+  font-family: "Times New Roman", "Georgia", serif;
+  line-height: 1.65;
+  padding: 30px;
+}
+body[data-preview-theme="classic"] .preview-body h1 { color: #000000; font-size: 30px; font-weight: 700; border-bottom: 2px solid #000; padding-bottom: 8px; text-align: center; }
+body[data-preview-theme="classic"] .preview-body h2 { color: #000000; font-size: 24px; font-weight: 700; border-bottom: 1px solid #000; }
+body[data-preview-theme="classic"] .preview-body h3 { color: #000000; font-size: 20px; }
+body[data-preview-theme="classic"] .preview-body h4,
+body[data-preview-theme="classic"] .preview-body h5,
+body[data-preview-theme="classic"] .preview-body h6 { color: #000000; }
+body[data-preview-theme="classic"] .preview-body a { color: #0000EE; text-decoration: underline; }
+body[data-preview-theme="classic"] .preview-body strong { color: #000000; }
+body[data-preview-theme="classic"] .preview-body em { color: #000000; }
+body[data-preview-theme="classic"] .preview-body code { background: #EEEEEE; color: #000000; padding: 2px 6px; border-radius: 0; font-size: 0.9em; }
+body[data-preview-theme="classic"] .preview-body pre { background: #EEEEEE; border: 1px solid #000; border-radius: 0; padding: 14px; overflow-x: auto; }
+body[data-preview-theme="classic"] .preview-body pre code { background: none; padding: 0; color: #000000; }
+body[data-preview-theme="classic"] .preview-body blockquote { border-left: 4px solid #000000; background: #F5F5F5; color: #000000; padding: 8px 14px; margin: 14px 0; border-radius: 0; }
+body[data-preview-theme="classic"] .preview-body table { border-collapse: collapse; margin: 14px 0; }
+body[data-preview-theme="classic"] .preview-body th { background: #EEEEEE; color: #000000; border: 1px solid #000; padding: 6px 12px; }
+body[data-preview-theme="classic"] .preview-body td { border: 1px solid #000; padding: 6px 12px; }
+body[data-preview-theme="classic"] .preview-body hr { border: none; border-top: 1px solid #000; margin: 16px 0; }
+body[data-preview-theme="classic"] .preview-body ul,
+body[data-preview-theme="classic"] .preview-body ol { padding-left: 28px; }
+body[data-preview-theme="classic"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="classic"] .preview-body img { max-width: 100%; border-radius: 0; }
+body[data-preview-theme="classic"] .preview-body::-webkit-scrollbar-thumb { background: #999999; }

@@ -1,0 +1,30 @@
+/* 预览主题 —— Microsoft Docs */
+body[data-preview-theme="microsoft-docs"] .preview-body {
+  background: #FFFFFF;
+  color: #323130;
+  font-family: "Segoe UI", sans-serif;
+  line-height: 1.6;
+  padding: 24px;
+}
+body[data-preview-theme="microsoft-docs"] .preview-body h1 { color: #201F1E; font-size: 30px; border-bottom: 1px solid #edebe9; padding-bottom: 8px; }
+body[data-preview-theme="microsoft-docs"] .preview-body h2 { color: #201F1E; font-size: 24px; border-bottom: 1px solid #edebe9; }
+body[data-preview-theme="microsoft-docs"] .preview-body h3 { color: #201F1E; font-size: 20px; }
+body[data-preview-theme="microsoft-docs"] .preview-body h4,
+body[data-preview-theme="microsoft-docs"] .preview-body h5,
+body[data-preview-theme="microsoft-docs"] .preview-body h6 { color: #201F1E; }
+body[data-preview-theme="microsoft-docs"] .preview-body a { color: #0078D4; text-decoration: none; }
+body[data-preview-theme="microsoft-docs"] .preview-body strong { color: #201F1E; }
+body[data-preview-theme="microsoft-docs"] .preview-body em { color: #323130; }
+body[data-preview-theme="microsoft-docs"] .preview-body code { background: #F3F2F1; color: #C19C00; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+body[data-preview-theme="microsoft-docs"] .preview-body pre { background: #F3F2F1; border: 1px solid #edebe9; border-radius: 4px; padding: 12px; overflow-x: auto; }
+body[data-preview-theme="microsoft-docs"] .preview-body pre code { background: none; padding: 0; color: #C19C00; }
+body[data-preview-theme="microsoft-docs"] .preview-body blockquote { border-left: 4px solid #0078D4; background: #F3F2F1; color: #323130; padding: 8px 12px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+body[data-preview-theme="microsoft-docs"] .preview-body table { border-collapse: collapse; margin: 12px 0; }
+body[data-preview-theme="microsoft-docs"] .preview-body th { background: #F3F2F1; color: #201F1E; border: 1px solid #edebe9; padding: 6px 12px; }
+body[data-preview-theme="microsoft-docs"] .preview-body td { border: 1px solid #edebe9; padding: 6px 12px; }
+body[data-preview-theme="microsoft-docs"] .preview-body hr { border: none; border-top: 1px solid #edebe9; margin: 16px 0; }
+body[data-preview-theme="microsoft-docs"] .preview-body ul,
+body[data-preview-theme="microsoft-docs"] .preview-body ol { padding-left: 24px; }
+body[data-preview-theme="microsoft-docs"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="microsoft-docs"] .preview-body img { max-width: 100%; border-radius: 4px; }
+body[data-preview-theme="microsoft-docs"] .preview-body::-webkit-scrollbar-thumb { background: #C8C6C4; }

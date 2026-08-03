@@ -1,0 +1,31 @@
+/* 预览主题 —— Hacker News */
+body[data-preview-theme="hacker-news"] .preview-body {
+  background: #FFFFFF;
+  color: #000000;
+  font-family: "Verdana", "Geneva", sans-serif;
+  line-height: 1.5;
+  padding: 20px 24px;
+  font-size: 14px;
+}
+body[data-preview-theme="hacker-news"] .preview-body h1 { color: #000000; font-size: 1.6em; border-bottom: none; padding-bottom: 0; font-weight: 700; }
+body[data-preview-theme="hacker-news"] .preview-body h2 { color: #000000; font-size: 1.4em; border-bottom: none; font-weight: 700; }
+body[data-preview-theme="hacker-news"] .preview-body h3 { color: #000000; font-size: 1.2em; font-weight: 700; }
+body[data-preview-theme="hacker-news"] .preview-body h4,
+body[data-preview-theme="hacker-news"] .preview-body h5,
+body[data-preview-theme="hacker-news"] .preview-body h6 { color: #000000; }
+body[data-preview-theme="hacker-news"] .preview-body a { color: #0000EE; text-decoration: underline; }
+body[data-preview-theme="hacker-news"] .preview-body strong { color: #000000; }
+body[data-preview-theme="hacker-news"] .preview-body em { color: #000000; }
+body[data-preview-theme="hacker-news"] .preview-body code { background: #F0F0F0; color: #000000; padding: 0.1em 0.3em; border-radius: 0; font-size: 0.9em; }
+body[data-preview-theme="hacker-news"] .preview-body pre { background: #F0F0F0; border: 1px solid #CCCCCC; border-radius: 0; padding: 10px 12px; overflow-x: auto; }
+body[data-preview-theme="hacker-news"] .preview-body pre code { background: none; padding: 0; font-size: 0.9em; color: #000000; }
+body[data-preview-theme="hacker-news"] .preview-body blockquote { border-left: 3px solid #888888; background: none; color: #444444; padding: 2px 14px; margin: 12px 0; border-radius: 0; font-style: italic; }
+body[data-preview-theme="hacker-news"] .preview-body table { border-collapse: collapse; margin: 12px 0; width: auto; }
+body[data-preview-theme="hacker-news"] .preview-body th { background: #EEEEEE; color: #000000; border: 1px solid #CCCCCC; padding: 4px 10px; font-weight: 700; }
+body[data-preview-theme="hacker-news"] .preview-body td { border: 1px solid #CCCCCC; padding: 4px 10px; }
+body[data-preview-theme="hacker-news"] .preview-body hr { border: none; border-top: 1px solid #CCCCCC; margin: 16px 0; }
+body[data-preview-theme="hacker-news"] .preview-body ul,
+body[data-preview-theme="hacker-news"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="hacker-news"] .preview-body li { margin: 2px 0; }
+body[data-preview-theme="hacker-news"] .preview-body img { max-width: 100%; border-radius: 0; }
+body[data-preview-theme="hacker-news"] .preview-body::-webkit-scrollbar-thumb { background: #888888; }

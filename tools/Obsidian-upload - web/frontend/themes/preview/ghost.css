@@ -1,0 +1,30 @@
+/* 预览主题 —— Ghost */
+body[data-preview-theme="ghost"] .preview-body {
+  background: #FFFFFF;
+  color: #333333;
+  font-family: "Georgia", serif;
+  line-height: 1.6;
+  padding: 38px 52px;
+}
+body[data-preview-theme="ghost"] .preview-body h1 { color: #15171A; font-size: 2.5em; border-bottom: none; padding-bottom: 0; font-weight: 700; }
+body[data-preview-theme="ghost"] .preview-body h2 { color: #15171A; font-size: 1.8em; border-bottom: none; font-weight: 700; }
+body[data-preview-theme="ghost"] .preview-body h3 { color: #15171A; font-size: 1.4em; font-weight: 700; }
+body[data-preview-theme="ghost"] .preview-body h4,
+body[data-preview-theme="ghost"] .preview-body h5,
+body[data-preview-theme="ghost"] .preview-body h6 { color: #15171A; }
+body[data-preview-theme="ghost"] .preview-body a { color: #15171A; text-decoration: underline; }
+body[data-preview-theme="ghost"] .preview-body strong { color: #15171A; }
+body[data-preview-theme="ghost"] .preview-body em { color: #333333; }
+body[data-preview-theme="ghost"] .preview-body code { background: #F1F1F1; color: #333333; padding: 0.15em 0.35em; border-radius: 3px; font-size: 0.88em; }
+body[data-preview-theme="ghost"] .preview-body pre { background: #F1F1F1; border: none; border-radius: 6px; padding: 18px; overflow-x: auto; }
+body[data-preview-theme="ghost"] .preview-body pre code { background: none; padding: 0; font-size: 0.88em; color: #333333; }
+body[data-preview-theme="ghost"] .preview-body blockquote { border-left: 4px solid #FF1A75; background: #FFF5F8; color: #333333; padding: 12px 20px; margin: 22px 0; border-radius: 0 6px 6px 0; font-style: italic; }
+body[data-preview-theme="ghost"] .preview-body table { border-collapse: collapse; margin: 18px 0; width: 100%; }
+body[data-preview-theme="ghost"] .preview-body th { background: #15171A; color: #FFFFFF; border: 1px solid #15171A; padding: 8px 14px; font-weight: 700; }
+body[data-preview-theme="ghost"] .preview-body td { border: 1px solid #E0E0E0; padding: 8px 14px; }
+body[data-preview-theme="ghost"] .preview-body hr { border: none; border-top: 1px solid #E0E0E0; margin: 30px 0; }
+body[data-preview-theme="ghost"] .preview-body ul,
+body[data-preview-theme="ghost"] .preview-body ol { padding-left: 1.8em; }
+body[data-preview-theme="ghost"] .preview-body li { margin: 6px 0; }
+body[data-preview-theme="ghost"] .preview-body img { max-width: 100%; border-radius: 6px; }
+body[data-preview-theme="ghost"] .preview-body::-webkit-scrollbar-thumb { background: #FF1A75; }

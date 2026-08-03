@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 品红爆发 Magenta Burst（浅色版） */
+body[data-editor-theme="magenta-burst"] {
+  --cm-bg: #FBF5FB;              /* 编辑器背景 */
+  --cm-fg: #2E1A3D;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #F5EBF5;       /* 行号栏背景 */
+  --cm-gutter-fg: #7D4A8B;       /* 行号文字 */
+  --cm-gutter-border: #E0D0E0;   /* 行号栏右边框 */
+  --cm-active-line: rgba(201,38,181,.05);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(201,38,181,.12);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #C926B5;          /* 光标颜色 */
+  --cm-selection: rgba(201,38,181,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(0,150,0,.22);       /* 搜索匹配高亮 */
+  --cm-fold-bg: #F5EBF5;         /* 折叠按钮背景 */
+  --cm-fold-border: #7D4A8B;     /* 折叠按钮边框 */
+  --cm-fold-fg: #6A0DAD;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="magenta-burst"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="magenta-burst"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="magenta-burst"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="magenta-burst"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="magenta-burst"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="magenta-burst"] #editor .cm-selectionBackground,
+body[data-editor-theme="magenta-burst"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="magenta-burst"] #editor .tok-heading { color: #AD1457; font-weight: 700; }
+body[data-editor-theme="magenta-burst"] #editor .tok-strong { color: #B8860B; font-weight: 700; }
+body[data-editor-theme="magenta-burst"] #editor .tok-emphasis { color: #B8860B; font-style: italic; }
+body[data-editor-theme="magenta-burst"] #editor .tok-monospace { color: #00838F; background: #E5F0F5; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="magenta-burst"] #editor .tok-link { color: #C2185B; text-decoration: underline; }
+body[data-editor-theme="magenta-burst"] #editor .tok-url { color: #C2185B; }
+body[data-editor-theme="magenta-burst"] #editor .tok-quote { color: #6A4C93; font-style: italic; }
+body[data-editor-theme="magenta-burst"] #editor .tok-list { color: #AD1457; }
+body[data-editor-theme="magenta-burst"] #editor .tok-keyword { color: #880E4F; font-weight: 700; }
+body[data-editor-theme="magenta-burst"] #editor .tok-string { color: #2E7D32; }
+body[data-editor-theme="magenta-burst"] #editor .tok-number { color: #B8860B; }
+body[data-editor-theme="magenta-burst"] #editor .tok-comment { color: #8D6E9E; font-style: italic; }
+body[data-editor-theme="magenta-burst"] #editor .cm-formatting { color: #6A4C93; }

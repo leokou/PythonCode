@@ -1,0 +1,30 @@
+/* 预览主题 —— Stack Overflow */
+body[data-preview-theme="stack-overflow"] .preview-body {
+  background: #FFFFFF;
+  color: #232629;
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  padding: 24px 28px;
+}
+body[data-preview-theme="stack-overflow"] .preview-body h1 { color: #0C0D0E; font-size: 1.8em; border-bottom: 1px solid #D6D9DC; padding-bottom: 0.3em; }
+body[data-preview-theme="stack-overflow"] .preview-body h2 { color: #0C0D0E; font-size: 1.5em; border-bottom: 1px solid #D6D9DC; padding-bottom: 0.2em; }
+body[data-preview-theme="stack-overflow"] .preview-body h3 { color: #0C0D0E; font-size: 1.25em; }
+body[data-preview-theme="stack-overflow"] .preview-body h4,
+body[data-preview-theme="stack-overflow"] .preview-body h5,
+body[data-preview-theme="stack-overflow"] .preview-body h6 { color: #0C0D0E; }
+body[data-preview-theme="stack-overflow"] .preview-body a { color: #0074CC; text-decoration: none; }
+body[data-preview-theme="stack-overflow"] .preview-body strong { color: #0C0D0E; }
+body[data-preview-theme="stack-overflow"] .preview-body em { color: #232629; }
+body[data-preview-theme="stack-overflow"] .preview-body code { background: #EDEDED; color: #232629; padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.85em; }
+body[data-preview-theme="stack-overflow"] .preview-body pre { background: #F6F8FA; border: 1px solid #D6D9DC; border-radius: 4px; padding: 12px; overflow-x: auto; }
+body[data-preview-theme="stack-overflow"] .preview-body pre code { background: none; padding: 0; font-size: 0.85em; color: #232629; }
+body[data-preview-theme="stack-overflow"] .preview-body blockquote { border-left: 3px solid #F48024; background: #F8F9F9; color: #3B4045; padding: 8px 14px; margin: 12px 0; border-radius: 0; }
+body[data-preview-theme="stack-overflow"] .preview-body table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+body[data-preview-theme="stack-overflow"] .preview-body th { background: #F48024; color: #FFFFFF; border: 1px solid #D6D9DC; padding: 6px 10px; font-weight: 600; }
+body[data-preview-theme="stack-overflow"] .preview-body td { border: 1px solid #D6D9DC; padding: 6px 10px; }
+body[data-preview-theme="stack-overflow"] .preview-body hr { border: none; border-top: 1px solid #D6D9DC; margin: 16px 0; }
+body[data-preview-theme="stack-overflow"] .preview-body ul,
+body[data-preview-theme="stack-overflow"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="stack-overflow"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="stack-overflow"] .preview-body img { max-width: 100%; border-radius: 4px; }
+body[data-preview-theme="stack-overflow"] .preview-body::-webkit-scrollbar-thumb { background: #D6D9DC; }

@@ -1,0 +1,30 @@
+/* 预览主题 —— 赛博朋克 (Cyberpunk) */
+body[data-preview-theme="cyberpunk"] .preview-body {
+  background: #FFFFFF;
+  color: #0A0A0A;
+  font-family: "Consolas", "Courier New", monospace;
+  line-height: 1.6;
+  padding: 32px;
+}
+body[data-preview-theme="cyberpunk"] .preview-body h1 { color: #FF00FF; font-size: 2.2em; border-bottom: 3px solid #00FFFF; padding-bottom: 0.3em; }
+body[data-preview-theme="cyberpunk"] .preview-body h2 { color: #00FFFF; font-size: 1.6em; border-bottom: 2px solid #FF00FF; padding-bottom: 0.25em; }
+body[data-preview-theme="cyberpunk"] .preview-body h3 { color: #FF00FF; font-size: 1.3em; }
+body[data-preview-theme="cyberpunk"] .preview-body h4,
+body[data-preview-theme="cyberpunk"] .preview-body h5,
+body[data-preview-theme="cyberpunk"] .preview-body h6 { color: #00FFFF; }
+body[data-preview-theme="cyberpunk"] .preview-body a { color: #00FFFF; text-decoration: underline; }
+body[data-preview-theme="cyberpunk"] .preview-body strong { color: #FF00FF; }
+body[data-preview-theme="cyberpunk"] .preview-body em { color: #00FFFF; }
+body[data-preview-theme="cyberpunk"] .preview-body code { background: #FFFF00; color: #000000; padding: 0.2em 0.4em; border-radius: 4px; font-size: 85%; border: 1px solid #FF00FF; }
+body[data-preview-theme="cyberpunk"] .preview-body pre { background: #FFFF00; border: 1px solid #FF00FF; border-radius: 4px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="cyberpunk"] .preview-body pre code { background: none; padding: 0; font-size: 85%; border: none; color: #000000; }
+body[data-preview-theme="cyberpunk"] .preview-body blockquote { border-left: 4px solid #00FFFF; background: #F0FFFF; color: #0A0A0A; padding: 12px 20px; margin: 16px 0; border-radius: 0 4px 4px 0; }
+body[data-preview-theme="cyberpunk"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="cyberpunk"] .preview-body th { background: #FF00FF; color: #00FFFF; border: 1px solid #FF00FF; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="cyberpunk"] .preview-body td { border: 1px solid #FF00FF; padding: 8px 13px; }
+body[data-preview-theme="cyberpunk"] .preview-body hr { border: none; border-top: 2px solid #FF00FF; margin: 24px 0; }
+body[data-preview-theme="cyberpunk"] .preview-body ul,
+body[data-preview-theme="cyberpunk"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="cyberpunk"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="cyberpunk"] .preview-body img { max-width: 100%; border-radius: 4px; }
+body[data-preview-theme="cyberpunk"] .preview-body::-webkit-scrollbar-thumb { background: #FF00FF; }

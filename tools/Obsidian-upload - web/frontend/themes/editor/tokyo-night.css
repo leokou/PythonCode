@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Tokyo Night */
+body[data-editor-theme="tokyo-night"] {
+  --cm-bg: #1A1B26;              /* 编辑器背景 */
+  --cm-fg: #C0CAF5;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #16161E;       /* 行号栏背景 */
+  --cm-gutter-fg: #565F89;       /* 行号文字 */
+  --cm-gutter-border: #24283B;   /* 行号栏右边框 */
+  --cm-active-line: #1F2335;     /* 当前行高亮 */
+  --cm-active-line-gutter: #24283B;  /* 当前行号高亮 */
+  --cm-cursor: #C0CAF5;          /* 光标颜色 */
+  --cm-selection: rgba(122,162,247,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(255,158,100,.35);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #24283B;         /* 折叠按钮背景 */
+  --cm-fold-border: #414868;     /* 折叠按钮边框 */
+  --cm-fold-fg: #C0CAF5;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="tokyo-night"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="tokyo-night"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="tokyo-night"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="tokyo-night"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="tokyo-night"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="tokyo-night"] #editor .cm-selectionBackground,
+body[data-editor-theme="tokyo-night"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="tokyo-night"] #editor .tok-heading { color: #7DCFFF; font-weight: 700; }
+body[data-editor-theme="tokyo-night"] #editor .tok-strong { color: #E0AF68; font-weight: 700; }
+body[data-editor-theme="tokyo-night"] #editor .tok-emphasis { color: #BB9AF7; font-style: italic; }
+body[data-editor-theme="tokyo-night"] #editor .tok-monospace { color: #7AA2F7; background: #24283B; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="tokyo-night"] #editor .tok-link { color: #7AA2F7; text-decoration: underline; }
+body[data-editor-theme="tokyo-night"] #editor .tok-url { color: #7AA2F7; }
+body[data-editor-theme="tokyo-night"] #editor .tok-quote { color: #565F89; font-style: italic; }
+body[data-editor-theme="tokyo-night"] #editor .tok-list { color: #BB9AF7; }
+body[data-editor-theme="tokyo-night"] #editor .tok-keyword { color: #BB9AF7; font-weight: 700; }
+body[data-editor-theme="tokyo-night"] #editor .tok-string { color: #9ECE6A; }
+body[data-editor-theme="tokyo-night"] #editor .tok-number { color: #FF9E64; }
+body[data-editor-theme="tokyo-night"] #editor .tok-comment { color: #565F89; font-style: italic; }
+body[data-editor-theme="tokyo-night"] #editor .cm-formatting { color: #565F89; }

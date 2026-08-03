@@ -1,0 +1,30 @@
+/* 预览主题 —— Pandoc */
+body[data-preview-theme="pandoc"] .preview-body {
+  background: #FFFFFF;
+  color: #1A1A1A;
+  font-family: "Georgia", serif;
+  line-height: 1.6;
+  padding: 32px 56px;
+}
+body[data-preview-theme="pandoc"] .preview-body h1 { color: #1A1A1A; font-size: 2.1em; border-bottom: 2px solid #DDD; padding-bottom: 0.3em; font-weight: 700; }
+body[data-preview-theme="pandoc"] .preview-body h2 { color: #1A1A1A; font-size: 1.6em; border-bottom: 1px solid #DDD; padding-bottom: 0.2em; font-weight: 700; }
+body[data-preview-theme="pandoc"] .preview-body h3 { color: #1A1A1A; font-size: 1.3em; font-weight: 700; }
+body[data-preview-theme="pandoc"] .preview-body h4,
+body[data-preview-theme="pandoc"] .preview-body h5,
+body[data-preview-theme="pandoc"] .preview-body h6 { color: #1A1A1A; }
+body[data-preview-theme="pandoc"] .preview-body a { color: #1A4F8B; text-decoration: underline; }
+body[data-preview-theme="pandoc"] .preview-body strong { color: #1A1A1A; }
+body[data-preview-theme="pandoc"] .preview-body em { color: #1A1A1A; }
+body[data-preview-theme="pandoc"] .preview-body code { background: #F4F4F4; color: #C21325; padding: 0.1em 0.3em; border-radius: 0; font-size: 0.88em; }
+body[data-preview-theme="pandoc"] .preview-body pre { background: #F4F4F4; border: 1px solid #DDD; border-radius: 0; padding: 12px 16px; overflow-x: auto; }
+body[data-preview-theme="pandoc"] .preview-body pre code { background: none; padding: 0; font-size: 0.88em; color: #1A1A1A; }
+body[data-preview-theme="pandoc"] .preview-body blockquote { border-left: 4px solid #888; background: #FAFAFA; color: #444; padding: 6px 16px; margin: 14px 0; border-radius: 0; }
+body[data-preview-theme="pandoc"] .preview-body table { border-collapse: collapse; margin: 14px 0; width: 100%; }
+body[data-preview-theme="pandoc"] .preview-body th { background: #ECECEC; color: #1A1A1A; border: 1px solid #BBB; padding: 6px 12px; font-weight: 700; }
+body[data-preview-theme="pandoc"] .preview-body td { border: 1px solid #BBB; padding: 6px 12px; }
+body[data-preview-theme="pandoc"] .preview-body hr { border: none; border-top: 1px solid #BBB; margin: 22px 0; }
+body[data-preview-theme="pandoc"] .preview-body ul,
+body[data-preview-theme="pandoc"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="pandoc"] .preview-body li { margin: 3px 0; }
+body[data-preview-theme="pandoc"] .preview-body img { max-width: 100%; border-radius: 0; }
+body[data-preview-theme="pandoc"] .preview-body::-webkit-scrollbar-thumb { background: #888; }

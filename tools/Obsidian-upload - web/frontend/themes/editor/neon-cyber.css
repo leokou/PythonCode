@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 霓虹赛博 Neon Cyber（浅色版） */
+body[data-editor-theme="neon-cyber"] {
+  --cm-bg: #F5F7FA;              /* 编辑器背景 */
+  --cm-fg: #1A1F3A;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #EDF0F5;       /* 行号栏背景 */
+  --cm-gutter-fg: #6A7BBF;       /* 行号文字 */
+  --cm-gutter-border: #D8DEE9;   /* 行号栏右边框 */
+  --cm-active-line: rgba(102,126,234,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(102,126,234,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #C926B5;          /* 光标颜色 */
+  --cm-selection: rgba(201,38,181,.5);        /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(0,150,200,.22);      /* 搜索匹配高亮 */
+  --cm-fold-bg: #EDF0F5;         /* 折叠按钮背景 */
+  --cm-fold-border: #6A7BBF;     /* 折叠按钮边框 */
+  --cm-fold-fg: #4A5FBF;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="neon-cyber"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="neon-cyber"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="neon-cyber"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="neon-cyber"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="neon-cyber"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="neon-cyber"] #editor .cm-selectionBackground,
+body[data-editor-theme="neon-cyber"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="neon-cyber"] #editor .tok-heading { color: #C926B5; font-weight: 700; }
+body[data-editor-theme="neon-cyber"] #editor .tok-strong { color: #B8860B; font-weight: 700; }
+body[data-editor-theme="neon-cyber"] #editor .tok-emphasis { color: #B8860B; font-style: italic; }
+body[data-editor-theme="neon-cyber"] #editor .tok-monospace { color: #00695C; background: #E8F5F9; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="neon-cyber"] #editor .tok-link { color: #C926B5; text-decoration: underline; }
+body[data-editor-theme="neon-cyber"] #editor .tok-url { color: #C926B5; }
+body[data-editor-theme="neon-cyber"] #editor .tok-quote { color: #5C6BC0; font-style: italic; }
+body[data-editor-theme="neon-cyber"] #editor .tok-list { color: #C926B5; }
+body[data-editor-theme="neon-cyber"] #editor .tok-keyword { color: #AD1457; font-weight: 700; }
+body[data-editor-theme="neon-cyber"] #editor .tok-string { color: #00838F; }
+body[data-editor-theme="neon-cyber"] #editor .tok-number { color: #B8860B; }
+body[data-editor-theme="neon-cyber"] #editor .tok-comment { color: #7E8AA4; font-style: italic; }
+body[data-editor-theme="neon-cyber"] #editor .cm-formatting { color: #5C6BC0; }

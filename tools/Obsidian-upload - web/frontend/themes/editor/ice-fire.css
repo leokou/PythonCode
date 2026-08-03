@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 冰火 Ice Fire（浅色版） */
+body[data-editor-theme="ice-fire"] {
+  --cm-bg: #F5FAFD;              /* 编辑器背景 */
+  --cm-fg: #1A2E3D;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #E8F2F8;       /* 行号栏背景 */
+  --cm-gutter-fg: #4A7BA5;       /* 行号文字 */
+  --cm-gutter-border: #C8DCE8;   /* 行号栏右边框 */
+  --cm-active-line: rgba(0,120,200,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(0,120,200,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #FF5722;          /* 光标颜色 */
+  --cm-selection: rgba(0,120,200,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(105,180,74,.22);   /* 搜索匹配高亮 */
+  --cm-fold-bg: #E8F2F8;         /* 折叠按钮背景 */
+  --cm-fold-border: #4A7BA5;     /* 折叠按钮边框 */
+  --cm-fold-fg: #1565C0;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="ice-fire"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="ice-fire"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="ice-fire"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="ice-fire"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="ice-fire"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="ice-fire"] #editor .cm-selectionBackground,
+body[data-editor-theme="ice-fire"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="ice-fire"] #editor .tok-heading { color: #D84315; font-weight: 700; }
+body[data-editor-theme="ice-fire"] #editor .tok-strong { color: #BF8800; font-weight: 700; }
+body[data-editor-theme="ice-fire"] #editor .tok-emphasis { color: #BF8800; font-style: italic; }
+body[data-editor-theme="ice-fire"] #editor .tok-monospace { color: #00838F; background: #E0F2F5; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="ice-fire"] #editor .tok-link { color: #0277BD; text-decoration: underline; }
+body[data-editor-theme="ice-fire"] #editor .tok-url { color: #0277BD; }
+body[data-editor-theme="ice-fire"] #editor .tok-quote { color: #1565C0; font-style: italic; }
+body[data-editor-theme="ice-fire"] #editor .tok-list { color: #D84315; }
+body[data-editor-theme="ice-fire"] #editor .tok-keyword { color: #C62828; font-weight: 700; }
+body[data-editor-theme="ice-fire"] #editor .tok-string { color: #2E7D32; }
+body[data-editor-theme="ice-fire"] #editor .tok-number { color: #BF8800; }
+body[data-editor-theme="ice-fire"] #editor .tok-comment { color: #7E9EB4; font-style: italic; }
+body[data-editor-theme="ice-fire"] #editor .cm-formatting { color: #1565C0; }

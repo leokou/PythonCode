@@ -1,0 +1,30 @@
+/* 预览主题 —— 森林 (Forest) */
+body[data-preview-theme="forest"] .preview-body {
+  background: #FFFFFF;
+  color: #1B3A2B;
+  font-family: "Georgia", serif;
+  line-height: 1.7;
+  padding: 32px;
+}
+body[data-preview-theme="forest"] .preview-body h1 { color: #2D6A4F; font-size: 2.2em; border-bottom: 2px solid #74C69D; padding-bottom: 0.3em; }
+body[data-preview-theme="forest"] .preview-body h2 { color: #40916C; font-size: 1.6em; border-bottom: 2px solid #74C69D; padding-bottom: 0.25em; }
+body[data-preview-theme="forest"] .preview-body h3 { color: #52B788; font-size: 1.3em; }
+body[data-preview-theme="forest"] .preview-body h4,
+body[data-preview-theme="forest"] .preview-body h5,
+body[data-preview-theme="forest"] .preview-body h6 { color: #40916C; }
+body[data-preview-theme="forest"] .preview-body a { color: #2D6A4F; text-decoration: underline; }
+body[data-preview-theme="forest"] .preview-body strong { color: #1B4332; }
+body[data-preview-theme="forest"] .preview-body em { color: #52B788; }
+body[data-preview-theme="forest"] .preview-body code { background: #E8F5E9; color: #1B5E20; padding: 0.2em 0.4em; border-radius: 6px; font-size: 85%; border: 1px solid #A5D6A7; }
+body[data-preview-theme="forest"] .preview-body pre { background: #E8F5E9; border: 1px solid #A5D6A7; border-radius: 8px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="forest"] .preview-body pre code { background: none; padding: 0; font-size: 85%; border: none; color: #1B5E20; }
+body[data-preview-theme="forest"] .preview-body blockquote { border-left: 4px solid #52B788; background: #E8F5E9; color: #1B3A2B; padding: 12px 20px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+body[data-preview-theme="forest"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="forest"] .preview-body th { background: #2D6A4F; color: #FFFFFF; border: 1px solid #2D6A4F; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="forest"] .preview-body td { border: 1px solid #A5D6A7; padding: 8px 13px; }
+body[data-preview-theme="forest"] .preview-body hr { border: none; border-top: 2px solid #74C69D; margin: 24px 0; }
+body[data-preview-theme="forest"] .preview-body ul,
+body[data-preview-theme="forest"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="forest"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="forest"] .preview-body img { max-width: 100%; border-radius: 8px; }
+body[data-preview-theme="forest"] .preview-body::-webkit-scrollbar-thumb { background: #2D6A4F; }

@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Dracula */
+body[data-editor-theme="dracula"] {
+  --cm-bg: #282A36;              /* 编辑器背景 */
+  --cm-fg: #F8F8F2;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #282A36;       /* 行号栏背景 */
+  --cm-gutter-fg: #6272A4;       /* 行号文字 */
+  --cm-gutter-border: #44475A;   /* 行号栏右边框 */
+  --cm-active-line: rgba(255,255,255,.03);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(68,71,90,.6);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #FF79C6;          /* 光标颜色 */
+  --cm-selection: rgba(68,71,90,.5);           /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(241,250,140,.3);     /* 搜索匹配高亮 */
+  --cm-fold-bg: #44475A;         /* 折叠按钮背景 */
+  --cm-fold-border: #6272A4;     /* 折叠按钮边框 */
+  --cm-fold-fg: #6272A4;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="dracula"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="dracula"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="dracula"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="dracula"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="dracula"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="dracula"] #editor .cm-selectionBackground,
+body[data-editor-theme="dracula"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="dracula"] #editor .tok-heading { color: #BD93F9; font-weight: 700; }
+body[data-editor-theme="dracula"] #editor .tok-strong { color: #FFB86C; font-weight: 700; }
+body[data-editor-theme="dracula"] #editor .tok-emphasis { color: #FFB86C; font-style: italic; }
+body[data-editor-theme="dracula"] #editor .tok-monospace { color: #8BE9FD; background: #383A50; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="dracula"] #editor .tok-link { color: #FF79C6; text-decoration: underline; }
+body[data-editor-theme="dracula"] #editor .tok-url { color: #FF79C6; }
+body[data-editor-theme="dracula"] #editor .tok-quote { color: #6272A4; font-style: italic; }
+body[data-editor-theme="dracula"] #editor .tok-list { color: #FF79C6; }
+body[data-editor-theme="dracula"] #editor .tok-keyword { color: #FF79C6; font-weight: 700; }
+body[data-editor-theme="dracula"] #editor .tok-string { color: #F1FA8C; }
+body[data-editor-theme="dracula"] #editor .tok-number { color: #BD93F9; }
+body[data-editor-theme="dracula"] #editor .tok-comment { color: #6272A4; font-style: italic; }
+body[data-editor-theme="dracula"] #editor .cm-formatting { color: #6272A4; }

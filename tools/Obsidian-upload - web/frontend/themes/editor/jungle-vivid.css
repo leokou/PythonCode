@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 鲜艳丛林 Jungle Vivid（浅色版） */
+body[data-editor-theme="jungle-vivid"] {
+  --cm-bg: #F5FAF5;              /* 编辑器背景 */
+  --cm-fg: #1F2E1A;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #EAF5EA;       /* 行号栏背景 */
+  --cm-gutter-fg: #4A7D4A;       /* 行号文字 */
+  --cm-gutter-border: #C8E0C8;   /* 行号栏右边框 */
+  --cm-active-line: rgba(46,125,50,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(46,125,50,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #F57F17;          /* 光标颜色 */
+  --cm-selection: rgba(46,125,50,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(245,127,23,.22);   /* 搜索匹配高亮 */
+  --cm-fold-bg: #EAF5EA;         /* 折叠按钮背景 */
+  --cm-fold-border: #4A7D4A;     /* 折叠按钮边框 */
+  --cm-fold-fg: #2E7D32;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="jungle-vivid"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="jungle-vivid"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="jungle-vivid"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="jungle-vivid"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="jungle-vivid"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="jungle-vivid"] #editor .cm-selectionBackground,
+body[data-editor-theme="jungle-vivid"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="jungle-vivid"] #editor .tok-heading { color: #F57F17; font-weight: 700; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-strong { color: #E65100; font-weight: 700; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-emphasis { color: #E65100; font-style: italic; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-monospace { color: #2E7D32; background: #E0F0E0; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-link { color: #00838F; text-decoration: underline; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-url { color: #00838F; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-quote { color: #2E7D32; font-style: italic; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-list { color: #F57F17; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-keyword { color: #C62828; font-weight: 700; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-string { color: #6A4C93; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-number { color: #F57F17; }
+body[data-editor-theme="jungle-vivid"] #editor .tok-comment { color: #7E9E7E; font-style: italic; }
+body[data-editor-theme="jungle-vivid"] #editor .cm-formatting { color: #2E7D32; }

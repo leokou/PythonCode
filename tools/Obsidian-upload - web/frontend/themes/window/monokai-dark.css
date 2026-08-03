@@ -1,0 +1,30 @@
+/* 窗口主题 —— Monokai */
+body[data-window-theme="monokai-dark"] {
+  --bg-main: #272822;        /* 窗口主背景 */
+  --bg-editor: #272822;      /* 编辑区背景 */
+  --bg-preview: #272822;     /* 预览区背景 */
+  --bg-2: #1E1F1C;           /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #3E3D32;           /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #3E3D32;       /* 悬浮背景 */
+  --text-color: #F8F8F2;     /* 普通正文 */
+  --title-color: #F92672;    /* 标题文字 */
+  --h1-color: #F92672;       /* 一级标题 */
+  --text-dim: #75715E;       /* 辅助文字 */
+  --border-color: #3E3D32;   /* 边框 */
+  --quote-color: #FD971F;    /* 引用竖线 */
+  --scroll-thumb: #49483E;   /* 滚动条 */
+  --accent: #A6E22E;         /* 强调色（主按钮/选中态） */
+  --accent-strong: #8FC71F;  /* 强调色加深 */
+  --accent-soft: rgba(166,226,46,.18);   /* 当前行高亮（带透明度） */
+  --accent-gutter: rgba(166,226,46,.25); /* 当前行行号高亮（带透明度） */
+  --hover-overlay: rgba(255,255,255,.08); /* 图标按钮悬浮（带透明度） */
+  --success: #A6E22E;        /* 成功色 */
+  --error: #F92672;          /* 错误色 */
+  --code-bg: #1E1F1C;        /* 代码块背景 */
+  --code-text: #F8F8F2;      /* 代码块文字 */
+  --toast-bg: #3E3D32;       /* Toast 提示背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.4);            /* 阴影 box-shadow */
+  --glass-bg: rgba(30,30,46,.9);                  /* 玻璃面板背景（带透明度） */
+  --glass-border: rgba(62,61,50,.9);              /* 玻璃面板边框（带透明度） */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.4);      /* 玻璃面板阴影 box-shadow */
+}

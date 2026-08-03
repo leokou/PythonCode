@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 毒液绿 Toxic Green（浅色版） */
+body[data-editor-theme="toxic-green"] {
+  --cm-bg: #F4FAF4;              /* 编辑器背景 */
+  --cm-fg: #1A2E1A;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #E8F5E8;       /* 行号栏背景 */
+  --cm-gutter-fg: #4A7D4A;       /* 行号文字 */
+  --cm-gutter-border: #C8E0C8;   /* 行号栏右边框 */
+  --cm-active-line: rgba(46,125,50,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(46,125,50,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #2E7D32;          /* 光标颜色 */
+  --cm-selection: rgba(46,125,50,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(200,160,0,.22);    /* 搜索匹配高亮 */
+  --cm-fold-bg: #E8F5E8;         /* 折叠按钮背景 */
+  --cm-fold-border: #4A7D4A;     /* 折叠按钮边框 */
+  --cm-fold-fg: #2E7D32;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="toxic-green"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="toxic-green"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="toxic-green"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="toxic-green"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="toxic-green"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="toxic-green"] #editor .cm-selectionBackground,
+body[data-editor-theme="toxic-green"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="toxic-green"] #editor .tok-heading { color: #2E7D32; font-weight: 700; }
+body[data-editor-theme="toxic-green"] #editor .tok-strong { color: #BF8800; font-weight: 700; }
+body[data-editor-theme="toxic-green"] #editor .tok-emphasis { color: #BF8800; font-style: italic; }
+body[data-editor-theme="toxic-green"] #editor .tok-monospace { color: #00695C; background: #E0F2F0; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="toxic-green"] #editor .tok-link { color: #2E7D32; text-decoration: underline; }
+body[data-editor-theme="toxic-green"] #editor .tok-url { color: #2E7D32; }
+body[data-editor-theme="toxic-green"] #editor .tok-quote { color: #4A7D4A; font-style: italic; }
+body[data-editor-theme="toxic-green"] #editor .tok-list { color: #2E7D32; }
+body[data-editor-theme="toxic-green"] #editor .tok-keyword { color: #AD1457; font-weight: 700; }
+body[data-editor-theme="toxic-green"] #editor .tok-string { color: #6A4C93; }
+body[data-editor-theme="toxic-green"] #editor .tok-number { color: #BF8800; }
+body[data-editor-theme="toxic-green"] #editor .tok-comment { color: #7E9E7E; font-style: italic; }
+body[data-editor-theme="toxic-green"] #editor .cm-formatting { color: #4A7D4A; }

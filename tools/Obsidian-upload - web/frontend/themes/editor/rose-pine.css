@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Rosé Pine */
+body[data-editor-theme="rose-pine"] {
+  --cm-bg: #191724;              /* 编辑器背景 */
+  --cm-fg: #E0DEF4;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #15131F;       /* 行号栏背景 */
+  --cm-gutter-fg: #6E6A86;       /* 行号文字 */
+  --cm-gutter-border: #1F1D2E;   /* 行号栏右边框 */
+  --cm-active-line: #1F1D2E;     /* 当前行高亮 */
+  --cm-active-line-gutter: #26233A;  /* 当前行号高亮 */
+  --cm-cursor: #EBBCBA;          /* 光标颜色 */
+  --cm-selection: rgba(235,188,186,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(246,193,119,.32);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #1F1D2E;         /* 折叠按钮背景 */
+  --cm-fold-border: #2A2837;     /* 折叠按钮边框 */
+  --cm-fold-fg: #E0DEF4;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="rose-pine"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="rose-pine"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="rose-pine"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="rose-pine"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="rose-pine"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="rose-pine"] #editor .cm-selectionBackground,
+body[data-editor-theme="rose-pine"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="rose-pine"] #editor .tok-heading { color: #EBBCBA; font-weight: 700; }
+body[data-editor-theme="rose-pine"] #editor .tok-strong { color: #F6C177; font-weight: 700; }
+body[data-editor-theme="rose-pine"] #editor .tok-emphasis { color: #C4A7E7; font-style: italic; }
+body[data-editor-theme="rose-pine"] #editor .tok-monospace { color: #31748F; background: #1F1D2E; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="rose-pine"] #editor .tok-link { color: #EBBCBA; text-decoration: underline; }
+body[data-editor-theme="rose-pine"] #editor .tok-url { color: #EBBCBA; }
+body[data-editor-theme="rose-pine"] #editor .tok-quote { color: #6E6A86; font-style: italic; }
+body[data-editor-theme="rose-pine"] #editor .tok-list { color: #C4A7E7; }
+body[data-editor-theme="rose-pine"] #editor .tok-keyword { color: #C4A7E7; font-weight: 700; }
+body[data-editor-theme="rose-pine"] #editor .tok-string { color: #9CCFD8; }
+body[data-editor-theme="rose-pine"] #editor .tok-number { color: #F6C177; }
+body[data-editor-theme="rose-pine"] #editor .tok-comment { color: #6E6A86; font-style: italic; }
+body[data-editor-theme="rose-pine"] #editor .cm-formatting { color: #6E6A86; }

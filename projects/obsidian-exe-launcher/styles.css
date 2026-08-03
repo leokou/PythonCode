@@ -1,9 +1,7 @@
 /* ========== 大尺寸弹窗 ========== */
 .modal.exe-launcher-modal-large {
-  max-width: 2500px !important;
-  width: 95vw;
-  max-height: 1500px !important;
-  height: 85vh;
+  width: 1080px;
+  height: 500px;
 }
 
 .modal.exe-launcher-modal-large .modal-content {

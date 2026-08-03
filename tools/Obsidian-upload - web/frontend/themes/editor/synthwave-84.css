@@ -1,0 +1,37 @@
+/* 编辑器主题 —— Synthwave 84 */
+body[data-editor-theme="synthwave-84"] {
+  --cm-bg: #262335;              /* 编辑器背景 */
+  --cm-fg: #FFFFFF;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #1E1B2E;       /* 行号栏背景 */
+  --cm-gutter-fg: #6272A4;       /* 行号文字 */
+  --cm-gutter-border: #2A2A4A;   /* 行号栏右边框 */
+  --cm-active-line: #2A2740;     /* 当前行高亮 */
+  --cm-active-line-gutter: #2A2A4A;  /* 当前行号高亮 */
+  --cm-cursor: #FF7EDB;          /* 光标颜色 */
+  --cm-selection: rgba(255,126,219,.5);  /* 选区颜色 */
+  --cm-search-match: rgba(255,184,108,.35);  /* 搜索匹配高亮 */
+  --cm-fold-bg: #2A2A4A;         /* 折叠按钮背景 */
+  --cm-fold-border: #3D3D66;     /* 折叠按钮边框 */
+  --cm-fold-fg: #FFFFFF;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="synthwave-84"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="synthwave-84"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="synthwave-84"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="synthwave-84"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="synthwave-84"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="synthwave-84"] #editor .cm-selectionBackground,
+body[data-editor-theme="synthwave-84"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：鲜艳高对比度 */
+body[data-editor-theme="synthwave-84"] #editor .tok-heading { color: #FF7EDB; font-weight: 700; }
+body[data-editor-theme="synthwave-84"] #editor .tok-strong { color: #FFB86C; font-weight: 700; }
+body[data-editor-theme="synthwave-84"] #editor .tok-emphasis { color: #B084EB; font-style: italic; }
+body[data-editor-theme="synthwave-84"] #editor .tok-monospace { color: #36F9F6; background: #2A2A4A; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="synthwave-84"] #editor .tok-link { color: #FF7EDB; text-decoration: underline; }
+body[data-editor-theme="synthwave-84"] #editor .tok-url { color: #36F9F6; }
+body[data-editor-theme="synthwave-84"] #editor .tok-quote { color: #6272A4; font-style: italic; }
+body[data-editor-theme="synthwave-84"] #editor .tok-list { color: #FFB86C; }
+body[data-editor-theme="synthwave-84"] #editor .tok-keyword { color: #FF7EDB; font-weight: 700; }
+body[data-editor-theme="synthwave-84"] #editor .tok-string { color: #FF8170; }
+body[data-editor-theme="synthwave-84"] #editor .tok-number { color: #FFB86C; }
+body[data-editor-theme="synthwave-84"] #editor .tok-comment { color: #6272A4; font-style: italic; }
+body[data-editor-theme="synthwave-84"] #editor .cm-formatting { color: #6272A4; }

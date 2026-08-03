@@ -1,0 +1,30 @@
+/* 预览主题 —— 热带 (Tropical) */
+body[data-preview-theme="tropical"] .preview-body {
+  background: #FFFFFF;
+  color: #004D40;
+  font-family: "Inter", sans-serif;
+  line-height: 1.7;
+  padding: 32px;
+}
+body[data-preview-theme="tropical"] .preview-body h1 { color: #00897B; font-size: 2.2em; border-bottom: 2px solid #FF6F00; padding-bottom: 0.3em; }
+body[data-preview-theme="tropical"] .preview-body h2 { color: #00695C; font-size: 1.6em; border-bottom: 2px solid #FF6F00; padding-bottom: 0.25em; }
+body[data-preview-theme="tropical"] .preview-body h3 { color: #00796B; font-size: 1.3em; }
+body[data-preview-theme="tropical"] .preview-body h4,
+body[data-preview-theme="tropical"] .preview-body h5,
+body[data-preview-theme="tropical"] .preview-body h6 { color: #00695C; }
+body[data-preview-theme="tropical"] .preview-body a { color: #FF6F00; text-decoration: underline; }
+body[data-preview-theme="tropical"] .preview-body strong { color: #BF360C; }
+body[data-preview-theme="tropical"] .preview-body em { color: #00796B; }
+body[data-preview-theme="tropical"] .preview-body code { background: #E0F2F1; color: #00695C; padding: 0.2em 0.4em; border-radius: 6px; font-size: 85%; border: 1px solid #B2DFDB; }
+body[data-preview-theme="tropical"] .preview-body pre { background: #E0F2F1; border: 1px solid #B2DFDB; border-radius: 8px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="tropical"] .preview-body pre code { background: none; padding: 0; font-size: 85%; border: none; color: #00695C; }
+body[data-preview-theme="tropical"] .preview-body blockquote { border-left: 4px solid #FF6F00; background: #FFF8E1; color: #004D40; padding: 12px 20px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+body[data-preview-theme="tropical"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="tropical"] .preview-body th { background: #00897B; color: #FFFFFF; border: 1px solid #00897B; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="tropical"] .preview-body td { border: 1px solid #B2DFDB; padding: 8px 13px; }
+body[data-preview-theme="tropical"] .preview-body hr { border: none; border-top: 2px solid #FF6F00; margin: 24px 0; }
+body[data-preview-theme="tropical"] .preview-body ul,
+body[data-preview-theme="tropical"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="tropical"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="tropical"] .preview-body img { max-width: 100%; border-radius: 8px; }
+body[data-preview-theme="tropical"] .preview-body::-webkit-scrollbar-thumb { background: #00897B; }

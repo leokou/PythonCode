@@ -1,0 +1,30 @@
+/* 窗口主题 —— Obsidian Dark */
+body[data-window-theme="obsidian-dark"] {
+  --bg-main: #1E1E2E;        /* 窗口主背景 */
+  --bg-editor: #1E1E2E;      /* 编辑区背景 */
+  --bg-preview: #1E1E2E;     /* 预览区背景 */
+  --bg-2: #181825;           /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #313244;           /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #313244;       /* 悬浮背景 */
+  --text-color: #CDD6F4;     /* 普通正文 */
+  --title-color: #E5E9F0;    /* 标题文字 */
+  --h1-color: #E5E9F0;       /* 一级标题 */
+  --text-dim: #6C7086;       /* 辅助文字 */
+  --border-color: #313244;   /* 边框 */
+  --quote-color: #45475A;    /* 引用竖线 */
+  --scroll-thumb: #45475A;   /* 滚动条 */
+  --accent: #7C5CD6;         /* 强调色（主按钮/选中态） */
+  --accent-strong: #8B6CE0;  /* 强调色加深 */
+  --accent-soft: rgba(124,92,214,.18);   /* 当前行高亮（带透明度） */
+  --accent-gutter: rgba(124,92,214,.25); /* 当前行行号高亮（带透明度） */
+  --hover-overlay: rgba(255,255,255,.08); /* 图标按钮悬浮（带透明度） */
+  --success: #A6E3A1;        /* 成功色 */
+  --error: #F38BA8;          /* 错误色 */
+  --code-bg: #181825;        /* 代码块背景 */
+  --code-text: #CDD6F4;      /* 代码块文字 */
+  --toast-bg: #313244;       /* Toast 提示背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.4);            /* 阴影 box-shadow */
+  --glass-bg: rgba(30,30,46,.9);                  /* 玻璃面板背景（带透明度） */
+  --glass-border: rgba(49,50,68,.9);              /* 玻璃面板边框（带透明度） */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.4);      /* 玻璃面板阴影 box-shadow */
+}

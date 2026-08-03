@@ -1,0 +1,30 @@
+/* 预览主题 —— Apple Docs */
+body[data-preview-theme="apple-docs"] .preview-body {
+  background: #FFFFFF;
+  color: #1D1D1F;
+  font-family: -apple-system, "SF Pro", sans-serif;
+  line-height: 1.67;
+  padding: 32px;
+}
+body[data-preview-theme="apple-docs"] .preview-body h1 { color: #1D1D1F; font-size: 32px; font-weight: 700; border-bottom: none; padding-bottom: 8px; }
+body[data-preview-theme="apple-docs"] .preview-body h2 { color: #1D1D1F; font-size: 26px; border-bottom: none; }
+body[data-preview-theme="apple-docs"] .preview-body h3 { color: #1D1D1F; font-size: 20px; }
+body[data-preview-theme="apple-docs"] .preview-body h4,
+body[data-preview-theme="apple-docs"] .preview-body h5,
+body[data-preview-theme="apple-docs"] .preview-body h6 { color: #1D1D1F; }
+body[data-preview-theme="apple-docs"] .preview-body a { color: #0066CC; text-decoration: none; }
+body[data-preview-theme="apple-docs"] .preview-body strong { color: #1D1D1F; }
+body[data-preview-theme="apple-docs"] .preview-body em { color: #424245; }
+body[data-preview-theme="apple-docs"] .preview-body code { background: #F5F5F7; color: #D63384; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; border: 1px solid #E5E5E7; }
+body[data-preview-theme="apple-docs"] .preview-body pre { background: #F5F5F7; border: 1px solid #E5E5E7; border-radius: 8px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="apple-docs"] .preview-body pre code { background: none; padding: 0; border: none; color: #D63384; }
+body[data-preview-theme="apple-docs"] .preview-body blockquote { border-left: 4px solid #86868B; background: #F5F5F7; color: #1D1D1F; padding: 8px 12px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+body[data-preview-theme="apple-docs"] .preview-body table { border-collapse: collapse; margin: 16px 0; }
+body[data-preview-theme="apple-docs"] .preview-body th { background: #F5F5F7; color: #1D1D1F; border: 1px solid #E5E5E7; padding: 8px 12px; }
+body[data-preview-theme="apple-docs"] .preview-body td { border: 1px solid #E5E5E7; padding: 8px 12px; }
+body[data-preview-theme="apple-docs"] .preview-body hr { border: none; border-top: 1px solid #E5E5E7; margin: 20px 0; }
+body[data-preview-theme="apple-docs"] .preview-body ul,
+body[data-preview-theme="apple-docs"] .preview-body ol { padding-left: 24px; }
+body[data-preview-theme="apple-docs"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="apple-docs"] .preview-body img { max-width: 100%; border-radius: 8px; }
+body[data-preview-theme="apple-docs"] .preview-body::-webkit-scrollbar-thumb { background: #C7C7CC; }

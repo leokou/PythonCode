@@ -1,0 +1,37 @@
+/* 编辑器主题 —— 熔岩流 Lava Flow（浅色版） */
+body[data-editor-theme="lava-flow"] {
+  --cm-bg: #FFF5F0;              /* 编辑器背景 */
+  --cm-fg: #3D1F1F;              /* 编辑器前景文字 */
+  --cm-gutter-bg: #FBEBE3;       /* 行号栏背景 */
+  --cm-gutter-fg: #A55A3D;       /* 行号文字 */
+  --cm-gutter-border: #E8D0C0;   /* 行号栏右边框 */
+  --cm-active-line: rgba(255,69,0,.06);     /* 当前行高亮（带透明度） */
+  --cm-active-line-gutter: rgba(255,69,0,.14);  /* 当前行号高亮（带透明度） */
+  --cm-cursor: #C62828;          /* 光标颜色 */
+  --cm-selection: rgba(255,69,0,.5);       /* 选区颜色（带透明度） */
+  --cm-search-match: rgba(255,140,0,.22);   /* 搜索匹配高亮 */
+  --cm-fold-bg: #FBEBE3;         /* 折叠按钮背景 */
+  --cm-fold-border: #A55A3D;     /* 折叠按钮边框 */
+  --cm-fold-fg: #8B0000;         /* 折叠按钮文字 */
+}
+body[data-editor-theme="lava-flow"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
+body[data-editor-theme="lava-flow"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
+body[data-editor-theme="lava-flow"] #editor .cm-activeLine { background: var(--cm-active-line); }
+body[data-editor-theme="lava-flow"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
+body[data-editor-theme="lava-flow"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
+body[data-editor-theme="lava-flow"] #editor .cm-selectionBackground,
+body[data-editor-theme="lava-flow"] #editor .cm-selection { background: var(--cm-selection); }
+/* 语法高亮：浅色背景下的中等饱和度配色 */
+body[data-editor-theme="lava-flow"] #editor .tok-heading { color: #C62828; font-weight: 700; }
+body[data-editor-theme="lava-flow"] #editor .tok-strong { color: #B8860B; font-weight: 700; }
+body[data-editor-theme="lava-flow"] #editor .tok-emphasis { color: #B8860B; font-style: italic; }
+body[data-editor-theme="lava-flow"] #editor .tok-monospace { color: #BF360C; background: #FCE4DC; padding: 0 3px; border-radius: 3px; }
+body[data-editor-theme="lava-flow"] #editor .tok-link { color: #C62828; text-decoration: underline; }
+body[data-editor-theme="lava-flow"] #editor .tok-url { color: #C62828; }
+body[data-editor-theme="lava-flow"] #editor .tok-quote { color: #8B0000; font-style: italic; }
+body[data-editor-theme="lava-flow"] #editor .tok-list { color: #C62828; }
+body[data-editor-theme="lava-flow"] #editor .tok-keyword { color: #B71C1C; font-weight: 700; }
+body[data-editor-theme="lava-flow"] #editor .tok-string { color: #6A1B9A; }
+body[data-editor-theme="lava-flow"] #editor .tok-number { color: #B8860B; }
+body[data-editor-theme="lava-flow"] #editor .tok-comment { color: #A1887F; font-style: italic; }
+body[data-editor-theme="lava-flow"] #editor .cm-formatting { color: #8B0000; }

@@ -1,0 +1,30 @@
+/* 预览主题 —— 星河 (Galaxy) */
+body[data-preview-theme="galaxy"] .preview-body {
+  background: #FFFFFF;
+  color: #1A1033;
+  font-family: "Inter", sans-serif;
+  line-height: 1.7;
+  padding: 32px;
+}
+body[data-preview-theme="galaxy"] .preview-body h1 { color: #4C1D95; font-size: 2.2em; border-bottom: 2px solid #A78BFA; padding-bottom: 0.3em; }
+body[data-preview-theme="galaxy"] .preview-body h2 { color: #5B21B6; font-size: 1.6em; border-bottom: 2px solid #A78BFA; padding-bottom: 0.25em; }
+body[data-preview-theme="galaxy"] .preview-body h3 { color: #7C3AED; font-size: 1.3em; }
+body[data-preview-theme="galaxy"] .preview-body h4,
+body[data-preview-theme="galaxy"] .preview-body h5,
+body[data-preview-theme="galaxy"] .preview-body h6 { color: #5B21B6; }
+body[data-preview-theme="galaxy"] .preview-body a { color: #4C1D95; text-decoration: underline; }
+body[data-preview-theme="galaxy"] .preview-body strong { color: #DB2777; }
+body[data-preview-theme="galaxy"] .preview-body em { color: #7C3AED; }
+body[data-preview-theme="galaxy"] .preview-body code { background: #F5F3FF; color: #5B21B6; padding: 0.2em 0.4em; border-radius: 6px; font-size: 85%; border: 1px solid #DDD6FE; }
+body[data-preview-theme="galaxy"] .preview-body pre { background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 8px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="galaxy"] .preview-body pre code { background: none; padding: 0; font-size: 85%; border: none; color: #5B21B6; }
+body[data-preview-theme="galaxy"] .preview-body blockquote { border-left: 4px solid #7C3AED; background: #F5F3FF; color: #1A1033; padding: 12px 20px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+body[data-preview-theme="galaxy"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="galaxy"] .preview-body th { background: #4C1D95; color: #DDD6FE; border: 1px solid #4C1D95; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="galaxy"] .preview-body td { border: 1px solid #DDD6FE; padding: 8px 13px; }
+body[data-preview-theme="galaxy"] .preview-body hr { border: none; border-top: 2px solid #A78BFA; margin: 24px 0; }
+body[data-preview-theme="galaxy"] .preview-body ul,
+body[data-preview-theme="galaxy"] .preview-body ol { padding-left: 2em; }
+body[data-preview-theme="galaxy"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="galaxy"] .preview-body img { max-width: 100%; border-radius: 8px; }
+body[data-preview-theme="galaxy"] .preview-body::-webkit-scrollbar-thumb { background: #4C1D95; }
