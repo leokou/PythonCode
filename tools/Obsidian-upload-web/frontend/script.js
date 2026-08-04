@@ -739,6 +739,67 @@ function _mapPreviewCursorToEditor() {
   return lineStart + offsetInBlock;
 }
 
+/* ============ Markdown 工具栏宿主能力（供 toolbar.js 经 Toolbar.init 注入） ============ */
+
+/* 将预览区一个 DOM 点（container+offset）映射到编辑器 markdown 字符位置 */
+function _mapPreviewPointToEditor(container, offset) {
+  if (!container) return null;
+  let node = (container.nodeType === Node.TEXT_NODE) ? container.parentNode : container;
+  let block = null;
+  while (node && node !== previewEl) {
+    if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute && node.hasAttribute("data-line")
+        && parseInt(node.getAttribute("data-line"), 10) > 0) {
+      block = node;
+      break;
+    }
+    node = node.parentNode;
+  }
+  if (!block) return null;
+  const blockLine = parseInt(block.getAttribute("data-line"), 10);
+  const range = document.createRange();
+  range.selectNodeContents(block);
+  range.setEnd(container, offset);
+  const plainOffset = range.toString().length;
+  const tab = currentTab();
+  if (!tab) return null;
+  const doc = tab.state.doc;
+  if (blockLine > doc.lines) return null;
+  const mdOffset = _mapPlainToMd(doc.line(blockLine).text, plainOffset);
+  return doc.line(blockLine).from + mdOffset;
+}
+
+/* 捕获预览区当前选区，映射为编辑器 {from,to}（供编辑命令在预览选区上操作） */
+function _toolbarCapturePreviewRange() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  if (!currentTab()) return null;
+  const a = _mapPreviewPointToEditor(sel.anchorNode, sel.anchorOffset);
+  const b = _mapPreviewPointToEditor(sel.focusNode, sel.focusOffset);
+  if (a == null || b == null) return null;
+  return { from: Math.min(a, b), to: Math.max(a, b) };
+}
+
+/* 将捕获的预览选区应用到编辑器并聚焦 */
+function _toolbarApplyPreviewRange(range) {
+  if (!range) return;
+  const len = view.state.doc.length;
+  const to = Math.min(range.to, len);
+  const from = Math.min(range.from, to);
+  view.dispatch({ selection: { anchor: from, head: to } });
+  view.focus();
+}
+
+/* 复制当前页签全文 Markdown */
+function _toolbarCopyMarkdown() {
+  if (!currentTab()) return;
+  const text = view.state.doc.toString();
+  if (!text) { toast("内容为空", "warn"); return; }
+  navigator.clipboard.writeText(text).then(
+    () => toast("已复制全文 " + text.length + " 字符", "ok"),
+    () => toast("复制失败", "err")
+  );
+}
+
 /* ============ 预览区键盘拦截：Enter / Ctrl+Z / Ctrl+Y ============ */
 
 /* 将预览区纯文本偏移映射为 markdown 源码位置
@@ -981,27 +1042,38 @@ function _scrollPreviewCursorIntoView() {
   const sh = previewEl.clientHeight;
   if (sh === 0) return;
 
-  /* 末尾空行特殊处理：trailing <br> 不增加块高度，getBoundingClientRect 测不到，
-   * 直接滚到预览区底部，配合 .preview-body 的 padding-bottom 保证金光标行不贴边可见 */
+  let target = null; /* 目标 scrollTop；null 表示无需滚动 */
+
   if (_isCaretAtDocEnd()) {
+    /* 末尾空行特殊处理：trailing <br> 不增加块高度，getBoundingClientRect 测不到，
+     * 直接滚到预览区底部，配合 .preview-body 的 padding-bottom 保证光标行不贴边可见 */
     const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
-    if (previewEl.scrollTop < maxScroll) previewEl.scrollTop = maxScroll;
-    return;
+    if (previewEl.scrollTop < maxScroll) target = maxScroll;
+  } else {
+    const pr = previewEl.getBoundingClientRect();
+    const br = block.getBoundingClientRect();
+    const relTop = br.top - pr.top;       /* 块顶相对预览区视口（含已滚动偏移） */
+    const relBottom = br.bottom - pr.top; /* 块底相对预览区视口 */
+    let delta = 0;
+    if (relTop < 10) {
+      delta = relTop - 10;                /* 块在视口上方：向上滚 */
+    } else if (relBottom > sh - 24) {
+      delta = relBottom - (sh - 24);      /* 块在视口下方：向下滚 */
+    }
+    if (delta !== 0) {
+      const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
+      target = Math.max(0, Math.min(previewEl.scrollTop + delta, maxScroll));
+    }
   }
 
-  const pr = previewEl.getBoundingClientRect();
-  const br = block.getBoundingClientRect();
-  const relTop = br.top - pr.top;       /* 块顶相对预览区视口（含已滚动偏移） */
-  const relBottom = br.bottom - pr.top; /* 块底相对预览区视口 */
-  let delta = 0;
-  if (relTop < 10) {
-    delta = relTop - 10;                /* 块在视口上方：向上滚 */
-  } else if (relBottom > sh - 24) {
-    delta = relBottom - (sh - 24);      /* 块在视口下方：向下滚 */
-  }
-  if (delta === 0) return;
-  const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
-  previewEl.scrollTop = Math.max(0, Math.min(previewEl.scrollTop + delta, maxScroll));
+  if (target === null) return;
+
+  /* 关键：设置滚动同步抑制标志。预览区回车后 cursorFollowPlugin 会在 rAF 中滚动编辑器，
+   * 该编辑器 scroll 事件会触发 editor→preview 同步（scrollPreviewToLine），把预览区拉离底部，
+   * 覆盖此处滚动 → 新行/光标再次出窗。抑制 200ms 覆盖那一轮 rAF 滚动及其 scroll 事件。 */
+  _cursorSyncActive = true;
+  previewEl.scrollTop = target;
+  setTimeout(() => { _cursorSyncActive = false; }, 200);
 }
 
 /* ============ 执行预览区 Enter 键 ============ */
@@ -2035,6 +2107,9 @@ const editorExtensions = [
       if (update.selectionSet || update.docChanged) {
         if (window.Outline && Outline.highlightAtPos) {
           Outline.highlightAtPos(update.state.selection.main.head);
+        }
+        if (window.Toolbar && Toolbar.updateActiveState) {
+          Toolbar.updateActiveState(update.view);
         }
       }
     }
@@ -3602,6 +3677,18 @@ async function handleStartupRestore() {
   if (window.Workspace && Workspace.init) Workspace.init();
   if (window.Search && Search.init) Search.init();
   if (window.Workspace && Workspace.start) await Workspace.start();
+
+  /* Markdown 工具栏：注入宿主能力（getView / 复制 / 定位 / 预览选区映射 / 重新渲染） */
+  if (window.Toolbar && Toolbar.init) {
+    Toolbar.init({
+      getView: () => view,
+      copyMarkdown: _toolbarCopyMarkdown,
+      revealFile: syncExplorerWithTab,
+      renderPreview: renderPreview,
+      capturePreviewRange: _toolbarCapturePreviewRange,
+      applyPreviewRangeToEditor: _toolbarApplyPreviewRange,
+    });
+  }
 
   /* 自动保存状态回调：更新 Tab 状态徽标（key = pageId 或外部文件路径） */
   Storage.setStatusCallback((key, status) => {
