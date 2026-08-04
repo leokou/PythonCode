@@ -1191,8 +1191,12 @@ function _doPreviewEnter(isSoftEnter) {
   _oldBlockMarkdown = newDoc.sliceString(newFromPos, newToPos);
   _oldBlockPlainText = block.innerText;
 
-  _previewEditing = false;
+  /* 延迟恢复 _previewEditing：插入 <br> 会异步派发 input 事件，
+   * 该事件触发 _syncPreviewToEditor → 检测 innerText 中的换行 → 向 markdown 追加多余 \n
+   * → 编辑区出现预览区没有的空白行（"按回车出两行/出空行"）。延一帧跳过该杂散 input。
+   * 注意：_skipPreviewRerender 立即恢复（dispatch 已完成），仅 defer _previewEditing。 */
   _skipPreviewRerender = false;
+  setTimeout(() => { _previewEditing = false; }, 0);
 
   /* 回车后光标已移到新行，滚动预览区确保新行可见（长文档末尾回车不丢光标） */
   _scrollPreviewCursorIntoView();
