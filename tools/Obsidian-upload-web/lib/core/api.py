@@ -892,7 +892,16 @@ class Api:
     # ---- 打开工具箱窗口 ----
     def open_tools(self):
         if _main._tools_window is not None:
+            # 记录来源窗口，使工具箱主题与打开它的窗口保持一致
+            if _main._tools_api is not None:
+                _main._tools_api.source_window = self.window_type
             _main._safe_show_window(_main._tools_window)
+            # 立即按来源窗口重应用主题（工具箱窗口常驻，避免停留在上次来源主题）
+            try:
+                _main._tools_window.evaluate_js(
+                    "if(window.ThemeManager) window.ThemeManager.load();")
+            except Exception as e:
+                log_error("重应用工具箱主题失败: %s" % e)
             log_info("打开工具箱窗口（来源: %s）" % self.window_type)
         return True
 
@@ -941,6 +950,13 @@ class Api:
             if _main._settings_api is not None:
                 _main._settings_api.source_window = self.window_type
             _main._safe_show_window(_main._settings_window)
+            # 每次打开都按来源窗口重应用主题（设置窗是单例常驻，init 只跑一次）
+            try:
+                _main._settings_window.evaluate_js(
+                    "if(window.applyWindowThemeToSelf) "
+                    "window.applyWindowThemeToSelf('%s');" % self.window_type)
+            except Exception as e:
+                log_error("重应用设置窗主题失败: %s" % e)
             log_info("打开设置窗口（来源: %s）" % self.window_type)
         return True
 
@@ -1062,6 +1078,7 @@ class ToolApi:
     def __init__(self):
         self.user_path = os.path.join(_main.log_dir(), "tools.json")
         self.builtin_path = _main.resource_path(os.path.join("tools", "tools.json"))
+        self.source_window = "flash"   # 打开工具箱的来源窗口，使主题与打开它的窗口一致
 
     def _builtin_default(self):
         return {
@@ -1194,9 +1211,9 @@ class ToolApi:
             log_error("获取功能区工具失败: %s" % e)
             return []
 
-    # ---- 主题（工具箱窗口只读，保证窗口主题一致） ----
+    # ---- 主题（工具箱窗口只读；跟随打开它的来源窗口，保证主题一致） ----
     def get_theme(self):
-        return theme_store.get_theme("flash")
+        return theme_store.get_theme(self.source_window)
 
     # ---- 前端（编辑器窗口）：保存功能区拖动排序 ----
     def save_pinned_order(self, order_ids):

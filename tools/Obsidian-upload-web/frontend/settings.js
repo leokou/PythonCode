@@ -267,8 +267,18 @@ async function submitTheme() {
 
 themeSubmitBtn.addEventListener("click", submitTheme);
 
-/* 把指定窗口的主题应用到设置窗自身，使弹窗外观与来源窗口一致（实时预览） */
+/* 把指定窗口的主题应用到设置窗自身，并切换为该窗口页签（与打开它的窗口一致）。
+ * 同时用于"打开时重应用"：设置窗是单例常驻，init 只跑一次，再次打开需主动调用。 */
 async function applyWindowThemeToSelf(wt) {
+  if (!wt || !allThemeData[wt]) return;
+  // 先保存当前页签选中值，避免切换丢失
+  saveCurrentTabValues();
+  // 切换激活页签到来源窗口
+  document.querySelectorAll(".set-theme-tab").forEach((b) =>
+    b.classList.toggle("active", b.dataset.window === wt));
+  currentWindowType = wt;
+  applyTabTheme(allThemeData[wt]);
+  // 应用该窗口主题到设置窗自身（实时预览）
   const a = api();
   if (!a || !a.get_theme) return;
   try {
@@ -289,21 +299,20 @@ async function applyWindowThemeToSelf(wt) {
   await loadMsConfig();
   await loadPicgoSwitch();
   await loadThemes();
-  /* 让设置窗默认选中并应用"打开它的来源窗口"的主题（与来源窗口一致） */
+  /* 让设置窗默认应用"打开它的来源窗口"的主题（与来源窗口一致） */
   const a = api();
   if (a && a.get_source_window) {
     try {
       const res = await a.get_source_window();
       if (res && res.ok && res.windowType && allThemeData[res.windowType]) {
-        const wt = res.windowType;
-        saveCurrentTabValues();
-        document.querySelectorAll(".set-theme-tab").forEach((b) =>
-          b.classList.toggle("active", b.dataset.window === wt));
-        currentWindowType = wt;
-        applyTabTheme(allThemeData[wt]);
+        await applyWindowThemeToSelf(res.windowType);
+      } else {
+        await applyWindowThemeToSelf(currentWindowType);
       }
-    } catch (e) { /* 失败则沿用默认 FlashNote 页签 */ }
+    } catch (e) {
+      await applyWindowThemeToSelf(currentWindowType);
+    }
+  } else {
+    await applyWindowThemeToSelf(currentWindowType);
   }
-  /* 应用来源窗口主题到设置窗自身（与打开它的窗口保持一致） */
-  if (currentWindowType) await applyWindowThemeToSelf(currentWindowType);
 })();

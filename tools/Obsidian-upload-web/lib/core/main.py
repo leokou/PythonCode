@@ -88,6 +88,7 @@ _exit_lock = threading.Lock()
 _state = {"quitting": False}
 _windows = {}           # key -> window（四个独立窗口引用）
 _tools_window = None    # 工具箱窗口引用
+_tools_api = None       # 工具箱窗口 js_api 引用（用于写入来源窗口类型）
 _settings_window = None  # 设置窗口引用
 _settings_api = None     # 设置窗口 js_api 引用（用于写入来源窗口类型）
 _canvas_window = None    # 画布窗口引用
@@ -105,6 +106,13 @@ def _set_last_active(key):
     global _last_active
     if key in WINDOW_TITLES:
         _last_active = key
+
+
+def _set_tools_source_to_last_active():
+    """托盘直接显示工具箱时，把主题来源设为最近激活窗口（避免停留在上次来源）。"""
+    global _tools_api
+    if _tools_api is not None and _last_active in WINDOW_TITLES:
+        _tools_api.source_window = _last_active
 
 
 def _check_single_instance(file_args=None):
@@ -289,7 +297,7 @@ def _flush_all_windows():
 
 
 def main():
-    global _windows, _hotkeys, _tools_window, _settings_window, _settings_api, _canvas_window, _canvas_server
+    global _windows, _hotkeys, _tools_window, _tools_api, _settings_window, _settings_api, _canvas_window, _canvas_server
 
     _perf_mark("main_start")
     cfg = load_config()
@@ -421,10 +429,11 @@ def main():
         if not os.path.exists(tools_html):
             log_error("找不到工具箱界面: %s" % tools_html)
         tx, ty = get_center_position(1000, 600)
+        tools_api = ToolApi()
         tools_win = webview.create_window(
             TOOLS_TITLE,
             url=tools_html,
-            js_api=ToolApi(),
+            js_api=tools_api,
             width=1000,
             height=600,
             x=tx,
@@ -445,6 +454,7 @@ def main():
 
         tools_win.events.closing += on_tools_closing
         _tools_window = tools_win
+        _tools_api = tools_api
         log_info("工具箱窗口创建成功: %s" % TOOLS_TITLE)
     except Exception as e:
         log_error("创建工具箱窗口失败: %s" % e)
@@ -595,7 +605,8 @@ def main():
                 default=True),
             pystray.MenuItem(
                 "工具箱",
-                lambda i, it: _safe_show_window(_tools_window)),
+                lambda i, it: (_set_tools_source_to_last_active(),
+                               _safe_show_window(_tools_window))[1]),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("退出程序", lambda i, it: exit_app()),
         )
