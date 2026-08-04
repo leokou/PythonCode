@@ -195,8 +195,9 @@ function renderPreview() {
   /* 为预览区图片挂载放大镜按钮（本地附件 / PicGo 通用） */
   _setupImageZoom();
 
-  /* 清除上一轮的跨区高亮 */
-  _clearCrossHighlight();
+  /* 重建跨区高亮：innerHTML 已抹掉 .cross-highlight，此处按 _lastHighlightedLine 复原。
+   * 原实现是 _clearCrossHighlight()，导致「编辑区删一个词 → 预览区高亮丢失」。 */
+  _reapplyCrossHighlight();
 
   if (window.Outline && Outline.refresh) Outline.refresh();
 }
@@ -476,6 +477,34 @@ function _highlightEditorLine(lineNum) {
   if (lineEl) lineEl.classList.add("cm-crossHighlightLine");
 }
 
+/* 查找预览区中对应行号的块元素
+ * 可能有多个元素共享 data-line（如 <ul> 与 <li>），取 DOM 序最后一个（最深嵌套），
+ * 避免高亮到容器元素导致多行全亮。找不到精确匹配时回退到不超过该行号的最近块。 */
+function _findPreviewBlockByLine(lineNum) {
+  const exact = previewEl.querySelectorAll(`[data-line="${lineNum}"]`);
+  if (exact.length) return exact[exact.length - 1];
+  let bestBlock = null;
+  let bestLine = 0;
+  for (const b of previewEl.querySelectorAll("[data-line]")) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl <= lineNum && bl > bestLine) { bestLine = bl; bestBlock = b; }
+  }
+  return bestBlock;
+}
+
+/* 重建跨区高亮（不改动 _lastHighlightedLine，也不滚动）
+ * 两侧高亮都是纯 DOM class，会被下列操作抹掉，抹掉后必须重建：
+ *   - 预览区：renderPreview() 重设 innerHTML → .cross-highlight 丢失
+ *   - 编辑区：CM6 文档变更后重建 .cm-line 元素 → .cm-crossHighlightLine 丢失
+ * 这就是「删掉一个词后高亮消失、要再点一下才亮」的原因。 */
+function _reapplyCrossHighlight() {
+  const ln = _lastHighlightedLine;
+  if (ln <= 0) return;
+  const block = _findPreviewBlockByLine(ln);
+  if (block) block.classList.add("cross-highlight");
+  _highlightEditorLine(ln);
+}
+
 /* 获取编辑器光标行在视口中的相对位置（0=顶部, 1=底部） */
 function _getEditorCursorRatio() {
   try {
@@ -508,24 +537,8 @@ function _highlightLine(lineNum, scrollTarget) {
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
-  /* 高亮预览区对应 data-line 的块（预览区不虚拟化，总是可以高亮）
-   * 可能有多个元素共享 data-line（如 <ul> 与 <li>），取 DOM 序最后一个（最深嵌套），
-   * 避免高亮到容器元素导致多行全亮。 */
-  const allMatches = previewEl.querySelectorAll(`[data-line="${lineNum}"]`);
-  let previewBlock = allMatches.length ? allMatches[allMatches.length - 1] : null;
-  if (!previewBlock) {
-    const allBlocks = previewEl.querySelectorAll("[data-line]");
-    let bestBlock = null;
-    let bestLine = 0;
-    for (const b of allBlocks) {
-      const bl = parseInt(b.getAttribute("data-line"), 10);
-      if (bl <= lineNum && bl > bestLine) {
-        bestLine = bl;
-        bestBlock = b;
-      }
-    }
-    previewBlock = bestBlock;
-  }
+  /* 高亮预览区对应 data-line 的块（预览区不虚拟化，总是可以高亮） */
+  const previewBlock = _findPreviewBlockByLine(lineNum);
   if (previewBlock) previewBlock.classList.add("cross-highlight");
 
   if (scrollTarget === "editor") {
@@ -1042,18 +1055,43 @@ function _doPreviewUndoRedo(type) {
   /* 保存并恢复滚动位置 */
   const savedScrollTop = previewEl.scrollTop;
 
+  /* 变更点所在行号：撤销/重做要把两侧视图定位到这里，否则用户看不出改了哪 */
+  let changeLine = 0;
+  try {
+    changeLine = view.state.doc.lineAt(Math.min(anchor, view.state.doc.length)).number;
+  } catch (e) { changeLine = 0; }
+
   requestAnimationFrame(() => {
     renderPreview();
 
     syncing = true;
+    /* 先回位，避免 renderPreview / CM6 重排造成的中间态闪动 */
     previewEl.scrollTop = savedScrollTop;
-    /* 编辑区同样回位：renderPreview 与 CM6 重排都可能改动 scrollTop */
     view.scrollDOM.scrollTop = savedEditorScroll;
-    /* 不再强制 _placeCursorAtDocEnd()——它会把滚动条拉到底部，
-     * 导致撤销前后的视图位置相同（若撤销前也在末尾），撤销"无效果"。
-     * renderPreview() 已保存/恢复 scroll，此处只保持视图不动。 */
+
+    /* 再定位到变更行：仅在该行不在视口内时滚动（nearest 语义，避免无谓跳动）。
+     * 上一轮为止住「编辑区乱飘」把视图完全冻结，副作用是撤销后定位不到那一行。 */
+    if (changeLine > 0) {
+      try {
+        const eBlock = view.lineBlockAt(view.state.doc.line(changeLine).from);
+        const eTop = eBlock.top - view.scrollDOM.scrollTop;
+        if (eTop < 0 || eTop + eBlock.height > view.scrollDOM.clientHeight) {
+          scrollEditorToLine(changeLine, 0.3);
+        }
+      } catch (e) { /* ignore */ }
+
+      const pBlock = _findPreviewBlockByLine(changeLine);
+      if (pBlock) {
+        const pTop = pBlock.offsetTop - previewEl.scrollTop;
+        if (pTop < 0 || pTop + pBlock.offsetHeight > previewEl.clientHeight) {
+          scrollPreviewToLine(changeLine, 0.3);
+        }
+      }
+    }
 
     requestAnimationFrame(() => {
+      /* 高亮放在滚动之后：CM6 虚拟化，目标行滚入视口后才有 DOM 元素可加 class */
+      if (changeLine > 0) _highlightLine(changeLine);
       syncing = false;
       _suppressCursorFollow = false;
     });
@@ -2180,9 +2218,26 @@ const editorExtensions = [
       tab.state = update.state;
       if (update.docChanged) {
         updateTabName(tab);
+
+        /* 跨区高亮跟随光标行更新。高亮只由 mouseup / 方向键 / focus 触发，打字和删除都不触发，
+         * 而两侧高亮又是会被重排抹掉的纯 DOM class —— 这就是「删掉一个词后高亮消失、
+         * 要再点一下才亮」的成因。光标即编辑位置；预览区来源的变更经 CM6 change mapping
+         * 后光标同样落在编辑点。必须在 renderPreview 之前更新行号，否则那一帧会闪旧高亮。
+         * 仅在此前已有高亮时重建，不凭空产生高亮。 */
+        const needRehighlight = _lastHighlightedLine > 0;
+        if (needRehighlight) {
+          try {
+            _lastHighlightedLine = update.state.doc.lineAt(update.state.selection.main.head).number;
+          } catch (e) { /* 保留原值 */ }
+        }
+
         /* 从预览区同步过来的变更，跳过预览重新渲染（避免覆盖用户光标） */
         if (!_skipPreviewRerender) {
-          renderPreview();
+          renderPreview(); /* 内部已按 _lastHighlightedLine 重建预览区侧高亮 */
+        }
+        /* 编辑区侧：CM6 重建 .cm-line 会抹掉 class，等重排完成后再加 */
+        if (needRehighlight) {
+          requestAnimationFrame(() => _reapplyCrossHighlight());
         }
         /* 自动保存：Capture 立即保存，其他窗口 3 秒 debounce 后保存到 Tab 文件 */
         if (tab.pageId) {
@@ -3492,11 +3547,18 @@ window.__runTool = function (toolId) {
       toast("查找面板不可用", "err");
     }
   } else if (toolId === "editor_scroll_top") {
+    /* 两侧同时回顶：syncing 抑制 scroll 事件互相触发，rAF 后释放 */
     view.focus();
+    syncing = true;
     view.scrollDOM.scrollTop = 0;
+    previewEl.scrollTop = 0;
+    requestAnimationFrame(() => { syncing = false; });
   } else if (toolId === "editor_scroll_bottom") {
     view.focus();
+    syncing = true;
     view.scrollDOM.scrollTop = view.scrollDOM.scrollHeight;
+    previewEl.scrollTop = previewEl.scrollHeight;
+    requestAnimationFrame(() => { syncing = false; });
   } else if (toolId === "canvas") {
     if (typeof pywebview !== "undefined" && pywebview.api) {
       pywebview.api.open_canvas().catch(() => {});
