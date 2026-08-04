@@ -62,6 +62,8 @@ Obsidian-upload-web/
 │   ├── script.js / storage.js / tab-manager.js / explorer.js / context-menu.js / settings.js / tools.js
 │   ├── js/                 layout / resize / outline / history / workspace / search / theme-manager / theme-loader / file-tree / favorites
 │   ├── themes/             主题 CSS（window/ editor/ preview/ 三子目录，以 body[data-*-theme="id"] 作用域）
+│   ├── gen_themes.py       编辑器主题 CSS 生成脚本（唯一数据源，见「十二、2」）
+│   ├── editor-layout.css   编辑器布局层 / editor-syntax.css 语法层（均引用 --cm-* 变量）
 │   ├── vendor/             cm6.min.js / marked.min.js（离线本地化）
 │   └── theme.css / style.css / explorer.css / settings.css / tools.css
 ├── commands/               通用模块（保持原位）
@@ -435,6 +437,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 - 主题 CSS 由 `frontend/js/theme-loader.js` 按需加载当前激活主题，切换时移除旧 `<link>`（先加载新再移除旧，避免切换瞬间无样式）。
 - `editor.html` / `settings.html` / `tools.html` 均已接入 ThemeLoader。
 - 新增窗口必须遵循：HTML 中只保留 `theme.css` + 结构样式，主题 CSS 由 ThemeLoader 动态注入。
+- **主题文件生成源（改主题必读）**：`frontend/gen_themes.py` 是编辑器主题 CSS 的唯一数据源（`THEMES` dict 含全部 35 个主题的 `--cm-*` 颜色变量），生成 `themes/editor/*.css`（仅颜色变量，布局/语法由 editor-layout.css + editor-syntax.css 统一管理）。**改主题颜色必须改 gen_themes.py 再运行重新生成，禁止直接改 css 产物**（否则下次生成被覆盖）。深色主题的 `cm-formatting-color` 已调亮为可见值（如 github-dark `#8B949E`、neon-cyber `#00B32E`）。输出路径固定为 `frontend/themes/editor`（勿改成带空格的旧路径）。
 - **编辑器语法高亮**：`script.js` 用 `HighlightStyle.define`（`window.CodeMirrorBundle.HighlightStyle/tags`，已在 `vendor/cm6.min.js` 补挂载导出）定义 `themeHighlightStyle`，把语法 tag 映射到 `--cm-*` 主题变量，注册在 `syntaxHighlighting(defaultHighlightStyle, {fallback:true})` 之后。原因：CM6 默认 `defaultHighlightStyle` 标记色（meta `#404740` 等）是浅色主题配色，深色主题下不可见；且 CM6 生成 `ͼxx` 哈希类名，`editor-syntax.css` 的 `.cm-formatting`/`.cm-heading` 等语义类选择器不匹配、不生效（死规则，保留无害）。**注意**：CM6 markdown 把 `# - * 1. > \`` 等标记标为 `meta` tag；`tags.list` 会命中段落正文，禁止染色；后注册 style 按 tag 粒度整体接管同 tag 规则（含 fontStyle/fontWeight），自定义规则须补齐样式属性；改 `vendor/cm6.min.js` 须保留 `HighlightStyle:Gi,tags:p` 导出。
 
 ### 3. 内存缓存 + 延迟写盘（pages.py 模式）
