@@ -94,7 +94,9 @@ function _lineOf(raw) {
     _renderPos = idx + raw.length;
     return _renderDoc.slice(0, idx).split("\n").length;
   }
-  return _renderDoc.slice(0, _renderPos).split("\n").length;
+  /* 嵌套块（如 li 内的 p / blockquote / code）的 raw 在 _renderPos 之后不可见，
+   * 返回 0 表示无法定位行号，由调用方跳过 data-line 属性 */
+  return 0;
 }
 
 /* 从列表原始文本中提取每个 <li> 的起始行号（1 起），返回长度 = count 的数组。
@@ -121,15 +123,24 @@ marked.use({
       return `<h${depth} data-line="${_lineOf(raw)}">${this.parser.parseInline(tokens)}</h${depth}>`;
     },
     paragraph({ tokens, raw }) {
-      return `<p data-line="${_lineOf(raw)}">${this.parser.parseInline(tokens)}</p>`;
+      const line = _lineOf(raw);
+      return line > 0
+        ? `<p data-line="${line}">${this.parser.parseInline(tokens)}</p>`
+        : `<p>${this.parser.parseInline(tokens)}</p>`;
     },
     blockquote({ tokens, raw }) {
-      return `<blockquote data-line="${_lineOf(raw)}">${this.parser.parse(tokens)}</blockquote>`;
+      const line = _lineOf(raw);
+      return line > 0
+        ? `<blockquote data-line="${line}">${this.parser.parse(tokens)}</blockquote>`
+        : `<blockquote>${this.parser.parse(tokens)}</blockquote>`;
     },
     code({ text, lang, raw }) {
+      const line = _lineOf(raw);
       const cls = lang ? ` class="language-${lang}"` : "";
       const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-      return `<pre data-line="${_lineOf(raw)}"><code${cls}>${esc}</code></pre>`;
+      return line > 0
+        ? `<pre data-line="${line}"><code${cls}>${esc}</code></pre>`
+        : `<pre><code${cls}>${esc}</code></pre>`;
     },
     hr({ raw }) {
       return `<hr data-line="${_lineOf(raw)}">`;
@@ -147,7 +158,9 @@ marked.use({
       return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
     },
     table({ header, rows, raw }) {
-      let html = `<table data-line="${_lineOf(raw)}"><thead><tr>`;
+      const line = _lineOf(raw);
+      const lineAttr = line > 0 ? ` data-line="${line}"` : "";
+      let html = `<table${lineAttr}><thead><tr>`;
       for (const cell of header) html += `<th>${this.parser.parseInline(cell.tokens)}</th>`;
       html += "</tr></thead><tbody>";
       for (const row of rows) {
@@ -482,6 +495,8 @@ function _getPreviewBlockRatio(block) {
  *   'editor'  → 预览区光标移动：高亮两侧 + 把编辑器滚到同一水平线
  *   undefined → 只高亮，不滚动 */
 function _highlightLine(lineNum, scrollTarget) {
+  /* 防御：无效行号（如嵌套块产生的 data-line="0"）不处理 */
+  if (lineNum <= 0) return;
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
@@ -690,7 +705,9 @@ function _findCursorBlock() {
   if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
   while (node && node !== previewEl) {
     if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute && node.hasAttribute("data-line")) {
-      return node;
+      /* 跳过 data-line="0" 的嵌套假锚点（子块内部被 marked.js 包裹的 paragraph/code/blockquote 等），
+       * 继续向上遍历到真正的块级父元素（li / h1-h6 / 顶层 p 等） */
+      if (parseInt(node.getAttribute("data-line"), 10) > 0) return node;
     }
     node = node.parentNode;
   }

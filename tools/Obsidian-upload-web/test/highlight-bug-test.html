@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Highlight Bug Reproduction</title>
+<script src="../frontend/vendor/marked.min.js"></script>
+<style>
+  body { font-family: system-ui; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .container { display: flex; gap: 20px; }
+  .panel { flex: 1; border: 1px solid #ccc; padding: 15px; min-height: 300px; }
+  h3 { margin-top: 0; }
+  #preview [data-line].cross-highlight { background: yellow; outline: 2px solid orange; }
+  code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
+  .debug { margin-top: 10px; font-size: 12px; color: #666; }
+</style>
+</head>
+<body>
+<h2>Highlight Bug — Reproduction</h2>
+<div class="container">
+  <div class="panel">
+    <h3>Editor (Markdown source)</h3>
+    <pre id="source">### 1. 日志、服务端
+- `LogLevel`：日志等级枚举 `DEBUG / INFO / WARN / ERROR`
+- `ServerConfig`：`opencode serve` Web 服务配置
+- `port`监听端口、`hostname`监听地址
+- `mdns`局域网设备发现、`cors`跨域白名单</pre>
+  </div>
+  <div class="panel">
+    <h3>Preview (rendered, clickable)</h3>
+    <div id="preview" contenteditable="false" style="cursor: pointer;"></div>
+  </div>
+</div>
+
+<div class="debug">
+  <p>Clicked data-line: <strong id="clicked-line">—</strong></p>
+  <p>All elements with data-line=<span id="target-line">—</span>: <pre id="matches-info">—</pre></p>
+  <p>Last matched element tag: <strong id="last-match-tag">—</strong></p>
+  <p>Preview innerHTML (first 2000 chars): <pre id="preview-html">—</pre></p>
+</div>
+
+<script>
+// ====== Copy the exact rendering logic from script.js ======
+
+let _renderDoc = "";
+let _renderPos = 0;
+
+function _lineOf(raw) {
+  const idx = _renderDoc.indexOf(raw, _renderPos);
+  if (idx >= 0) {
+    _renderPos = idx + raw.length;
+    return _renderDoc.slice(0, idx).split("\n").length;
+  }
+  return 0;
+}
+
+function _findListItemLines(raw, count) {
+  const lines = raw.split("\n");
+  const result = [];
+  const baseLine = _renderDoc.slice(0, _renderDoc.indexOf(raw, _renderPos) >= 0
+    ? _renderDoc.indexOf(raw, _renderPos) : _renderPos).split("\n").length;
+  for (let i = 0; i < lines.length && result.length < count; i++) {
+    const t = lines[i].trimStart();
+    if (/^[-*+]\s/.test(t) || /^\d+\.\s/.test(t)) {
+      result.push(baseLine + i);
+    }
+  }
+  while (result.length < count) result.push(result.length ? result[result.length - 1] + 1 : baseLine);
+  return result;
+}
+
+marked.use({
+  renderer: {
+    heading({ tokens, depth, raw }) {
+      return `<h${depth} data-line="${_lineOf(raw)}">${this.parser.parseInline(tokens)}</h${depth}>`;
+    },
+    paragraph({ tokens, raw }) {
+      const line = _lineOf(raw);
+      return line > 0
+        ? `<p data-line="${line}">${this.parser.parseInline(tokens)}</p>`
+        : `<p>${this.parser.parseInline(tokens)}</p>`;
+    },
+    blockquote({ tokens, raw }) {
+      const line = _lineOf(raw);
+      return line > 0
+        ? `<blockquote data-line="${line}">${this.parser.parse(tokens)}</blockquote>`
+        : `<blockquote>${this.parser.parse(tokens)}</blockquote>`;
+    },
+    code({ text, lang, raw }) {
+      const line = _lineOf(raw);
+      const cls = lang ? ` class="language-${lang}"` : "";
+      const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      return line > 0
+        ? `<pre data-line="${line}"><code${cls}>${esc}</code></pre>`
+        : `<pre><code${cls}>${esc}</code></pre>`;
+    },
+    hr({ raw }) {
+      return `<hr data-line="${_lineOf(raw)}">`;
+    },
+    list({ ordered, start, items, raw }) {
+      const tag = ordered ? "ol" : "ul";
+      const startAttr = ordered && start !== 1 ? ` start="${start}"` : "";
+      const itemLines = _findListItemLines(raw, items.length);
+      let body = "";
+      for (let i = 0; i < items.length; i++) {
+        const line = itemLines[i] || 0;
+        body += `<li data-line="${line}">${this.parser.parse(items[i].tokens)}</li>`;
+      }
+      return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
+    },
+    table({ header, rows, raw }) {
+      const line = _lineOf(raw);
+      const lineAttr = line > 0 ? ` data-line="${line}"` : "";
+      let html = `<table${lineAttr}><thead><tr>`;
+      for (const cell of header) html += `<th>${this.parser.parseInline(cell.tokens)}</th>`;
+      html += "</tr></thead><tbody>";
+      for (const row of rows) {
+        html += "<tr>";
+        for (const cell of row) html += `<td>${this.parser.parseInline(cell.tokens)}</td>`;
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      return html;
+    },
+  },
+});
+
+// ====== Render ======
+function render() {
+  const previewEl = document.getElementById("preview");
+  const sourceText = document.getElementById("source").textContent;
+  _renderDoc = sourceText;
+  _renderPos = 0;
+  previewEl.innerHTML = marked.parse(sourceText, { breaks: true, gfm: true });
+
+  // Show rendered HTML
+  document.getElementById("preview-html").textContent = previewEl.innerHTML.substring(0, 2000);
+
+  // List all data-line attributes
+  const allDataLines = previewEl.querySelectorAll("[data-line]");
+  let dlInfo = "";
+  allDataLines.forEach(el => {
+    dlInfo += `<${el.tagName.toLowerCase()} data-line="${el.getAttribute("data-line")}">`;
+    if (el.tagName === "LI") dlInfo += ` text="${el.textContent.substring(0, 40)}"`;
+    dlInfo += "\n";
+  });
+  document.getElementById("matches-info").textContent = dlInfo;
+
+  // ====== Simulate _findCursorBlock ======
+  function _findCursorBlock() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    let node = sel.anchorNode;
+    if (!node) return null;
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+    while (node && node !== previewEl) {
+      if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute && node.hasAttribute("data-line")) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  // ====== Click handler ======
+  previewEl.addEventListener("mouseup", () => {
+    const block = _findCursorBlock();
+    if (block) {
+      const lineNum = block.getAttribute("data-line");
+      document.getElementById("clicked-line").textContent = `line ${lineNum} (tag: <${block.tagName.toLowerCase()}>)`;
+      document.getElementById("target-line").textContent = lineNum;
+
+      // Simulate _highlightLine
+      const allMatches = previewEl.querySelectorAll(`[data-line="${lineNum}"]`);
+      const allMatchTags = Array.from(allMatches).map(el => `<${el.tagName.toLowerCase()}>`).join(", ");
+      document.getElementById("last-match-tag").textContent =
+        `${allMatches.length} matches: ${allMatchTags} | last: <${allMatches.length ? allMatches[allMatches.length - 1].tagName.toLowerCase() : 'none'}>`;
+
+      // Clear all highlights
+      previewEl.querySelectorAll("[data-line].cross-highlight").forEach(el => {
+        el.classList.remove("cross-highlight");
+      });
+
+      // Highlight
+      if (allMatches.length) {
+        const previewBlock = allMatches[allMatches.length - 1];
+        previewBlock.classList.add("cross-highlight");
+        document.getElementById("last-match-tag").textContent +=
+          ` | highlighted: <${previewBlock.tagName.toLowerCase()}>`;
+      }
+    } else {
+      document.getElementById("clicked-line").textContent = "null (not found!)";
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
