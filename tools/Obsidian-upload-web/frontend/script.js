@@ -981,9 +981,11 @@ function _doPreviewUndoRedo(type) {
     _previewHistory.push(tab.state.doc.toString());
   }
 
-  /* 替换整篇文档 */
+  /* 替换整篇文档：光标置于新文档末尾（避免落在 0 → cursorFollowPlugin 滚到首页） */
+  syncing = true; /* 抑制 dispatch 引发的 editor↔preview 滚动同步，防止飘首页 */
   view.dispatch({
-    changes: { from: 0, to: tab.state.doc.length, insert: newDoc }
+    changes: { from: 0, to: tab.state.doc.length, insert: newDoc },
+    selection: { anchor: newDoc.length },
   });
   tab.state = view.state;
 
