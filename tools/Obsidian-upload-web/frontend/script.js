@@ -239,6 +239,20 @@ function _highlightLine(lineNum, scrollTarget) {
 
 /* ============ 预览区链接点击 → 默认浏览器打开 / wikilink ============ */
 previewEl.addEventListener("click", (e) => {
+  /* 预览区点击 → 目录高亮对应章节（镜像编辑区：编辑区由 updateListener 调用 Outline.highlightAtPos(head)）
+   * 取点击块的 data-line（markdown 行号）→ 转该行行首字符位置 → 调 Outline.highlightAtPos */
+  if (window.Outline && Outline.highlightAtPos) {
+    const block = e.target.closest("[data-line]");
+    if (block) {
+      const lineNum = parseInt(block.getAttribute("data-line"), 10);
+      if (lineNum > 0) {
+        const doc = view.state.doc;
+        const ln = Math.min(lineNum, doc.lines);
+        Outline.highlightAtPos(doc.line(ln).from);
+      }
+    }
+  }
+
   /* 图片放大镜按钮点击（放大逻辑已由按钮自身处理，这里拦截防止光标/链接干扰） */
   if (e.target.closest(".img-zoom-btn")) {
     e.preventDefault();
