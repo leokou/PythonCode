@@ -121,7 +121,15 @@ marked.use({
       const startAttr = ordered && start !== 1 ? ` start="${start}"` : "";
       let body = "";
       for (const item of items) {
-        body += `<li>${this.parser.parse(item.tokens)}</li>`;
+        let itemBody = "";
+        /* 任务列表：prepend 禁用 checkbox（marked 默认渲染被自定义 list 覆盖后丢失） */
+        if (item.task) {
+          const checked = item.checked ? " checked" : "";
+          itemBody += `<input type="checkbox" disabled${checked} class="md-task-checkbox"> `;
+        }
+        /* parse 第二参数传 item.loose：非 loose 时 text 不包 <p>，任务列表 checkbox 与文本保持一行 */
+        itemBody += this.parser.parse(item.tokens, item.loose);
+        body += `<li>${itemBody}</li>`;
       }
       return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
     },
@@ -153,10 +161,28 @@ function renderPreview() {
   /* 处理 [[wikilink]] 链接 */
   _processWikilinks();
 
+  /* 为预览区图片挂载放大镜按钮（本地附件 / PicGo 通用） */
+  _setupImageZoom();
+
   /* 清除上一轮的跨区高亮 */
   _clearCrossHighlight();
 
   if (window.Outline && Outline.refresh) Outline.refresh();
+}
+
+/* 兜底渲染：预览区同步链的标志因异常/竞态未恢复时，延迟一帧补一次渲染，
+ * 保证预览区与编辑区最终一致（修复：编辑区回车后预览区不更新，需再按一次才更新）。
+ * 仅当焦点不在预览区（无活跃预览编辑会话）时兜底，避免重渲染覆盖预览区输入光标；
+ * 不依赖 _skipPreviewRerender 标志恢复——异常路径下标志可能永久卡住，仍要保证预览一致。 */
+let _deferredRenderTimer = null;
+function _scheduleDeferredPreviewRender() {
+  if (_deferredRenderTimer) return;
+  _deferredRenderTimer = setTimeout(() => {
+    _deferredRenderTimer = null;
+    if (_isFocusInPreview()) return; /* 预览区正在输入，不打扰（预览区自身保持 DOM 一致） */
+    const tab = currentTab();
+    if (tab && tab.state === view.state) renderPreview();
+  }, 0);
 }
 
 /* ============ 预览区 ![[image]] Obsidian 图片嵌入处理 ============ */
@@ -249,6 +275,85 @@ async function _resolveEmbedImages(pending) {
       }
     } catch (e) { /* ignore single image failure */ }
   }
+}
+
+/* ============ 预览区图片放大镜：悬浮按钮 + 点击放大预览 ============ */
+/* 覆盖两种图片：本地附件嵌入 ![[image.png]]（data URL）与 PicGo 远程图 ![alt](url) */
+function _setupImageZoom() {
+  const imgs = previewEl.querySelectorAll("img");
+  for (const img of imgs) {
+    if (img.closest(".img-zoom-wrap")) continue; /* 已包装（重复渲染防抖） */
+    const wrap = document.createElement("span");
+    wrap.className = "img-zoom-wrap";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "img-zoom-btn";
+    btn.title = "放大预览";
+    btn.tabIndex = -1;
+    btn.setAttribute("aria-label", "放大预览");
+    /* 内联 SVG 放大镜：无文本节点，不影响预览区 innerText diff 同步 */
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    /* 阻止 mousedown 在 contenteditable 中移动光标 / 抢焦点 */
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      _openImageLightbox(img);
+    });
+    wrap.appendChild(btn);
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+  }
+}
+
+/* 放大预览（lightbox）：支持本地附件 data URL 与 PicGo 远程 URL */
+let _imgLightboxEl = null;
+
+function _openImageLightbox(img) {
+  if (!img || !img.src) return;
+  _closeImageLightbox();
+
+  const overlay = document.createElement("div");
+  overlay.className = "img-lightbox";
+
+  const big = document.createElement("img");
+  big.src = img.src;
+  big.alt = img.alt || "";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "img-lightbox-close";
+  closeBtn.title = "关闭（Esc）";
+  closeBtn.setAttribute("aria-label", "关闭");
+  closeBtn.textContent = "✕";
+
+  overlay.appendChild(big);
+  overlay.appendChild(closeBtn);
+  document.body.appendChild(overlay);
+  _imgLightboxEl = overlay;
+
+  /* 点击背景 / ✕ / Esc 关闭；点击图片本身不关闭（便于查看细节） */
+  overlay.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeImageLightbox();
+  });
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeImageLightbox();
+  });
+  big.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("keydown", _imgLightboxKeydown);
+}
+
+function _imgLightboxKeydown(e) {
+  if (e.key === "Escape") _closeImageLightbox();
+}
+
+function _closeImageLightbox() {
+  if (!_imgLightboxEl) return;
+  _imgLightboxEl.remove();
+  _imgLightboxEl = null;
+  document.removeEventListener("keydown", _imgLightboxKeydown);
 }
 
 /* ============ 预览区 [[wikilink]] 处理 ============ */
@@ -432,6 +537,13 @@ function _highlightLine(lineNum, scrollTarget) {
 
 /* ============ 预览区链接点击 → 默认浏览器打开 / wikilink ============ */
 previewEl.addEventListener("click", (e) => {
+  /* 图片放大镜按钮点击（放大逻辑已由按钮自身处理，这里拦截防止光标/链接干扰） */
+  if (e.target.closest(".img-zoom-btn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
   /* wikilink 点击 */
   const wikilink = e.target.closest(".wikilink");
   if (wikilink) {
@@ -635,6 +747,15 @@ function _mapPlainToMd(mdText, plainOffset) {
       continue;
     }
 
+    /* 内联 HTML 标签（<u> <mark> <span style> 等）整体跳过，不占可见字符 */
+    if (ch === "<") {
+      const gt = mdText.indexOf(">", i + 1);
+      if (gt > i) {
+        i = gt + 1;
+        continue;
+      }
+    }
+
     /* 行首语法：# ## ### - * + > 1. 等 */
     const atLineStart = (i === 0 || mdText[i - 1] === "\n");
     if (atLineStart) {
@@ -722,6 +843,16 @@ previewEl.addEventListener("keydown", (e) => {
       _doPreviewUndoRedo("redo");
       return;
     }
+    /* Ctrl+B / Ctrl+I / Ctrl+U：预览选区映射到编辑器后执行工具栏命令 */
+    const fmtCmd = { b: "bold", i: "italic", u: "underline" }[key];
+    if (fmtCmd && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      const pr = _capturePreviewRange();
+      if (pr) _applyPreviewRangeToEditor(pr);
+      ToolbarCommands.execute(fmtCmd, view, {});
+      return;
+    }
   }
 
   /* ============ Enter 键 → 在 markdown 中插入换行 ============ */
@@ -790,6 +921,10 @@ function _doPreviewUndoRedo(type) {
   });
   tab.state = view.state;
 
+  /* dispatch 已完成，立即恢复标志（消除 rAF 窗口内编辑区 docChanged 被误跳过预览渲染的问题） */
+  _previewEditing = false;
+  _skipPreviewRerender = false;
+
   /* 保存并恢复滚动位置 */
   const savedScrollTop = previewEl.scrollTop;
 
@@ -798,9 +933,6 @@ function _doPreviewUndoRedo(type) {
 
     syncing = true;
     previewEl.scrollTop = savedScrollTop;
-
-    _previewEditing = false;
-    _skipPreviewRerender = false;
 
     /* 光标回到文档末尾 */
     _placeCursorAtDocEnd();
@@ -821,6 +953,27 @@ function _placeCursorAtDocEnd() {
   if (!blocks.length) return;
   const lastBlock = blocks[blocks.length - 1];
   _placeCursorAtBlockEnd(lastBlock);
+  _scrollPreviewCursorIntoView();
+}
+
+/* 预览区：确保光标所在块在视口内（nearest 语义，光标已在视口内则不滚动） */
+function _scrollPreviewCursorIntoView() {
+  const block = _findCursorBlock();
+  if (!block) return;
+  const st = previewEl.scrollTop;
+  const sh = previewEl.clientHeight;
+  if (sh === 0) return;
+  const top = block.offsetTop;
+  const bottom = top + block.offsetHeight;
+  let target = null;
+  if (top < st + 10) {
+    target = Math.max(0, top - 10);
+  } else if (bottom > st + sh - 24) {
+    target = Math.max(0, bottom + 24 - sh);
+  }
+  if (target === null) return;
+  const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
+  previewEl.scrollTop = Math.min(target, maxScroll);
 }
 
 /* ============ 执行预览区 Enter 键 ============ */
@@ -934,6 +1087,9 @@ function _doPreviewEnter(isSoftEnter) {
 
   _previewEditing = false;
   _skipPreviewRerender = false;
+
+  /* 回车后光标已移到新行，滚动预览区确保新行可见（长文档末尾回车不丢光标） */
+  _scrollPreviewCursorIntoView();
 
   /* 触发保存 */
   if (tab.pageId) {
@@ -1063,6 +1219,12 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
     if (next2 === "**" || next2 === "__" || next2 === "~~") { i += 2; continue; }
     if (ch === "`" || ch === "*" || ch === "_" || ch === "~") { i++; continue; }
 
+    /* 内联 HTML 标签整体跳过（与 _mapPlainToMd 保持一致） */
+    if (ch === "<") {
+      const gt = mdText.indexOf(">", i + 1);
+      if (gt > i) { i = gt + 1; continue; }
+    }
+
     const atLineStart = (i === 0 || mdText[i - 1] === "\n");
     if (atLineStart) {
       if (ch === "#") {
@@ -1111,7 +1273,124 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
   return plainCount;
 }
 
+/* ============ 预览区选中 → 编辑器选区映射（工具栏格式命令） ============ */
+
+/* 找节点所在带 data-line 的块级祖先（不在预览区则返回 null） */
+function _blockFromNode(node) {
+  let n = node;
+  if (n && n.nodeType === Node.TEXT_NODE) n = n.parentNode;
+  while (n && n !== previewEl && n !== document.body) {
+    if (n.nodeType === Node.ELEMENT_NODE && n.hasAttribute && n.hasAttribute("data-line")) {
+      return n;
+    }
+    n = n.parentNode;
+  }
+  return null;
+}
+
+/* 块对应的 markdown 源码范围：块起始行 → 下一个 data-line 块的起始行 */
+function _blockMdRange(block, doc) {
+  const line = parseInt(block.getAttribute("data-line"), 10);
+  if (line > doc.lines) return { mdStart: null, lineStart: 0, lineEnd: 0 };
+  const lineStart = doc.line(line).from;
+  let endLine = doc.lines;
+  const allBlocks = previewEl.querySelectorAll("[data-line]");
+  for (const b of allBlocks) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl > line) { endLine = bl - 1; break; }
+  }
+  const lineEnd = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
+  return { mdStart: doc.sliceString(lineStart, lineEnd), lineStart, lineEnd };
+}
+
+/* 选区 start/end 一侧在块内的纯文本偏移（相对块首） */
+function _rangePlainOffsetWithinBlock(block, range, isStart) {
+  const pre = range.cloneRange();
+  pre.selectNodeContents(block);
+  if (isStart) {
+    pre.setEnd(range.startContainer, range.startOffset);
+  } else {
+    pre.setEnd(range.endContainer, range.endOffset);
+  }
+  return pre.toString().length;
+}
+
+/* 捕获预览区当前选中范围（非预览区 / 空选区返回 null）。
+ * 供工具栏在 pointerdown 阶段提前保存，避免点击按钮清空选区 */
+function _capturePreviewRange() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return null;
+  if (!_isFocusInPreview()) return null;
+  return range.cloneRange();
+}
+
+/* 将预览区 Range 映射为编辑器选区并设置（成功返回 true）。
+ * 跨块时起点取起始块内偏移、终点取结束块内偏移（中间 markdown 一并包含） */
+function _applyPreviewRangeToEditor(range) {
+  if (!range) return false;
+  const tab = currentTab();
+  if (!tab) return false;
+  const doc = tab.state.doc;
+
+  const startBlock = _blockFromNode(range.startContainer);
+  if (!startBlock) return false;
+  const startLine = parseInt(startBlock.getAttribute("data-line"), 10);
+  if (startLine > doc.lines) return false;
+  const sRange = _blockMdRange(startBlock, doc);
+  if (sRange.mdStart === null) return false;
+  const startPlain = _rangePlainOffsetWithinBlock(startBlock, range, true);
+  const mdFrom = sRange.lineStart + _mapPlainToMd(sRange.mdStart, startPlain);
+
+  const endBlock = _blockFromNode(range.endContainer) || startBlock;
+  const endLine = parseInt(endBlock.getAttribute("data-line"), 10);
+  if (endLine > doc.lines) return false;
+  const eRange = _blockMdRange(endBlock, doc);
+  const endPlain = _rangePlainOffsetWithinBlock(endBlock, range, false);
+  const mdTo = eRange.lineStart + _mapPlainToMd(eRange.mdStart, endPlain);
+
+  if (mdTo <= mdFrom) return false;
+
+  /* 取消未落盘的预览编辑计时器，避免随后覆盖本次变更 */
+  clearTimeout(_previewSyncTimer);
+  _oldBlockMarkdown = null;
+  _oldBlockLine = -1;
+  _previewInputActive = false;
+  _lastEditedBlock = null;
+
+  view.dispatch({ selection: { anchor: mdFrom, head: mdTo } });
+  return true;
+}
+
 /* ============ 预览区普通输入同步（保留 Markdown 语法） ============ */
+/* beforeinput 阶段（DOM 尚未变更）捕获编辑前基准：
+ * input 事件触发时预览区 DOM 已更新，此时读 block.innerText 拿到的已是新文本，
+ * 会导致 diff 比较新旧相同而同步失败（修复：预览区输入不进入编辑器）。 */
+previewEl.addEventListener("beforeinput", () => {
+  if (_previewEditing || _pendingAction) return;
+  const block = _findCursorBlock();
+  if (!block) return;
+  if (block === _lastEditedBlock) return; /* 同一块连续输入，基准已在首次捕获 */
+  _lastEditedBlock = block;
+  const blockLine = parseInt(block.getAttribute("data-line"), 10);
+  const tab = currentTab();
+  if (!tab) return;
+  const doc = tab.state.doc;
+  if (blockLine > doc.lines) return;
+  const lineStart = doc.line(blockLine).from;
+  const allBlocks = previewEl.querySelectorAll("[data-line]");
+  let endLine = doc.lines;
+  for (const b of allBlocks) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl > blockLine) { endLine = bl - 1; break; }
+  }
+  const lineEnd = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
+  _oldBlockMarkdown = doc.sliceString(lineStart, lineEnd);
+  _oldBlockPlainText = block.innerText; /* beforeinput 阶段 DOM 未变更，这是编辑前文本 */
+  _oldBlockLine = blockLine;
+});
+
 previewEl.addEventListener("input", () => {
   if (_previewEditing || _pendingAction) return;
 
@@ -1121,30 +1400,7 @@ previewEl.addEventListener("input", () => {
     _previewInputActive = true;
   }
 
-  /* 保存编辑前的状态：用于 diff 计算和光标恢复 */
-  const block = _findCursorBlock();
-  if (block && block !== _lastEditedBlock) {
-    _lastEditedBlock = block;
-    const blockLine = parseInt(block.getAttribute("data-line"), 10);
-    const tab = currentTab();
-    if (tab) {
-      const doc = tab.state.doc;
-      if (blockLine <= doc.lines) {
-        const lineStart = doc.line(blockLine).from;
-        const allBlocks = previewEl.querySelectorAll("[data-line]");
-        let endLine = doc.lines;
-        for (const b of allBlocks) {
-          const bl = parseInt(b.getAttribute("data-line"), 10);
-          if (bl > blockLine) { endLine = bl - 1; break; }
-        }
-        const lineEnd = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
-        _oldBlockMarkdown = doc.sliceString(lineStart, lineEnd);
-        _oldBlockPlainText = block.innerText;
-        _oldBlockLine = blockLine;
-      }
-    }
-  }
-
+  /* 编辑前基准已由 beforeinput 捕获，这里只调度同步 */
   clearTimeout(_previewSyncTimer);
   _previewSyncTimer = setTimeout(_syncPreviewToEditor, 200);
 });
@@ -1205,11 +1461,14 @@ function _syncPreviewToEditor() {
     _oldBlockMarkdown = newMarkdown;
     _oldBlockPlainText = newPlainText;
 
-    previewEl.focus();
+    /* dispatch 已完成，立即恢复标志（避免 rAF 窗口内编辑区回车被误跳过预览渲染） */
+    _previewEditing = false;
+    _skipPreviewRerender = false;
+
+    /* 仅当焦点仍在预览区时才保持焦点，避免打断正在编辑区的操作 */
+    if (_isFocusInPreview()) previewEl.focus();
 
     requestAnimationFrame(() => {
-      _skipPreviewRerender = false;
-      _previewEditing = false;
       _restorePreviewCursor(blockLine, newPlainText, diff);
     });
 
@@ -1426,11 +1685,14 @@ function _doFullReplace(newText, tab) {
   });
   tab.state = view.state;
 
-  previewEl.focus();
+  /* dispatch 已完成，立即恢复标志（避免 rAF 窗口内编辑区 docChanged 被误跳过预览渲染） */
+  _previewEditing = false;
+  _skipPreviewRerender = false;
+
+  /* 仅当焦点仍在预览区时才保持焦点，避免打断正在编辑区的操作 */
+  if (_isFocusInPreview()) previewEl.focus();
 
   requestAnimationFrame(() => {
-    _skipPreviewRerender = false;
-    _previewEditing = false;
     _restorePreviewCursor(null, _previewCursorInfo);
   });
 
@@ -1514,6 +1776,34 @@ async function previewCopy() {
   if (!sel || sel.isCollapsed) return;
   const text = sel.toString();
   if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("已复制 " + text.length + " 字符", "ok");
+  } catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e2) { /* ignore */ }
+    ta.remove();
+    toast("已复制 " + text.length + " 字符", "ok");
+  }
+}
+
+/* 复制当前页签完整 Markdown 内容到剪贴板（工具栏「复制」使用） */
+async function copyCurrentTabMarkdown() {
+  const tab = currentTab();
+  if (!tab) {
+    toast("没有可复制的页签", "err");
+    return;
+  }
+  const text = tab.state.doc.toString();
+  if (!text) {
+    toast("当前页签内容为空", "err");
+    return;
+  }
   try {
     await navigator.clipboard.writeText(text);
     toast("已复制 " + text.length + " 字符", "ok");
@@ -1687,6 +1977,94 @@ async function wikilinkCompletionSource(ctx) {
   };
 }
 
+/* ============ 标题层级 + 章节缩进 ViewPlugin ============ */
+/* 为 H1-H6 标题行添加 cm-heading / cm-heading{N} 类，
+ * 为标题下方的正文行添加 cm-section-indent 类（统一固定缩进，不递进） */
+const headingLevelPlugin = ViewPlugin.fromClass(class {
+  constructor(v) { this.decorations = this._build(v); }
+  update(u) {
+    if (u.docChanged || u.viewportChanged) {
+      this.decorations = this._build(u.view);
+    }
+  }
+  _build(v) {
+    const decos = [];
+    const doc = v.state.doc;
+    for (const { from, to } of v.visibleRanges) {
+      let pos = from;
+      let inSection = false;
+      while (pos <= to) {
+        const line = doc.lineAt(pos);
+        const text = line.text;
+        const headingMatch = text.match(/^(#{1,6})\s/);
+        if (headingMatch) {
+          const level = headingMatch[1].length;
+          decos.push(Decoration.line({ class: `cm-heading cm-heading${level}` }).range(line.from));
+          inSection = true;
+        } else if (inSection && text.trim() !== "") {
+          decos.push(Decoration.line({ class: "cm-section-indent" }).range(line.from));
+        } else if (text.trim() === "") {
+          decos.push(Decoration.line({ class: "cm-section-indent" }).range(line.from));
+        }
+        pos = line.to + 1;
+      }
+    }
+    return Decoration.set(decos, true);
+  }
+}, { decorations: v => v.decorations });
+
+/* ============ 光标跟随滚动（编辑区） ============ */
+/* CM6 内置光标滚动仅在编辑器持焦点时生效，且 scrollIntoView 在新增行
+ * 尚未布局时可能按过期的 scrollHeight clamp，滚动距离不足。
+ * 本插件不依赖焦点：事务后 rAF（DOM 已布局）直接设置 scrollTop，最可靠。 */
+const _CURSOR_MARGIN_TOP = 10;
+const _CURSOR_MARGIN_BOTTOM = 40; /* 底部留白，光标不贴边 */
+
+function _ensureEditorCursorVisible() {
+  const v = view;
+  if (!v) return;
+  const main = v.state.selection.main;
+  if (!main.empty) return; /* 拖拽/多选交给 CM6 内置行为 */
+  const scroller = v.scrollDOM;
+  const sh = scroller.clientHeight;
+  if (sh === 0) return; /* 编辑区隐藏/未布局时跳过 */
+  const block = v.lineBlockAt(main.head);
+  const st = scroller.scrollTop;
+  let target = null;
+  if (block.top < st + _CURSOR_MARGIN_TOP) {
+    target = Math.max(0, block.top - _CURSOR_MARGIN_TOP);
+  } else if (block.bottom > st + sh - _CURSOR_MARGIN_BOTTOM) {
+    target = Math.max(0, block.bottom + _CURSOR_MARGIN_BOTTOM - sh);
+  }
+  if (target === null) return; /* 光标行已在视口内 */
+  /* 直接设置 scrollTop（不做 clamp）：浏览器会自动限制到实际最大滚动位置。
+   * 不用 scrollHeight / documentHeight 手动 clamp——rAF 阶段浏览器 scrollHeight
+   * 可能仍是旧布局值（新增行未计入），clamp 后滚动距离不足导致光标行被裁。 */
+  if (Math.abs(scroller.scrollTop - target) > 1) {
+    scroller.scrollTop = target;
+    /* 下一帧复测：此时布局已完成（scrollHeight 已更新），若光标行仍越界则补滚 */
+    requestAnimationFrame(() => {
+      const b2 = v.lineBlockAt(v.state.selection.main.head);
+      const st2 = scroller.scrollTop;
+      const sh2 = scroller.clientHeight;
+      if (b2.bottom > st2 + sh2 - _CURSOR_MARGIN_BOTTOM) {
+        scroller.scrollTop = Math.min(
+          b2.bottom + _CURSOR_MARGIN_BOTTOM - sh2,
+          Math.max(0, scroller.scrollHeight - sh2)
+        );
+      }
+    });
+  }
+}
+
+const cursorFollowPlugin = ViewPlugin.fromClass(class {
+  update(update) {
+    if (!(update.docChanged || update.selectionSet)) return;
+    /* rAF 阶段执行：CM6 内置同步滚动已尝试，此处为可靠兜底 */
+    requestAnimationFrame(_ensureEditorCursorVisible);
+  }
+});
+
 const editorExtensions = [
   lineNumbers(),
   highlightActiveLineGutter(),
@@ -1704,9 +2082,17 @@ const editorExtensions = [
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
   highlightSelectionMatches(),
   wikilinkPlugin,
+  headingLevelPlugin,
+  cursorFollowPlugin,
+  /* 内置滚动（编辑器聚焦时）预留边距，与光标跟随滚动体验一致 */
+  EditorView.scrollMargins.of(() => ({ top: _CURSOR_MARGIN_TOP, bottom: _CURSOR_MARGIN_BOTTOM })),
   keymap.of([
     ...completionKeymap,
     ...closeBracketsKeymap,
+    /* 工具栏快捷键：加粗/斜体/下划线（与工具栏按钮共用命令实现，支持 undo） */
+    { key: "Mod-b", run: (v) => { ToolbarCommands.execute("bold", v, {}); return true; } },
+    { key: "Mod-i", run: (v) => { ToolbarCommands.execute("italic", v, {}); return true; } },
+    { key: "Mod-u", run: (v) => { ToolbarCommands.execute("underline", v, {}); return true; } },
     ...defaultKeymap,
     ...searchKeymap,
     ...historyKeymap,
@@ -1738,6 +2124,124 @@ const editorExtensions = [
       color: "var(--cm-fold-fg)",
     },
     ".cm-content": { fontFamily: "var(--cm-font, inherit)" },
+    /* ===== 格式化标记：确保 # * - ` 等在所有主题下可见 ===== */
+    ".cm-formatting": { color: "var(--cm-formatting-color) !important" },
+    ".cm-meta": { color: "var(--cm-formatting-color) !important" },
+    ".cm-atom": { color: "var(--cm-formatting-color) !important" },
+    ".cm-comment": { color: "var(--cm-formatting-color) !important", fontStyle: "italic" },
+    /* ===== 列表标记 ===== */
+    ".cm-list-marker": { color: "var(--cm-list-marker-color) !important", fontWeight: "700" },
+    /* ===== 标题行 ===== */
+    ".cm-line.cm-heading": { fontWeight: "700", lineHeight: "1.4" },
+    ".cm-line.cm-heading.cm-heading1": {
+      fontSize: "var(--cm-heading1-size, 1.8em)",
+      fontWeight: "var(--cm-heading1-weight, 800)",
+      color: "var(--cm-heading1-color) !important",
+      paddingTop: "var(--cm-heading-spacing-top, 14px)",
+    },
+    ".cm-line.cm-heading.cm-heading2": {
+      fontSize: "var(--cm-heading2-size, 1.5em)",
+      fontWeight: "var(--cm-heading2-weight, 700)",
+      color: "var(--cm-heading2-color) !important",
+      paddingTop: "var(--cm-heading-spacing-top, 10px)",
+    },
+    ".cm-line.cm-heading.cm-heading3": {
+      fontSize: "var(--cm-heading3-size, 1.25em)",
+      fontWeight: "var(--cm-heading3-weight, 600)",
+      color: "var(--cm-heading3-color) !important",
+      paddingTop: "var(--cm-heading-spacing-top, 8px)",
+    },
+    ".cm-line.cm-heading.cm-heading4": {
+      fontSize: "var(--cm-heading4-size, 1.1em)",
+      fontWeight: "var(--cm-heading4-weight, 600)",
+      color: "var(--cm-heading4-color) !important",
+    },
+    ".cm-line.cm-heading.cm-heading5": {
+      fontSize: "var(--cm-heading5-size, 1em)",
+      fontWeight: "var(--cm-heading5-weight, 600)",
+      color: "var(--cm-heading5-color) !important",
+    },
+    ".cm-line.cm-heading.cm-heading6": {
+      fontSize: "var(--cm-heading6-size, 0.9em)",
+      fontWeight: "var(--cm-heading6-weight, 600)",
+      color: "var(--cm-heading6-color) !important",
+    },
+    /* ===== 强调/加粗/删除线 ===== */
+    ".cm-strong": { color: "var(--cm-strong-color) !important", fontWeight: "700" },
+    ".cm-emphasis": { color: "var(--cm-emphasis-color) !important", fontStyle: "italic" },
+    ".cm-strikethrough": { color: "var(--cm-strikethrough-color) !important", textDecoration: "line-through" },
+    /* ===== 链接/URL ===== */
+    ".cm-link": { color: "var(--cm-link-color) !important", textDecoration: "underline" },
+    ".cm-url": { color: "var(--cm-url-color) !important" },
+    /* ===== 行内代码 ===== */
+    ".cm-inline-code": {
+      backgroundColor: "var(--cm-inline-code-bg) !important",
+      color: "var(--cm-inline-code-color) !important",
+      fontFamily: "Cascadia Code, Consolas, Fira Code, monospace",
+      fontSize: "0.9em",
+      padding: "2px 5px",
+      borderRadius: "4px",
+    },
+    /* ===== 代码块 ===== */
+    ".cm-codeblock": {
+      backgroundColor: "var(--cm-codeblock-bg) !important",
+      borderColor: "var(--cm-codeblock-border) !important",
+      color: "var(--cm-codeblock-color) !important",
+      fontFamily: "Cascadia Code, Consolas, Fira Code, monospace",
+      fontSize: "0.9em",
+      lineHeight: "1.5",
+      padding: "12px 16px",
+      borderRadius: "6px",
+      border: "1px solid",
+      margin: "4px 0",
+    },
+    /* ===== 引用块 ===== */
+    ".cm-blockquote": {
+      color: "var(--cm-blockquote-color) !important",
+      backgroundColor: "var(--cm-blockquote-bg) !important",
+      borderLeft: "3px solid var(--cm-blockquote-border) !important",
+      padding: "4px 0 4px 12px",
+      margin: "4px 0",
+    },
+    /* ===== 图片 ===== */
+    ".cm-image": { color: "var(--cm-image-color) !important" },
+    /* ===== 高亮 ===== */
+    ".cm-highlight": {
+      backgroundColor: "var(--cm-highlight-bg) !important",
+      color: "var(--cm-highlight-color) !important",
+    },
+    /* ===== 任务列表 ===== */
+    ".cm-task-done": { color: "var(--cm-task-done-color) !important", textDecoration: "line-through" },
+    ".cm-task-undone": { color: "var(--cm-task-undone-color) !important" },
+    /* ===== 双链 ===== */
+    ".cm-wikilink": {
+      color: "var(--cm-wikilink-color) !important",
+      background: "var(--cm-wikilink-bg) !important",
+      borderRadius: "3px",
+      padding: "0 1px",
+      fontWeight: "500",
+    },
+    ".cm-wikilink-unfinished": {
+      background: "var(--cm-wikilink-unfinished-bg) !important",
+      borderBottom: "1px dashed var(--cm-wikilink-unfinished-border) !important",
+      fontWeight: "400",
+    },
+    /* ===== 表格 ===== */
+    ".cm-table": { borderColor: "var(--cm-table-border) !important", borderCollapse: "collapse" },
+    ".cm-table-header": { backgroundColor: "var(--cm-table-header-bg) !important", fontWeight: "700" },
+    /* ===== 分隔线 ===== */
+    ".cm-hr": { borderTopColor: "var(--cm-hr-color) !important", border: "none", borderTop: "1px solid", margin: "14px 0" },
+    /* ===== YAML ===== */
+    ".cm-yaml": {
+      backgroundColor: "var(--cm-yaml-bg) !important",
+      borderColor: "var(--cm-yaml-border) !important",
+      borderRadius: "6px",
+      border: "1px solid",
+      padding: "8px 12px",
+      margin: "4px 0",
+    },
+    ".cm-yaml-key": { color: "var(--cm-yaml-key-color) !important" },
+    ".cm-yaml-value": { color: "var(--cm-yaml-value-color) !important" },
   }),
   EditorView.updateListener.of((update) => {
     const tab = currentTab();
@@ -1748,6 +2252,10 @@ const editorExtensions = [
         /* 从预览区同步过来的变更，跳过预览重新渲染（避免覆盖用户光标） */
         if (!_skipPreviewRerender) {
           renderPreview();
+        } else {
+          /* 兜底：预览区同步标志若因竞态仍未恢复，且焦点不在预览区，
+           * 延迟一帧补一次渲染，保证预览区最终与编辑区一致 */
+          _scheduleDeferredPreviewRender();
         }
         /* 自动保存：Capture 立即保存，其他窗口 3 秒 debounce 后保存到 Tab 文件 */
         if (tab.pageId) {
@@ -1757,10 +2265,13 @@ const editorExtensions = [
           Storage.scheduleExternal(tab.extPath, update.state.doc.toString());
         }
       }
-      /* 光标/内容变化 → 目录高亮当前章节 */
+      /* 光标/内容变化 → 目录高亮当前章节 + 工具栏格式按钮 active 状态 */
       if (update.selectionSet || update.docChanged) {
         if (window.Outline && Outline.highlightAtPos) {
           Outline.highlightAtPos(update.state.selection.main.head);
+        }
+        if (window.Toolbar && Toolbar.updateActiveState) {
+          Toolbar.updateActiveState(update.state);
         }
       }
     }
@@ -2164,14 +2675,16 @@ function _insertImageToPreview(res) {
   });
   tab.state = view.state;
 
+  /* dispatch 已完成，立即恢复标志（避免 rAF 窗口内编辑区 docChanged 被误跳过预览渲染） */
+  _previewEditing = false;
+  _skipPreviewRerender = false;
+
   /* 重新渲染预览区（图片是块级元素，重新渲染保证 data-line 正确） */
   const savedScrollTop = previewEl.scrollTop;
 
   requestAnimationFrame(() => {
     renderPreview();
     previewEl.scrollTop = savedScrollTop;
-    _previewEditing = false;
-    _skipPreviewRerender = false;
 
     /* 重置 _oldBlock 状态（下次输入会重新初始化） */
     _oldBlockMarkdown = null;
@@ -2183,6 +2696,7 @@ function _insertImageToPreview(res) {
       const imgBlock = imgEl.closest("[data-line]");
       if (imgBlock) {
         _placeCursorAtBlockEnd(imgBlock);
+        _scrollPreviewCursorIntoView();
       }
     }
 
@@ -2574,6 +3088,7 @@ async function restoreTab(page) {
   return {
     id: ++tabSeq, pageId: page.id, title: page.title || "",
     status: "unsaved", state, editorScroll: 0, previewScroll: 0,
+    file: page.file || "",
   };
 }
 
@@ -3246,6 +3761,20 @@ async function handleStartupRestore() {
       scrollToLine: (line) => { scrollEditorToLine(line); scrollPreviewToLine(line); },
     });
     Outline.init(document.getElementById("outline-body"));
+  }
+
+  /* Markdown 工具栏：编辑区格式化 + 预览区操作 */
+  if (window.Toolbar && Toolbar.init) {
+    Toolbar.init({
+      getView: () => view,
+      renderPreview: () => renderPreview(),
+      toggleToc: () => { if (window.Layout) Layout.toggleOutline(); },
+      copyMarkdown: () => copyCurrentTabMarkdown(),
+      revealFile: () => syncExplorerWithTab(),
+      toast: (msg, kind) => toast(msg, kind),
+      capturePreviewRange: () => _capturePreviewRange(),
+      applyPreviewRangeToEditor: (range) => _applyPreviewRangeToEditor(range),
+    });
   }
 
   /* 历史记录面板：列表渲染 / 搜索 / 点击重新打开 */
