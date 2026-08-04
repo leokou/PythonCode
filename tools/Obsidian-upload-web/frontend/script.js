@@ -2002,7 +2002,7 @@ const _CURSOR_MARGIN_TOP = 10;
 const _CURSOR_MARGIN_BOTTOM = 40; /* 底部留白，光标不贴边 */
 
 function _ensureEditorCursorVisible() {
-  if (_suppressCursorFollow) return; /* 预览区撤销/重做期间：编辑区视图保持不动 */
+  if (_suppressCursorFollow || _previewSyncActive || _inPreviewSync()) return; /* 预览区反向同步期间：编辑区光标为陈旧位置，勿反向滚动编辑区 */
   const v = view;
   if (!v) return;
   const main = v.state.selection.main;
@@ -2042,6 +2042,7 @@ function _ensureEditorCursorVisible() {
 const cursorFollowPlugin = ViewPlugin.fromClass(class {
   update(update) {
     if (!(update.docChanged || update.selectionSet)) return;
+    if (_previewSyncActive || _inPreviewSync()) return; /* 预览区反向同步期间不调度编辑区光标跟随滚动 */
     /* rAF 阶段执行：CM6 内置同步滚动已尝试，此处为可靠兜底 */
     requestAnimationFrame(_ensureEditorCursorVisible);
   }
@@ -2186,8 +2187,13 @@ const editorExtensions = [
       }
       /* 光标/内容变化 → 目录高亮当前章节 */
       if (update.selectionSet || update.docChanged) {
-        if (window.Outline && Outline.highlightAtPos) {
-          Outline.highlightAtPos(update.state.selection.main.head);
+        /* 预览区反向同步期间：编辑器选区为陈旧/顶部位置，调用 highlightAtPos 会把
+         * 目录错误高亮到一级标题，故用 _inPreviewSync() 守卫跳过；同步结束后用户
+         * 真实的光标移动/输入会重新驱动目录高亮，行为不变。 */
+        if (!_inPreviewSync()) {
+          if (window.Outline && Outline.highlightAtPos) {
+            Outline.highlightAtPos(update.state.selection.main.head);
+          }
         }
         if (window.Toolbar && Toolbar.updateActiveState) {
           Toolbar.updateActiveState(update.view);

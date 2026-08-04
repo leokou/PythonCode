@@ -46,7 +46,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  padding: 3px 6px;
+  padding: 3px 4px;
   border-radius: 5px;
   cursor: pointer;
   color: var(--text-color);
@@ -70,14 +70,21 @@
   text-overflow: ellipsis;
 }
 
-/* 缩进：每层约 2 个汉字宽度（font-size 12.5px → 2em ≈ 25px） */
+/* 缩进：每层约 1 个汉字宽度（font-size 12.5px → 1em ≈ 12.5px）。
+ * 收窄面板时，过深的嵌套会因缩进叠加吃掉名字宽度（名字被压成 1 个字、右侧留白），
+ * 故用更紧凑的缩进，保证长文件夹名仍有足够显示空间。 */
 .exp-children {
   display: none;
-  padding-left: 2em;
+  padding-left: 1em;
   flex: 1 1 100%;
   min-width: 0;
 }
 .exp-dir.exp-expanded > .exp-children { display: block; }
+
+/* 文件行左移，使文件图标与所在文件夹（父级）图标对齐：
+ * 抵消 .exp-children 的 1em 缩进 + .exp-row 的 4px 左 padding。
+ * 子文件夹（.exp-dir）不应用此规则，保持嵌套缩进。 */
+.exp-file { margin-left: calc(-1em - 4px); }
 
 /* 高亮当前打开文件 */
 .exp-row.exp-active {
@@ -95,6 +102,7 @@
 
 .exp-del {
   flex: 0 0 auto;
+  display: none;                 /* 默认隐藏且不占布局空间，避免挤压名字 + 行内留白 */
   border: none;
   background: transparent;
   color: var(--text-dim);
@@ -102,14 +110,14 @@
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
-  opacity: 0;
 }
-.exp-row:hover .exp-del { opacity: 1; }
+.exp-row:hover .exp-del { display: inline-flex; opacity: 1; }
 .exp-del:hover { color: var(--error); background: var(--hover-overlay); }
 
 /* 工作区文件夹上移/下移按钮（hover 行时显示） */
 .exp-mv {
   flex: 0 0 auto;
+  display: none;                 /* 默认隐藏且不占布局空间 */
   border: none;
   background: transparent;
   color: var(--text-dim);
@@ -117,9 +125,8 @@
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
-  opacity: 0;
 }
-.exp-row:hover .exp-mv { opacity: 1; }
+.exp-row:hover .exp-mv { display: inline-flex; opacity: 1; }
 .exp-mv:hover { color: var(--accent-strong); background: var(--hover-overlay); }
 
 .exp-loading .exp-name::after { content: " …"; color: var(--text-dim); }
