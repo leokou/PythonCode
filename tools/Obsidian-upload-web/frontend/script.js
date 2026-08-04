@@ -179,7 +179,12 @@ function renderPreview() {
   if (!tab) { previewEl.innerHTML = ""; return; }
   _renderDoc = tab.state.doc.toString();
   _renderPos = 0;
+
+  /* 保存并恢复滚动位置：设置 innerHTML 会重置 scrollTop=0，
+   * 编辑器 Ctrl+Z（CM6 undo）经 updateListener 触发 renderPreview 时尤其明显。 */
+  const savedScrollTop = previewEl.scrollTop;
   previewEl.innerHTML = marked.parse(_renderDoc, { breaks: true, gfm: true });
+  previewEl.scrollTop = savedScrollTop;
 
   /* 处理 ![[image.png]] Obsidian 图片嵌入（必须在 wikilink 之前，避免 ![[x]] 被 [[x]] 误匹配） */
   _processImageEmbeds();
@@ -994,9 +999,9 @@ function _doPreviewUndoRedo(type) {
 
     syncing = true;
     previewEl.scrollTop = savedScrollTop;
-
-    /* 光标回到文档末尾 */
-    _placeCursorAtDocEnd();
+    /* 不再强制 _placeCursorAtDocEnd()——它会把滚动条拉到底部，
+     * 导致撤销前后的视图位置相同（若撤销前也在末尾），撤销"无效果"。
+     * renderPreview() 已保存/恢复 scroll，此处只保保持视图不动。 */
 
     requestAnimationFrame(() => { syncing = false; });
 
