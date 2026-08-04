@@ -1,37 +1,56 @@
-/* 编辑器主题 —— 冰火 Ice Fire（浅色版） */
+/* 编辑器主题 —— Ice Fire（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="ice-fire"] {
-  --cm-bg: #F5FAFD;              /* 编辑器背景 */
-  --cm-fg: #1A2E3D;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #E8F2F8;       /* 行号栏背景 */
-  --cm-gutter-fg: #4A7BA5;       /* 行号文字 */
-  --cm-gutter-border: #C8DCE8;   /* 行号栏右边框 */
-  --cm-active-line: rgba(0,120,200,.06);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(0,120,200,.14);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #FF5722;          /* 光标颜色 */
-  --cm-selection: rgba(0,120,200,.5);       /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(105,180,74,.22);   /* 搜索匹配高亮 */
-  --cm-fold-bg: #E8F2F8;         /* 折叠按钮背景 */
-  --cm-fold-border: #4A7BA5;     /* 折叠按钮边框 */
-  --cm-fold-fg: #1565C0;         /* 折叠按钮文字 */
+  --cm-bg: #0F172A;
+  --cm-fg: #E2E8F0;
+  --cm-gutter-bg: #0F172A;
+  --cm-gutter-fg: #475569;
+  --cm-gutter-border: #1E293B;
+  --cm-active-line: rgba(56,189,248,.05);
+  --cm-active-line-gutter: rgba(56,189,248,.08);
+  --cm-cursor: #38BDF8;
+  --cm-selection: rgba(56,189,248,.25);
+  --cm-search-match: rgba(249,115,22,.3);
+  --cm-fold-bg: #1E293B;
+  --cm-fold-border: #334155;
+  --cm-fold-fg: #475569;
+  --cm-heading1-color: #38BDF8;
+  --cm-heading2-color: #38BDF8;
+  --cm-heading3-color: #F97316;
+  --cm-heading4-color: #E2E8F0;
+  --cm-heading5-color: #E2E8F0;
+  --cm-heading6-color: #94A3B8;
+  --cm-strong-color: #F43F5E;
+  --cm-emphasis-color: #A78BFA;
+  --cm-strikethrough-color: #94A3B8;
+  --cm-highlight-bg: #2D2A1E;
+  --cm-highlight-color: #FBBF24;
+  --cm-inline-code-bg: #1E293B;
+  --cm-inline-code-color: #34D399;
+  --cm-codeblock-bg: #1E293B;
+  --cm-codeblock-border: #334155;
+  --cm-codeblock-color: #E2E8F0;
+  --cm-link-color: #38BDF8;
+  --cm-url-color: #38BDF8;
+  --cm-wikilink-color: #38BDF8;
+  --cm-wikilink-bg: rgba(56,189,248,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #34D399;
+  --cm-blockquote-color: #94A3B8;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #334155;
+  --cm-list-marker-color: #F43F5E;
+  --cm-task-done-color: #34D399;
+  --cm-task-undone-color: #94A3B8;
+  --cm-table-border: #334155;
+  --cm-table-header-bg: #1E293B;
+  --cm-hr-color: #334155;
+  --cm-yaml-bg: #1E293B;
+  --cm-yaml-border: #334155;
+  --cm-yaml-key-color: #F43F5E;
+  --cm-yaml-value-color: #38BDF8;
+  --cm-formatting-color: #94A3B8;
 }
-body[data-editor-theme="ice-fire"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="ice-fire"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="ice-fire"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="ice-fire"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="ice-fire"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="ice-fire"] #editor .cm-selectionBackground,
-body[data-editor-theme="ice-fire"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：浅色背景下的中等饱和度配色 */
-body[data-editor-theme="ice-fire"] #editor .tok-heading { color: #D84315; font-weight: 700; }
-body[data-editor-theme="ice-fire"] #editor .tok-strong { color: #BF8800; font-weight: 700; }
-body[data-editor-theme="ice-fire"] #editor .tok-emphasis { color: #BF8800; font-style: italic; }
-body[data-editor-theme="ice-fire"] #editor .tok-monospace { color: #00838F; background: #E0F2F5; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="ice-fire"] #editor .tok-link { color: #0277BD; text-decoration: underline; }
-body[data-editor-theme="ice-fire"] #editor .tok-url { color: #0277BD; }
-body[data-editor-theme="ice-fire"] #editor .tok-quote { color: #1565C0; font-style: italic; }
-body[data-editor-theme="ice-fire"] #editor .tok-list { color: #D84315; }
-body[data-editor-theme="ice-fire"] #editor .tok-keyword { color: #C62828; font-weight: 700; }
-body[data-editor-theme="ice-fire"] #editor .tok-string { color: #2E7D32; }
-body[data-editor-theme="ice-fire"] #editor .tok-number { color: #BF8800; }
-body[data-editor-theme="ice-fire"] #editor .tok-comment { color: #7E9EB4; font-style: italic; }
-body[data-editor-theme="ice-fire"] #editor .cm-formatting { color: #1565C0; }

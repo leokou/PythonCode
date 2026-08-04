@@ -1,37 +1,56 @@
-/* 编辑器主题 —— GitHub Light */
+/* 编辑器主题 —— Github Light（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="github-light"] {
-  --cm-bg: #FFFFFF;              /* 编辑器背景 */
-  --cm-fg: #24292F;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #FFFFFF;       /* 行号栏背景 */
-  --cm-gutter-fg: #6E7781;       /* 行号文字 */
-  --cm-gutter-border: #D0D7DE;   /* 行号栏右边框 */
-  --cm-active-line: rgba(246,248,250,.6);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(246,248,250,.9);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #24292F;          /* 光标颜色 */
-  --cm-selection: rgba(175,184,193,.5);       /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(255,220,0,.45);     /* 搜索匹配高亮 */
-  --cm-fold-bg: #FFFFFF;         /* 折叠按钮背景 */
-  --cm-fold-border: #D0D7DE;     /* 折叠按钮边框 */
-  --cm-fold-fg: #6E7781;         /* 折叠按钮文字 */
+  --cm-bg: #FFFFFF;
+  --cm-fg: #24292F;
+  --cm-gutter-bg: #FFFFFF;
+  --cm-gutter-fg: #6E7781;
+  --cm-gutter-border: #D0D7DE;
+  --cm-active-line: rgba(246,248,250,.6);
+  --cm-active-line-gutter: rgba(246,248,250,.9);
+  --cm-cursor: #24292F;
+  --cm-selection: rgba(175,184,193,.5);
+  --cm-search-match: rgba(255,220,0,.45);
+  --cm-fold-bg: #FFFFFF;
+  --cm-fold-border: #D0D7DE;
+  --cm-fold-fg: #6E7781;
+  --cm-heading1-color: #0550AE;
+  --cm-heading2-color: #0969DA;
+  --cm-heading3-color: #1F2328;
+  --cm-heading4-color: #24292F;
+  --cm-heading5-color: #24292F;
+  --cm-heading6-color: #57606A;
+  --cm-strong-color: #CF222E;
+  --cm-emphasis-color: #8250DF;
+  --cm-strikethrough-color: #6E7781;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #24292F;
+  --cm-inline-code-bg: #EFF1F3;
+  --cm-inline-code-color: #0550AE;
+  --cm-codeblock-bg: #F6F8FA;
+  --cm-codeblock-border: #D0D7DE;
+  --cm-codeblock-color: #24292F;
+  --cm-link-color: #0969DA;
+  --cm-url-color: #0969DA;
+  --cm-wikilink-color: #0969DA;
+  --cm-wikilink-bg: rgba(9,105,218,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #1A7F37;
+  --cm-blockquote-color: #57606A;
+  --cm-blockquote-bg: rgba(175,184,193,.15);
+  --cm-blockquote-border: #D0D7DE;
+  --cm-list-marker-color: #CF222E;
+  --cm-task-done-color: #1A7F37;
+  --cm-task-undone-color: #6E7781;
+  --cm-table-border: #D0D7DE;
+  --cm-table-header-bg: #F6F8FA;
+  --cm-hr-color: #D0D7DE;
+  --cm-yaml-bg: #F6F8FA;
+  --cm-yaml-border: #D0D7DE;
+  --cm-yaml-key-color: #CF222E;
+  --cm-yaml-value-color: #0550AE;
+  --cm-formatting-color: #8B949E;
 }
-body[data-editor-theme="github-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="github-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="github-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="github-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="github-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="github-light"] #editor .cm-selectionBackground,
-body[data-editor-theme="github-light"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：鲜艳高对比度 */
-body[data-editor-theme="github-light"] #editor .tok-heading { color: #0550AE; font-weight: 700; }
-body[data-editor-theme="github-light"] #editor .tok-strong { color: #CF222E; font-weight: 700; }
-body[data-editor-theme="github-light"] #editor .tok-emphasis { color: #CF222E; font-style: italic; }
-body[data-editor-theme="github-light"] #editor .tok-monospace { color: #0550AE; background: #EFF1F3; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="github-light"] #editor .tok-link { color: #0969DA; text-decoration: underline; }
-body[data-editor-theme="github-light"] #editor .tok-url { color: #0969DA; }
-body[data-editor-theme="github-light"] #editor .tok-quote { color: #6E7781; font-style: italic; }
-body[data-editor-theme="github-light"] #editor .tok-list { color: #CF222E; }
-body[data-editor-theme="github-light"] #editor .tok-keyword { color: #CF222E; font-weight: 700; }
-body[data-editor-theme="github-light"] #editor .tok-string { color: #0A3069; }
-body[data-editor-theme="github-light"] #editor .tok-number { color: #0550AE; }
-body[data-editor-theme="github-light"] #editor .tok-comment { color: #6E7781; font-style: italic; }
-body[data-editor-theme="github-light"] #editor .cm-formatting { color: #6E7781; }

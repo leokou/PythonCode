@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Sky Dawn（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="sky-dawn"] {
+  --cm-bg: #F4F7FB;
+  --cm-fg: #2E3A48;
+  --cm-gutter-bg: #F4F7FB;
+  --cm-gutter-fg: #93A4B8;
+  --cm-gutter-border: #DCE5EF;
+  --cm-active-line: rgba(46,58,72,.05);
+  --cm-active-line-gutter: rgba(46,58,72,.08);
+  --cm-cursor: #2E7FD1;
+  --cm-selection: rgba(46,127,209,.2);
+  --cm-search-match: rgba(255,213,79,.4);
+  --cm-fold-bg: #E6EEF6;
+  --cm-fold-border: #CBD9E8;
+  --cm-fold-fg: #93A4B8;
+  --cm-heading1-color: #2E7FD1;
+  --cm-heading2-color: #2E7FD1;
+  --cm-heading3-color: #C08A3E;
+  --cm-heading4-color: #2E3A48;
+  --cm-heading5-color: #2E3A48;
+  --cm-heading6-color: #8A9BB0;
+  --cm-strong-color: #BF4B3E;
+  --cm-emphasis-color: #7A5BA8;
+  --cm-strikethrough-color: #93A4B8;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #2E3A48;
+  --cm-inline-code-bg: #E6EEF6;
+  --cm-inline-code-color: #BF4B3E;
+  --cm-codeblock-bg: #E6EEF6;
+  --cm-codeblock-border: #CBD9E8;
+  --cm-codeblock-color: #2E3A48;
+  --cm-link-color: #2E7FD1;
+  --cm-url-color: #2E7FD1;
+  --cm-wikilink-color: #2E7FD1;
+  --cm-wikilink-bg: rgba(46,127,209,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #4E8A5C;
+  --cm-blockquote-color: #8A9BB0;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #CBD9E8;
+  --cm-list-marker-color: #BF4B3E;
+  --cm-task-done-color: #4E8A5C;
+  --cm-task-undone-color: #93A4B8;
+  --cm-table-border: #CBD9E8;
+  --cm-table-header-bg: #E6EEF6;
+  --cm-hr-color: #CBD9E8;
+  --cm-yaml-bg: #E6EEF6;
+  --cm-yaml-border: #CBD9E8;
+  --cm-yaml-key-color: #BF4B3E;
+  --cm-yaml-value-color: #2E7FD1;
+  --cm-formatting-color: #93A4B6;
+}

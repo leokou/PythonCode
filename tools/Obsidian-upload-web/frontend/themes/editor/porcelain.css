@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Porcelain（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="porcelain"] {
+  --cm-bg: #F4F6F7;
+  --cm-fg: #2F3A42;
+  --cm-gutter-bg: #F4F6F7;
+  --cm-gutter-fg: #8A97A0;
+  --cm-gutter-border: #DCE4E8;
+  --cm-active-line: rgba(47,58,66,.05);
+  --cm-active-line-gutter: rgba(47,58,66,.08);
+  --cm-cursor: #1F7A8C;
+  --cm-selection: rgba(31,122,140,.25);
+  --cm-search-match: rgba(255,213,79,.4);
+  --cm-fold-bg: #E8EDEF;
+  --cm-fold-border: #CBD5DA;
+  --cm-fold-fg: #8A97A0;
+  --cm-heading1-color: #1F7A8C;
+  --cm-heading2-color: #1F7A8C;
+  --cm-heading3-color: #A47148;
+  --cm-heading4-color: #2F3A42;
+  --cm-heading5-color: #2F3A42;
+  --cm-heading6-color: #7A8B96;
+  --cm-strong-color: #B23A48;
+  --cm-emphasis-color: #6D4C9A;
+  --cm-strikethrough-color: #8A97A0;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #2F3A42;
+  --cm-inline-code-bg: #E8EDEF;
+  --cm-inline-code-color: #B23A48;
+  --cm-codeblock-bg: #E8EDEF;
+  --cm-codeblock-border: #CBD5DA;
+  --cm-codeblock-color: #2F3A42;
+  --cm-link-color: #1F7A8C;
+  --cm-url-color: #1F7A8C;
+  --cm-wikilink-color: #1F7A8C;
+  --cm-wikilink-bg: rgba(31,122,140,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #4A7C59;
+  --cm-blockquote-color: #7A8B96;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #CBD5DA;
+  --cm-list-marker-color: #B23A48;
+  --cm-task-done-color: #4A7C59;
+  --cm-task-undone-color: #8A97A0;
+  --cm-table-border: #CBD5DA;
+  --cm-table-header-bg: #E8EDEF;
+  --cm-hr-color: #CBD5DA;
+  --cm-yaml-bg: #E8EDEF;
+  --cm-yaml-border: #CBD5DA;
+  --cm-yaml-key-color: #B23A48;
+  --cm-yaml-value-color: #1F7A8C;
+  --cm-formatting-color: #93A3AC;
+}

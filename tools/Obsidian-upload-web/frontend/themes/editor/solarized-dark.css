@@ -1,37 +1,56 @@
-/* 编辑器主题 —— Solarized Dark */
+/* 编辑器主题 —— Solarized Dark（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="solarized-dark"] {
-  --cm-bg: #002B36;              /* 编辑器背景 */
-  --cm-fg: #93A1A1;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #002B36;       /* 行号栏背景 */
-  --cm-gutter-fg: #586E75;       /* 行号文字 */
-  --cm-gutter-border: #073642;   /* 行号栏右边框 */
-  --cm-active-line: rgba(255,255,255,.03);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(255,255,255,.06);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #839496;          /* 光标颜色 */
-  --cm-selection: rgba(38,139,210,.5);            /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(42,161,152,.4);      /* 搜索匹配高亮 */
-  --cm-fold-bg: #073642;         /* 折叠按钮背景 */
-  --cm-fold-border: #586E75;     /* 折叠按钮边框 */
-  --cm-fold-fg: #586E75;         /* 折叠按钮文字 */
+  --cm-bg: #002B36;
+  --cm-fg: #839496;
+  --cm-gutter-bg: #002B36;
+  --cm-gutter-fg: #586E75;
+  --cm-gutter-border: #073642;
+  --cm-active-line: rgba(255,255,255,.04);
+  --cm-active-line-gutter: rgba(255,255,255,.07);
+  --cm-cursor: #839496;
+  --cm-selection: rgba(38,139,210,.3);
+  --cm-search-match: rgba(181,137,0,.3);
+  --cm-fold-bg: #073642;
+  --cm-fold-border: #586E75;
+  --cm-fold-fg: #586E75;
+  --cm-heading1-color: #268BD2;
+  --cm-heading2-color: #268BD2;
+  --cm-heading3-color: #B58900;
+  --cm-heading4-color: #839496;
+  --cm-heading5-color: #839496;
+  --cm-heading6-color: #586E75;
+  --cm-strong-color: #CB4B16;
+  --cm-emphasis-color: #6C71C4;
+  --cm-strikethrough-color: #586E75;
+  --cm-highlight-bg: #3B3A2E;
+  --cm-highlight-color: #B58900;
+  --cm-inline-code-bg: #073642;
+  --cm-inline-code-color: #2AA198;
+  --cm-codeblock-bg: #073642;
+  --cm-codeblock-border: #586E75;
+  --cm-codeblock-color: #839496;
+  --cm-link-color: #268BD2;
+  --cm-url-color: #268BD2;
+  --cm-wikilink-color: #268BD2;
+  --cm-wikilink-bg: rgba(38,139,210,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #859900;
+  --cm-blockquote-color: #586E75;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #586E75;
+  --cm-list-marker-color: #CB4B16;
+  --cm-task-done-color: #859900;
+  --cm-task-undone-color: #586E75;
+  --cm-table-border: #586E75;
+  --cm-table-header-bg: #073642;
+  --cm-hr-color: #586E75;
+  --cm-yaml-bg: #073642;
+  --cm-yaml-border: #586E75;
+  --cm-yaml-key-color: #CB4B16;
+  --cm-yaml-value-color: #268BD2;
+  --cm-formatting-color: #93A1A1;
 }
-body[data-editor-theme="solarized-dark"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="solarized-dark"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="solarized-dark"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="solarized-dark"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="solarized-dark"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="solarized-dark"] #editor .cm-selectionBackground,
-body[data-editor-theme="solarized-dark"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：鲜艳高对比度 */
-body[data-editor-theme="solarized-dark"] #editor .tok-heading { color: #268BD2; font-weight: 700; }
-body[data-editor-theme="solarized-dark"] #editor .tok-strong { color: #CB4B16; font-weight: 700; }
-body[data-editor-theme="solarized-dark"] #editor .tok-emphasis { color: #6C71C4; font-style: italic; }
-body[data-editor-theme="solarized-dark"] #editor .tok-monospace { color: #2AA198; background: #073642; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="solarized-dark"] #editor .tok-link { color: #268BD2; text-decoration: underline; }
-body[data-editor-theme="solarized-dark"] #editor .tok-url { color: #268BD2; }
-body[data-editor-theme="solarized-dark"] #editor .tok-quote { color: #586E75; font-style: italic; }
-body[data-editor-theme="solarized-dark"] #editor .tok-list { color: #CB4B16; }
-body[data-editor-theme="solarized-dark"] #editor .tok-keyword { color: #859900; font-weight: 700; }
-body[data-editor-theme="solarized-dark"] #editor .tok-string { color: #2AA198; }
-body[data-editor-theme="solarized-dark"] #editor .tok-number { color: #D33682; }
-body[data-editor-theme="solarized-dark"] #editor .tok-comment { color: #586E75; font-style: italic; }
-body[data-editor-theme="solarized-dark"] #editor .cm-formatting { color: #586E75; }

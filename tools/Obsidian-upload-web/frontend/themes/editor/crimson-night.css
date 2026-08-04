@@ -1,37 +1,56 @@
-/* 编辑器主题 —— 绯红之夜 Crimson Night（浅色版） */
+/* 编辑器主题 —— Crimson Night（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="crimson-night"] {
-  --cm-bg: #FCF5F5;              /* 编辑器背景 */
-  --cm-fg: #3D1A1A;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #F8EAEA;       /* 行号栏背景 */
-  --cm-gutter-fg: #A55A5A;       /* 行号文字 */
-  --cm-gutter-border: #E8C8C8;   /* 行号栏右边框 */
-  --cm-active-line: rgba(180,40,40,.05);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(180,40,40,.12);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #C62828;          /* 光标颜色 */
-  --cm-selection: rgba(180,40,40,.5);       /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(180,140,0,.2);     /* 搜索匹配高亮 */
-  --cm-fold-bg: #F8EAEA;         /* 折叠按钮背景 */
-  --cm-fold-border: #A55A5A;     /* 折叠按钮边框 */
-  --cm-fold-fg: #8B0000;         /* 折叠按钮文字 */
+  --cm-bg: #1A0A0F;
+  --cm-fg: #E8D5D0;
+  --cm-gutter-bg: #1A0A0F;
+  --cm-gutter-fg: #6B4045;
+  --cm-gutter-border: #3D1A22;
+  --cm-active-line: rgba(255,255,255,.03);
+  --cm-active-line-gutter: rgba(255,255,255,.05);
+  --cm-cursor: #FF6B6B;
+  --cm-selection: rgba(200,80,80,.35);
+  --cm-search-match: rgba(255,180,80,.3);
+  --cm-fold-bg: #2D1520;
+  --cm-fold-border: #4A2530;
+  --cm-fold-fg: #6B4045;
+  --cm-heading1-color: #FF6B6B;
+  --cm-heading2-color: #FF6B6B;
+  --cm-heading3-color: #FFB86C;
+  --cm-heading4-color: #E8D5D0;
+  --cm-heading5-color: #E8D5D0;
+  --cm-heading6-color: #8B5E60;
+  --cm-strong-color: #FF4757;
+  --cm-emphasis-color: #C084FC;
+  --cm-strikethrough-color: #8B5E60;
+  --cm-highlight-bg: #3A2520;
+  --cm-highlight-color: #FFB86C;
+  --cm-inline-code-bg: #2D1520;
+  --cm-inline-code-color: #67E8F9;
+  --cm-codeblock-bg: #2D1520;
+  --cm-codeblock-border: #4A2530;
+  --cm-codeblock-color: #E8D5D0;
+  --cm-link-color: #67E8F9;
+  --cm-url-color: #67E8F9;
+  --cm-wikilink-color: #67E8F9;
+  --cm-wikilink-bg: rgba(103,232,249,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #4ADE80;
+  --cm-blockquote-color: #8B5E60;
+  --cm-blockquote-bg: rgba(255,255,255,.02);
+  --cm-blockquote-border: #4A2530;
+  --cm-list-marker-color: #FF4757;
+  --cm-task-done-color: #4ADE80;
+  --cm-task-undone-color: #8B5E60;
+  --cm-table-border: #4A2530;
+  --cm-table-header-bg: #2D1520;
+  --cm-hr-color: #4A2530;
+  --cm-yaml-bg: #2D1520;
+  --cm-yaml-border: #4A2530;
+  --cm-yaml-key-color: #FF4757;
+  --cm-yaml-value-color: #67E8F9;
+  --cm-formatting-color: #B88A8A;
 }
-body[data-editor-theme="crimson-night"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="crimson-night"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="crimson-night"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="crimson-night"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="crimson-night"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="crimson-night"] #editor .cm-selectionBackground,
-body[data-editor-theme="crimson-night"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：浅色背景下的中等饱和度配色 */
-body[data-editor-theme="crimson-night"] #editor .tok-heading { color: #B8860B; font-weight: 700; }
-body[data-editor-theme="crimson-night"] #editor .tok-strong { color: #C62828; font-weight: 700; }
-body[data-editor-theme="crimson-night"] #editor .tok-emphasis { color: #C62828; font-style: italic; }
-body[data-editor-theme="crimson-night"] #editor .tok-monospace { color: #BF360C; background: #FCE8E0; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="crimson-night"] #editor .tok-link { color: #D84315; text-decoration: underline; }
-body[data-editor-theme="crimson-night"] #editor .tok-url { color: #D84315; }
-body[data-editor-theme="crimson-night"] #editor .tok-quote { color: #8B0000; font-style: italic; }
-body[data-editor-theme="crimson-night"] #editor .tok-list { color: #B8860B; }
-body[data-editor-theme="crimson-night"] #editor .tok-keyword { color: #B71C1C; font-weight: 700; }
-body[data-editor-theme="crimson-night"] #editor .tok-string { color: #6A1B9A; }
-body[data-editor-theme="crimson-night"] #editor .tok-number { color: #B8860B; }
-body[data-editor-theme="crimson-night"] #editor .tok-comment { color: #A89090; font-style: italic; }
-body[data-editor-theme="crimson-night"] #editor .cm-formatting { color: #8B0000; }

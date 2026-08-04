@@ -1,37 +1,56 @@
-/* 编辑器主题 —— Atom One Light */
+/* 编辑器主题 —— Atom One Light（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="atom-one-light"] {
-  --cm-bg: #FAFAFA;              /* 编辑器背景 */
-  --cm-fg: #383A42;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #F0F0F0;       /* 行号栏背景 */
-  --cm-gutter-fg: #A0A1A7;       /* 行号文字 */
-  --cm-gutter-border: #E0E0E0;   /* 行号栏右边框 */
-  --cm-active-line: #F0F0F0;     /* 当前行高亮 */
-  --cm-active-line-gutter: #E8E8E8;  /* 当前行号高亮 */
-  --cm-cursor: #383A42;          /* 光标颜色 */
-  --cm-selection: rgba(64,120,242,.5);  /* 选区颜色 */
-  --cm-search-match: rgba(193,132,1,.25);  /* 搜索匹配高亮 */
-  --cm-fold-bg: #F0F0F0;         /* 折叠按钮背景 */
-  --cm-fold-border: #D0D0D0;     /* 折叠按钮边框 */
-  --cm-fold-fg: #383A42;         /* 折叠按钮文字 */
+  --cm-bg: #FAFAFA;
+  --cm-fg: #383A42;
+  --cm-gutter-bg: #FAFAFA;
+  --cm-gutter-fg: #A0A1A7;
+  --cm-gutter-border: #E5E5E6;
+  --cm-active-line: rgba(56,58,66,.06);
+  --cm-active-line-gutter: rgba(56,58,66,.1);
+  --cm-cursor: #526FFF;
+  --cm-selection: rgba(60,128,210,.35);
+  --cm-search-match: rgba(255,220,0,.4);
+  --cm-fold-bg: #F0F0F0;
+  --cm-fold-border: #D0D0D0;
+  --cm-fold-fg: #A0A1A7;
+  --cm-heading1-color: #4078F2;
+  --cm-heading2-color: #4078F2;
+  --cm-heading3-color: #986801;
+  --cm-heading4-color: #383A42;
+  --cm-heading5-color: #383A42;
+  --cm-heading6-color: #A0A1A7;
+  --cm-strong-color: #E45649;
+  --cm-emphasis-color: #A626A4;
+  --cm-strikethrough-color: #A0A1A7;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #383A42;
+  --cm-inline-code-bg: #F0F0F0;
+  --cm-inline-code-color: #E45649;
+  --cm-codeblock-bg: #F0F0F0;
+  --cm-codeblock-border: #E5E5E6;
+  --cm-codeblock-color: #383A42;
+  --cm-link-color: #4078F2;
+  --cm-url-color: #4078F2;
+  --cm-wikilink-color: #4078F2;
+  --cm-wikilink-bg: rgba(64,120,242,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #50A14F;
+  --cm-blockquote-color: #A0A1A7;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #D0D0D0;
+  --cm-list-marker-color: #E45649;
+  --cm-task-done-color: #50A14F;
+  --cm-task-undone-color: #A0A1A7;
+  --cm-table-border: #E5E5E6;
+  --cm-table-header-bg: #F0F0F0;
+  --cm-hr-color: #E5E5E6;
+  --cm-yaml-bg: #F0F0F0;
+  --cm-yaml-border: #E5E5E6;
+  --cm-yaml-key-color: #E45649;
+  --cm-yaml-value-color: #4078F2;
+  --cm-formatting-color: #A0A1A7;
 }
-body[data-editor-theme="atom-one-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="atom-one-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="atom-one-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="atom-one-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="atom-one-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="atom-one-light"] #editor .cm-selectionBackground,
-body[data-editor-theme="atom-one-light"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：鲜艳高对比度 */
-body[data-editor-theme="atom-one-light"] #editor .tok-heading { color: #4078F2; font-weight: 700; }
-body[data-editor-theme="atom-one-light"] #editor .tok-strong { color: #E45649; font-weight: 700; }
-body[data-editor-theme="atom-one-light"] #editor .tok-emphasis { color: #A626A4; font-style: italic; }
-body[data-editor-theme="atom-one-light"] #editor .tok-monospace { color: #0184BC; background: #F0F0F0; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="atom-one-light"] #editor .tok-link { color: #4078F2; text-decoration: underline; }
-body[data-editor-theme="atom-one-light"] #editor .tok-url { color: #4078F2; }
-body[data-editor-theme="atom-one-light"] #editor .tok-quote { color: #A0A1A7; font-style: italic; }
-body[data-editor-theme="atom-one-light"] #editor .tok-list { color: #A626A4; }
-body[data-editor-theme="atom-one-light"] #editor .tok-keyword { color: #A626A4; font-weight: 700; }
-body[data-editor-theme="atom-one-light"] #editor .tok-string { color: #50A14F; }
-body[data-editor-theme="atom-one-light"] #editor .tok-number { color: #986801; }
-body[data-editor-theme="atom-one-light"] #editor .tok-comment { color: #A0A1A7; font-style: italic; }
-body[data-editor-theme="atom-one-light"] #editor .cm-formatting { color: #A0A1A7; }

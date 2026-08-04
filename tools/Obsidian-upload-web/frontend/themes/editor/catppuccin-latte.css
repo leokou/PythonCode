@@ -1,37 +1,56 @@
-/* 编辑器主题 —— Catppuccin Latte */
+/* 编辑器主题 —— Catppuccin Latte（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="catppuccin-latte"] {
-  --cm-bg: #EFF1F5;              /* 编辑器背景 */
-  --cm-fg: #4C4F69;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #E6E9EF;       /* 行号栏背景 */
-  --cm-gutter-fg: #9CA0B0;       /* 行号文字 */
-  --cm-gutter-border: #CCD0DA;   /* 行号栏右边框 */
-  --cm-active-line: #E6E9EF;     /* 当前行高亮 */
-  --cm-active-line-gutter: #CCD0DA;  /* 当前行号高亮 */
-  --cm-cursor: #4C4F69;          /* 光标颜色 */
-  --cm-selection: rgba(30,102,245,.5);  /* 选区颜色 */
-  --cm-search-match: rgba(254,100,11,.25);  /* 搜索匹配高亮 */
-  --cm-fold-bg: #CCD0DA;         /* 折叠按钮背景 */
-  --cm-fold-border: #ACB0BE;     /* 折叠按钮边框 */
-  --cm-fold-fg: #4C4F69;         /* 折叠按钮文字 */
+  --cm-bg: #EFF1F5;
+  --cm-fg: #4C4F69;
+  --cm-gutter-bg: #EFF1F5;
+  --cm-gutter-fg: #9CA0B0;
+  --cm-gutter-border: #CCD0DA;
+  --cm-active-line: rgba(76,79,105,.06);
+  --cm-active-line-gutter: rgba(76,79,105,.1);
+  --cm-cursor: #1E66F5;
+  --cm-selection: rgba(30,102,245,.25);
+  --cm-search-match: rgba(223,142,29,.3);
+  --cm-fold-bg: #E6E9EF;
+  --cm-fold-border: #CCD0DA;
+  --cm-fold-fg: #9CA0B0;
+  --cm-heading1-color: #1E66F5;
+  --cm-heading2-color: #1E66F5;
+  --cm-heading3-color: #FE640B;
+  --cm-heading4-color: #4C4F69;
+  --cm-heading5-color: #4C4F69;
+  --cm-heading6-color: #9CA0B0;
+  --cm-strong-color: #D20F39;
+  --cm-emphasis-color: #8839EF;
+  --cm-strikethrough-color: #9CA0B0;
+  --cm-highlight-bg: #F9E2AF;
+  --cm-highlight-color: #4C4F69;
+  --cm-inline-code-bg: #E6E9EF;
+  --cm-inline-code-color: #D20F39;
+  --cm-codeblock-bg: #E6E9EF;
+  --cm-codeblock-border: #CCD0DA;
+  --cm-codeblock-color: #4C4F69;
+  --cm-link-color: #1E66F5;
+  --cm-url-color: #1E66F5;
+  --cm-wikilink-color: #1E66F5;
+  --cm-wikilink-bg: rgba(30,102,245,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #40A02B;
+  --cm-blockquote-color: #7C7F93;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #CCD0DA;
+  --cm-list-marker-color: #D20F39;
+  --cm-task-done-color: #40A02B;
+  --cm-task-undone-color: #9CA0B0;
+  --cm-table-border: #CCD0DA;
+  --cm-table-header-bg: #E6E9EF;
+  --cm-hr-color: #CCD0DA;
+  --cm-yaml-bg: #E6E9EF;
+  --cm-yaml-border: #CCD0DA;
+  --cm-yaml-key-color: #D20F39;
+  --cm-yaml-value-color: #1E66F5;
+  --cm-formatting-color: #ACB0BE;
 }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-selectionBackground,
-body[data-editor-theme="catppuccin-latte"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：鲜艳高对比度 */
-body[data-editor-theme="catppuccin-latte"] #editor .tok-heading { color: #D20F39; font-weight: 700; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-strong { color: #DF8E1D; font-weight: 700; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-emphasis { color: #8839EF; font-style: italic; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-monospace { color: #179299; background: #CCD0DA; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-link { color: #1E66F5; text-decoration: underline; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-url { color: #1E66F5; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-quote { color: #9CA0B0; font-style: italic; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-list { color: #8839EF; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-keyword { color: #8839EF; font-weight: 700; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-string { color: #40A02B; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-number { color: #FE640B; }
-body[data-editor-theme="catppuccin-latte"] #editor .tok-comment { color: #9CA0B0; font-style: italic; }
-body[data-editor-theme="catppuccin-latte"] #editor .cm-formatting { color: #9CA0B0; }

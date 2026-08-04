@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Cream Sand（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="cream-sand"] {
+  --cm-bg: #FBF7F0;
+  --cm-fg: #4A4038;
+  --cm-gutter-bg: #FBF7F0;
+  --cm-gutter-fg: #C4B4A0;
+  --cm-gutter-border: #F0E6D8;
+  --cm-active-line: rgba(74,64,56,.05);
+  --cm-active-line-gutter: rgba(74,64,56,.08);
+  --cm-cursor: #A67C3E;
+  --cm-selection: rgba(166,124,62,.2);
+  --cm-search-match: rgba(255,213,79,.4);
+  --cm-fold-bg: #F2EADB;
+  --cm-fold-border: #E3D6C0;
+  --cm-fold-fg: #C4B4A0;
+  --cm-heading1-color: #A67C3E;
+  --cm-heading2-color: #A67C3E;
+  --cm-heading3-color: #8A6A3A;
+  --cm-heading4-color: #4A4038;
+  --cm-heading5-color: #4A4038;
+  --cm-heading6-color: #B4A490;
+  --cm-strong-color: #B5503E;
+  --cm-emphasis-color: #7A5BA8;
+  --cm-strikethrough-color: #C4B4A0;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #4A4038;
+  --cm-inline-code-bg: #F2EADB;
+  --cm-inline-code-color: #B5503E;
+  --cm-codeblock-bg: #F2EADB;
+  --cm-codeblock-border: #E3D6C0;
+  --cm-codeblock-color: #4A4038;
+  --cm-link-color: #A67C3E;
+  --cm-url-color: #A67C3E;
+  --cm-wikilink-color: #A67C3E;
+  --cm-wikilink-bg: rgba(166,124,62,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #5C7A4E;
+  --cm-blockquote-color: #B4A490;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #E3D6C0;
+  --cm-list-marker-color: #B5503E;
+  --cm-task-done-color: #5C7A4E;
+  --cm-task-undone-color: #C4B4A0;
+  --cm-table-border: #E3D6C0;
+  --cm-table-header-bg: #F2EADB;
+  --cm-hr-color: #E3D6C0;
+  --cm-yaml-bg: #F2EADB;
+  --cm-yaml-border: #E3D6C0;
+  --cm-yaml-key-color: #B5503E;
+  --cm-yaml-value-color: #A67C3E;
+  --cm-formatting-color: #B4A490;
+}

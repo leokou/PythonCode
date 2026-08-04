@@ -1,37 +1,56 @@
-/* 编辑器主题 —— 电流蓝 Electric Blue（浅色版） */
+/* 编辑器主题 —— Electric Blue（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="electric-blue"] {
-  --cm-bg: #F4F8FB;              /* 编辑器背景 */
-  --cm-fg: #1A2F4A;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #E8F0F7;       /* 行号栏背景 */
-  --cm-gutter-fg: #4A7BB5;       /* 行号文字 */
-  --cm-gutter-border: #C8D8E8;   /* 行号栏右边框 */
-  --cm-active-line: rgba(0,116,217,.06);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(0,116,217,.14);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #0074D9;          /* 光标颜色 */
-  --cm-selection: rgba(0,116,217,.5);        /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(46,180,64,.22);     /* 搜索匹配高亮 */
-  --cm-fold-bg: #E8F0F7;         /* 折叠按钮背景 */
-  --cm-fold-border: #4A7BB5;     /* 折叠按钮边框 */
-  --cm-fold-fg: #0074D9;         /* 折叠按钮文字 */
+  --cm-bg: #0D1117;
+  --cm-fg: #C9D1D9;
+  --cm-gutter-bg: #0D1117;
+  --cm-gutter-fg: #484F58;
+  --cm-gutter-border: #21262D;
+  --cm-active-line: rgba(99,179,237,.06);
+  --cm-active-line-gutter: rgba(99,179,237,.1);
+  --cm-cursor: #58A6FF;
+  --cm-selection: rgba(56,139,253,.3);
+  --cm-search-match: rgba(255,213,79,.3);
+  --cm-fold-bg: #161B22;
+  --cm-fold-border: #30363D;
+  --cm-fold-fg: #484F58;
+  --cm-heading1-color: #58A6FF;
+  --cm-heading2-color: #58A6FF;
+  --cm-heading3-color: #79C0FF;
+  --cm-heading4-color: #C9D1D9;
+  --cm-heading5-color: #C9D1D9;
+  --cm-heading6-color: #8B949E;
+  --cm-strong-color: #FF7B72;
+  --cm-emphasis-color: #D2A8FF;
+  --cm-strikethrough-color: #8B949E;
+  --cm-highlight-bg: #2D2A1E;
+  --cm-highlight-color: #FFD379;
+  --cm-inline-code-bg: #161B22;
+  --cm-inline-code-color: #7EE787;
+  --cm-codeblock-bg: #161B22;
+  --cm-codeblock-border: #30363D;
+  --cm-codeblock-color: #C9D1D9;
+  --cm-link-color: #58A6FF;
+  --cm-url-color: #58A6FF;
+  --cm-wikilink-color: #58A6FF;
+  --cm-wikilink-bg: rgba(88,166,255,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #7EE787;
+  --cm-blockquote-color: #8B949E;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #30363D;
+  --cm-list-marker-color: #FF7B72;
+  --cm-task-done-color: #7EE787;
+  --cm-task-undone-color: #8B949E;
+  --cm-table-border: #30363D;
+  --cm-table-header-bg: #161B22;
+  --cm-hr-color: #30363D;
+  --cm-yaml-bg: #161B22;
+  --cm-yaml-border: #30363D;
+  --cm-yaml-key-color: #FF7B72;
+  --cm-yaml-value-color: #58A6FF;
+  --cm-formatting-color: #8B949E;
 }
-body[data-editor-theme="electric-blue"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="electric-blue"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="electric-blue"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="electric-blue"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="electric-blue"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="electric-blue"] #editor .cm-selectionBackground,
-body[data-editor-theme="electric-blue"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：浅色背景下的中等饱和度配色 */
-body[data-editor-theme="electric-blue"] #editor .tok-heading { color: #0277BD; font-weight: 700; }
-body[data-editor-theme="electric-blue"] #editor .tok-strong { color: #E65100; font-weight: 700; }
-body[data-editor-theme="electric-blue"] #editor .tok-emphasis { color: #E65100; font-style: italic; }
-body[data-editor-theme="electric-blue"] #editor .tok-monospace { color: #00838F; background: #E0F2F5; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="electric-blue"] #editor .tok-link { color: #00838F; text-decoration: underline; }
-body[data-editor-theme="electric-blue"] #editor .tok-url { color: #00838F; }
-body[data-editor-theme="electric-blue"] #editor .tok-quote { color: #4A7BB5; font-style: italic; }
-body[data-editor-theme="electric-blue"] #editor .tok-list { color: #0277BD; }
-body[data-editor-theme="electric-blue"] #editor .tok-keyword { color: #C62828; font-weight: 700; }
-body[data-editor-theme="electric-blue"] #editor .tok-string { color: #2E7D32; }
-body[data-editor-theme="electric-blue"] #editor .tok-number { color: #E65100; }
-body[data-editor-theme="electric-blue"] #editor .tok-comment { color: #7E8AA4; font-style: italic; }
-body[data-editor-theme="electric-blue"] #editor .cm-formatting { color: #4A7BB5; }

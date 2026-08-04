@@ -1,37 +1,56 @@
-/* 编辑器主题 —— Solarized Light */
+/* 编辑器主题 —— Solarized Light（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="solarized-light"] {
-  --cm-bg: #FDF6E3;              /* 编辑器背景 */
-  --cm-fg: #586E75;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #FDF6E3;       /* 行号栏背景 */
-  --cm-gutter-fg: #93A1A1;       /* 行号文字 */
-  --cm-gutter-border: #EEE8D5;   /* 行号栏右边框 */
-  --cm-active-line: rgba(238,232,213,.6);      /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(238,232,213,.9);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #586E75;          /* 光标颜色 */
-  --cm-selection: rgba(38,139,210,.5);        /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(181,137,0,.3);       /* 搜索匹配高亮 */
-  --cm-fold-bg: #EEE8D5;         /* 折叠按钮背景 */
-  --cm-fold-border: #93A1A1;     /* 折叠按钮边框 */
-  --cm-fold-fg: #93A1A1;         /* 折叠按钮文字 */
+  --cm-bg: #FDF6E3;
+  --cm-fg: #586E75;
+  --cm-gutter-bg: #FDF6E3;
+  --cm-gutter-fg: #93A1A1;
+  --cm-gutter-border: #EEE8D5;
+  --cm-active-line: rgba(238,232,213,.6);
+  --cm-active-line-gutter: rgba(238,232,213,.9);
+  --cm-cursor: #586E75;
+  --cm-selection: rgba(38,139,210,.5);
+  --cm-search-match: rgba(181,137,0,.3);
+  --cm-fold-bg: #EEE8D5;
+  --cm-fold-border: #93A1A1;
+  --cm-fold-fg: #93A1A1;
+  --cm-heading1-color: #073D61;
+  --cm-heading2-color: #268BD2;
+  --cm-heading3-color: #B58900;
+  --cm-heading4-color: #586E75;
+  --cm-heading5-color: #586E75;
+  --cm-heading6-color: #93A1A1;
+  --cm-strong-color: #CB4B16;
+  --cm-emphasis-color: #6C71C4;
+  --cm-strikethrough-color: #93A1A1;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #586E75;
+  --cm-inline-code-bg: #EEE8D5;
+  --cm-inline-code-color: #268BD2;
+  --cm-codeblock-bg: #EEE8D5;
+  --cm-codeblock-border: #93A1A1;
+  --cm-codeblock-color: #586E75;
+  --cm-link-color: #268BD2;
+  --cm-url-color: #268BD2;
+  --cm-wikilink-color: #268BD2;
+  --cm-wikilink-bg: rgba(38,139,210,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #859900;
+  --cm-blockquote-color: #93A1A1;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #93A1A1;
+  --cm-list-marker-color: #CB4B16;
+  --cm-task-done-color: #859900;
+  --cm-task-undone-color: #93A1A1;
+  --cm-table-border: #93A1A1;
+  --cm-table-header-bg: #EEE8D5;
+  --cm-hr-color: #93A1A1;
+  --cm-yaml-bg: #EEE8D5;
+  --cm-yaml-border: #93A1A1;
+  --cm-yaml-key-color: #CB4B16;
+  --cm-yaml-value-color: #268BD2;
+  --cm-formatting-color: #93A1A1;
 }
-body[data-editor-theme="solarized-light"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="solarized-light"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="solarized-light"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="solarized-light"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="solarized-light"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="solarized-light"] #editor .cm-selectionBackground,
-body[data-editor-theme="solarized-light"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：鲜艳高对比度 */
-body[data-editor-theme="solarized-light"] #editor .tok-heading { color: #073D61; font-weight: 700; }
-body[data-editor-theme="solarized-light"] #editor .tok-strong { color: #CB4B16; font-weight: 700; }
-body[data-editor-theme="solarized-light"] #editor .tok-emphasis { color: #6C71C4; font-style: italic; }
-body[data-editor-theme="solarized-light"] #editor .tok-monospace { color: #268BD2; background: #EEE8D5; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="solarized-light"] #editor .tok-link { color: #268BD2; text-decoration: underline; }
-body[data-editor-theme="solarized-light"] #editor .tok-url { color: #268BD2; }
-body[data-editor-theme="solarized-light"] #editor .tok-quote { color: #93A1A1; font-style: italic; }
-body[data-editor-theme="solarized-light"] #editor .tok-list { color: #CB4B16; }
-body[data-editor-theme="solarized-light"] #editor .tok-keyword { color: #859900; font-weight: 700; }
-body[data-editor-theme="solarized-light"] #editor .tok-string { color: #2AA198; }
-body[data-editor-theme="solarized-light"] #editor .tok-number { color: #D33682; }
-body[data-editor-theme="solarized-light"] #editor .tok-comment { color: #93A1A1; font-style: italic; }
-body[data-editor-theme="solarized-light"] #editor .cm-formatting { color: #93A1A1; }

@@ -1,37 +1,56 @@
-/* 编辑器主题 —— 霓虹赛博 Neon Cyber（浅色版） */
+/* 编辑器主题 —— Neon Cyber（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="neon-cyber"] {
-  --cm-bg: #F5F7FA;              /* 编辑器背景 */
-  --cm-fg: #1A1F3A;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #EDF0F5;       /* 行号栏背景 */
-  --cm-gutter-fg: #6A7BBF;       /* 行号文字 */
-  --cm-gutter-border: #D8DEE9;   /* 行号栏右边框 */
-  --cm-active-line: rgba(102,126,234,.06);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(102,126,234,.14);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #C926B5;          /* 光标颜色 */
-  --cm-selection: rgba(201,38,181,.5);        /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(0,150,200,.22);      /* 搜索匹配高亮 */
-  --cm-fold-bg: #EDF0F5;         /* 折叠按钮背景 */
-  --cm-fold-border: #6A7BBF;     /* 折叠按钮边框 */
-  --cm-fold-fg: #4A5FBF;         /* 折叠按钮文字 */
+  --cm-bg: #0A0A0A;
+  --cm-fg: #00FF41;
+  --cm-gutter-bg: #0A0A0A;
+  --cm-gutter-fg: #003B00;
+  --cm-gutter-border: #0D3B0D;
+  --cm-active-line: rgba(0,255,65,.05);
+  --cm-active-line-gutter: rgba(0,255,65,.08);
+  --cm-cursor: #00FF41;
+  --cm-selection: rgba(0,255,65,.25);
+  --cm-search-match: rgba(255,0,255,.25);
+  --cm-fold-bg: #0F1A0F;
+  --cm-fold-border: #1A3B1A;
+  --cm-fold-fg: #003B00;
+  --cm-heading1-color: #00FF41;
+  --cm-heading2-color: #00FF41;
+  --cm-heading3-color: #39FF14;
+  --cm-heading4-color: #00FF41;
+  --cm-heading5-color: #00FF41;
+  --cm-heading6-color: #006B00;
+  --cm-strong-color: #FF00FF;
+  --cm-emphasis-color: #00FFFF;
+  --cm-strikethrough-color: #006B00;
+  --cm-highlight-bg: #1A2A0A;
+  --cm-highlight-color: #FFFF00;
+  --cm-inline-code-bg: #0F1A0F;
+  --cm-inline-code-color: #FF00FF;
+  --cm-codeblock-bg: #0F1A0F;
+  --cm-codeblock-border: #1A3B1A;
+  --cm-codeblock-color: #00FF41;
+  --cm-link-color: #00FFFF;
+  --cm-url-color: #00FFFF;
+  --cm-wikilink-color: #00FFFF;
+  --cm-wikilink-bg: rgba(0,255,255,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #FFFF00;
+  --cm-blockquote-color: #006B00;
+  --cm-blockquote-bg: rgba(0,255,65,.03);
+  --cm-blockquote-border: #1A3B1A;
+  --cm-list-marker-color: #FF00FF;
+  --cm-task-done-color: #FFFF00;
+  --cm-task-undone-color: #006B00;
+  --cm-table-border: #1A3B1A;
+  --cm-table-header-bg: #0F1A0F;
+  --cm-hr-color: #1A3B1A;
+  --cm-yaml-bg: #0F1A0F;
+  --cm-yaml-border: #1A3B1A;
+  --cm-yaml-key-color: #FF00FF;
+  --cm-yaml-value-color: #00FFFF;
+  --cm-formatting-color: #00B32E;
 }
-body[data-editor-theme="neon-cyber"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="neon-cyber"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="neon-cyber"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="neon-cyber"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="neon-cyber"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="neon-cyber"] #editor .cm-selectionBackground,
-body[data-editor-theme="neon-cyber"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：浅色背景下的中等饱和度配色 */
-body[data-editor-theme="neon-cyber"] #editor .tok-heading { color: #C926B5; font-weight: 700; }
-body[data-editor-theme="neon-cyber"] #editor .tok-strong { color: #B8860B; font-weight: 700; }
-body[data-editor-theme="neon-cyber"] #editor .tok-emphasis { color: #B8860B; font-style: italic; }
-body[data-editor-theme="neon-cyber"] #editor .tok-monospace { color: #00695C; background: #E8F5F9; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="neon-cyber"] #editor .tok-link { color: #C926B5; text-decoration: underline; }
-body[data-editor-theme="neon-cyber"] #editor .tok-url { color: #C926B5; }
-body[data-editor-theme="neon-cyber"] #editor .tok-quote { color: #5C6BC0; font-style: italic; }
-body[data-editor-theme="neon-cyber"] #editor .tok-list { color: #C926B5; }
-body[data-editor-theme="neon-cyber"] #editor .tok-keyword { color: #AD1457; font-weight: 700; }
-body[data-editor-theme="neon-cyber"] #editor .tok-string { color: #00838F; }
-body[data-editor-theme="neon-cyber"] #editor .tok-number { color: #B8860B; }
-body[data-editor-theme="neon-cyber"] #editor .tok-comment { color: #7E8AA4; font-style: italic; }
-body[data-editor-theme="neon-cyber"] #editor .cm-formatting { color: #5C6BC0; }

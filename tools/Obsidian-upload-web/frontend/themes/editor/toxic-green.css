@@ -1,37 +1,56 @@
-/* 编辑器主题 —— 毒液绿 Toxic Green（浅色版） */
+/* 编辑器主题 —— Toxic Green（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
 body[data-editor-theme="toxic-green"] {
-  --cm-bg: #F4FAF4;              /* 编辑器背景 */
-  --cm-fg: #1A2E1A;              /* 编辑器前景文字 */
-  --cm-gutter-bg: #E8F5E8;       /* 行号栏背景 */
-  --cm-gutter-fg: #4A7D4A;       /* 行号文字 */
-  --cm-gutter-border: #C8E0C8;   /* 行号栏右边框 */
-  --cm-active-line: rgba(46,125,50,.06);     /* 当前行高亮（带透明度） */
-  --cm-active-line-gutter: rgba(46,125,50,.14);  /* 当前行号高亮（带透明度） */
-  --cm-cursor: #2E7D32;          /* 光标颜色 */
-  --cm-selection: rgba(46,125,50,.5);       /* 选区颜色（带透明度） */
-  --cm-search-match: rgba(200,160,0,.22);    /* 搜索匹配高亮 */
-  --cm-fold-bg: #E8F5E8;         /* 折叠按钮背景 */
-  --cm-fold-border: #4A7D4A;     /* 折叠按钮边框 */
-  --cm-fold-fg: #2E7D32;         /* 折叠按钮文字 */
+  --cm-bg: #0A0F0A;
+  --cm-fg: #B8D8B8;
+  --cm-gutter-bg: #0A0F0A;
+  --cm-gutter-fg: #3D5B3D;
+  --cm-gutter-border: #1A2A1A;
+  --cm-active-line: rgba(0,255,0,.04);
+  --cm-active-line-gutter: rgba(0,255,0,.07);
+  --cm-cursor: #00FF00;
+  --cm-selection: rgba(0,255,0,.2);
+  --cm-search-match: rgba(255,255,0,.25);
+  --cm-fold-bg: #1A2A1A;
+  --cm-fold-border: #2A4A2A;
+  --cm-fold-fg: #3D5B3D;
+  --cm-heading1-color: #00FF00;
+  --cm-heading2-color: #00FF00;
+  --cm-heading3-color: #7FFF00;
+  --cm-heading4-color: #B8D8B8;
+  --cm-heading5-color: #B8D8B8;
+  --cm-heading6-color: #5B8B5B;
+  --cm-strong-color: #FF4444;
+  --cm-emphasis-color: #FF69B4;
+  --cm-strikethrough-color: #5B8B5B;
+  --cm-highlight-bg: #2A3A1E;
+  --cm-highlight-color: #FFFF00;
+  --cm-inline-code-bg: #1A2A1A;
+  --cm-inline-code-color: #00FF00;
+  --cm-codeblock-bg: #1A2A1A;
+  --cm-codeblock-border: #2A4A2A;
+  --cm-codeblock-color: #B8D8B8;
+  --cm-link-color: #00FF00;
+  --cm-url-color: #00FF00;
+  --cm-wikilink-color: #00FF00;
+  --cm-wikilink-bg: rgba(0,255,0,.1);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #FFFF00;
+  --cm-blockquote-color: #5B8B5B;
+  --cm-blockquote-bg: rgba(0,255,0,.03);
+  --cm-blockquote-border: #2A4A2A;
+  --cm-list-marker-color: #FF4444;
+  --cm-task-done-color: #FFFF00;
+  --cm-task-undone-color: #5B8B5B;
+  --cm-table-border: #2A4A2A;
+  --cm-table-header-bg: #1A2A1A;
+  --cm-hr-color: #2A4A2A;
+  --cm-yaml-bg: #1A2A1A;
+  --cm-yaml-border: #2A4A2A;
+  --cm-yaml-key-color: #FF4444;
+  --cm-yaml-value-color: #00FF00;
+  --cm-formatting-color: #6FA86F;
 }
-body[data-editor-theme="toxic-green"] #editor .cm-editor { background: var(--cm-bg); color: var(--cm-fg); }
-body[data-editor-theme="toxic-green"] #editor .cm-gutters { background: var(--cm-gutter-bg); border-right-color: var(--cm-gutter-border); color: var(--cm-gutter-fg); }
-body[data-editor-theme="toxic-green"] #editor .cm-activeLine { background: var(--cm-active-line); }
-body[data-editor-theme="toxic-green"] #editor .cm-activeLineGutter { background: var(--cm-active-line-gutter); color: var(--cm-gutter-fg); }
-body[data-editor-theme="toxic-green"] #editor .cm-cursor { border-left-color: var(--cm-cursor); }
-body[data-editor-theme="toxic-green"] #editor .cm-selectionBackground,
-body[data-editor-theme="toxic-green"] #editor .cm-selection { background: var(--cm-selection); }
-/* 语法高亮：浅色背景下的中等饱和度配色 */
-body[data-editor-theme="toxic-green"] #editor .tok-heading { color: #2E7D32; font-weight: 700; }
-body[data-editor-theme="toxic-green"] #editor .tok-strong { color: #BF8800; font-weight: 700; }
-body[data-editor-theme="toxic-green"] #editor .tok-emphasis { color: #BF8800; font-style: italic; }
-body[data-editor-theme="toxic-green"] #editor .tok-monospace { color: #00695C; background: #E0F2F0; padding: 0 3px; border-radius: 3px; }
-body[data-editor-theme="toxic-green"] #editor .tok-link { color: #2E7D32; text-decoration: underline; }
-body[data-editor-theme="toxic-green"] #editor .tok-url { color: #2E7D32; }
-body[data-editor-theme="toxic-green"] #editor .tok-quote { color: #4A7D4A; font-style: italic; }
-body[data-editor-theme="toxic-green"] #editor .tok-list { color: #2E7D32; }
-body[data-editor-theme="toxic-green"] #editor .tok-keyword { color: #AD1457; font-weight: 700; }
-body[data-editor-theme="toxic-green"] #editor .tok-string { color: #6A4C93; }
-body[data-editor-theme="toxic-green"] #editor .tok-number { color: #BF8800; }
-body[data-editor-theme="toxic-green"] #editor .tok-comment { color: #7E9E7E; font-style: italic; }
-body[data-editor-theme="toxic-green"] #editor .cm-formatting { color: #4A7D4A; }

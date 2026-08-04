@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Peach Blossom（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="peach-blossom"] {
+  --cm-bg: #FDF7F4;
+  --cm-fg: #4A3636;
+  --cm-gutter-bg: #FDF7F4;
+  --cm-gutter-fg: #C0A09C;
+  --cm-gutter-border: #F0E2DE;
+  --cm-active-line: rgba(74,54,54,.05);
+  --cm-active-line-gutter: rgba(74,54,54,.08);
+  --cm-cursor: #E06A7A;
+  --cm-selection: rgba(224,106,122,.2);
+  --cm-search-match: rgba(255,213,79,.4);
+  --cm-fold-bg: #F6E9E5;
+  --cm-fold-border: #EAD5D0;
+  --cm-fold-fg: #C0A09C;
+  --cm-heading1-color: #D85C6E;
+  --cm-heading2-color: #D85C6E;
+  --cm-heading3-color: #C08A3E;
+  --cm-heading4-color: #4A3636;
+  --cm-heading5-color: #4A3636;
+  --cm-heading6-color: #B0908C;
+  --cm-strong-color: #BE4157;
+  --cm-emphasis-color: #9A5BA8;
+  --cm-strikethrough-color: #C0A09C;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #4A3636;
+  --cm-inline-code-bg: #F6E9E5;
+  --cm-inline-code-color: #BE4157;
+  --cm-codeblock-bg: #F6E9E5;
+  --cm-codeblock-border: #EAD5D0;
+  --cm-codeblock-color: #4A3636;
+  --cm-link-color: #D85C6E;
+  --cm-url-color: #D85C6E;
+  --cm-wikilink-color: #D85C6E;
+  --cm-wikilink-bg: rgba(216,92,110,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #7A8A4E;
+  --cm-blockquote-color: #B0908C;
+  --cm-blockquote-bg: rgba(0,0,0,.03);
+  --cm-blockquote-border: #EAD5D0;
+  --cm-list-marker-color: #BE4157;
+  --cm-task-done-color: #7A8A4E;
+  --cm-task-undone-color: #C0A09C;
+  --cm-table-border: #EAD5D0;
+  --cm-table-header-bg: #F6E9E5;
+  --cm-hr-color: #EAD5D0;
+  --cm-yaml-bg: #F6E9E5;
+  --cm-yaml-border: #EAD5D0;
+  --cm-yaml-key-color: #BE4157;
+  --cm-yaml-value-color: #D85C6E;
+  --cm-formatting-color: #C0A8A4;
+}
