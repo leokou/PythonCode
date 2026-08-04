@@ -709,6 +709,7 @@ let _previewCursorInfo = null;
 let _previewInputActive = false;  /* 当前是否处于输入会话中 */
 let _skipNextInputFlag = false;  /* 一次性：跳过由 <br> 插入引发的下一个杂散 input 事件 */
 let _previewSyncActive = false;  /* 预览区驱动的同步进行中：屏蔽编辑器被 dispatch 抢焦点后反向滚动预览区 */
+let _previewSyncSafety = null;   /* 安全兜底：预览区编辑 500ms 后自动复位 _previewSyncActive */
 
 /* 预览区失焦时重置输入会话标记 */
 previewEl.addEventListener("blur", () => {
@@ -1691,6 +1692,9 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
  * 与 newPlainText 相同 → diff null 不同步；后续删除/输入位置错位。 */
 previewEl.addEventListener("beforeinput", () => {
   if (_previewEditing || _pendingAction) return;
+  _previewSyncActive = true; /* 抑制双向滚动同步：原生 contenteditable 编辑期间两侧内容短期不同步 */
+  clearTimeout(_previewSyncSafety);
+  _previewSyncSafety = setTimeout(() => { _previewSyncActive = false; }, 500);
   const block = _findCursorBlock();
   if (block && block !== _lastEditedBlock) {
     _lastEditedBlock = block;
@@ -1740,6 +1744,8 @@ function _syncPreviewToEditor() {
   /* 进入即清 timer 句柄：debounce 触发后变量仍保留旧 id（truthy），
    * 会让外部「是否有挂起同步」的判断误判并重复 flush */
   _previewSyncTimer = null;
+  _previewSyncActive = false; /* 清除 beforeinput 设立的标志；dispatch 路径会重新设立并 rAF 复位 */
+  clearTimeout(_previewSyncSafety);
   if (_previewEditing || _pendingAction) return;
   const tab = currentTab();
   if (!tab) return;
@@ -2750,7 +2756,7 @@ view.scrollDOM.addEventListener("scroll", () => {
 });
 
 previewEl.addEventListener("scroll", () => {
-  if (syncing || _cursorSyncActive) return;
+  if (syncing || _cursorSyncActive || _previewSyncActive) return;
   syncing = true;
   const blocks = previewEl.querySelectorAll("[data-line]");
   const viewTop = previewEl.scrollTop + 10;
