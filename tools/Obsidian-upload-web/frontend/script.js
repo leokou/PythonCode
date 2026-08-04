@@ -534,6 +534,7 @@ function _getPreviewBlockRatio(block) {
 function _highlightLine(lineNum, scrollTarget) {
   /* 防御：无效行号（如嵌套块产生的 data-line="0"）不处理 */
   if (lineNum <= 0) return;
+  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的滚动触发 */
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
@@ -2728,6 +2729,7 @@ function findPreviewBlockForLine(line) {
 }
 
 function scrollPreviewToLine(line, ratio) {
+  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
   const b = findPreviewBlockForLine(line);
   if (b) {
     /* ratio: 目标行在视口中的目标相对位置（0=顶部, 1=底部），默认 0.2 */
@@ -2737,6 +2739,7 @@ function scrollPreviewToLine(line, ratio) {
 }
 
 function scrollEditorToLine(line, ratio) {
+  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
   const doc = view.state.doc;
   if (line < 1 || line > doc.lines) return;
   const block = view.lineBlockAt(doc.line(line).from);
