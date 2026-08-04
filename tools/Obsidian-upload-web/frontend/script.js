@@ -1043,12 +1043,16 @@ function _scrollPreviewCursorIntoView() {
   if (sh === 0) return;
 
   let target = null; /* 目标 scrollTop；null 表示无需滚动 */
+  let needGuard = false; /* 仅末尾回车场景需要抑制 editor→preview 同步覆盖 */
 
   if (_isCaretAtDocEnd()) {
     /* 末尾空行特殊处理：trailing <br> 不增加块高度，getBoundingClientRect 测不到，
      * 直接滚到预览区底部，配合 .preview-body 的 padding-bottom 保证光标行不贴边可见 */
     const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
-    if (previewEl.scrollTop < maxScroll) target = maxScroll;
+    if (previewEl.scrollTop < maxScroll) {
+      target = maxScroll;
+      needGuard = true; /* cursorFollowPlugin 的编辑器滚动会把预览区拉离底部，需抑制 */
+    }
   } else {
     const pr = previewEl.getBoundingClientRect();
     const br = block.getBoundingClientRect();
@@ -1064,16 +1068,18 @@ function _scrollPreviewCursorIntoView() {
       const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
       target = Math.max(0, Math.min(previewEl.scrollTop + delta, maxScroll));
     }
+    /* 非末尾场景不设 guard：保留原有 editor↔preview 滚动同步，避免中段编辑时两侧错位/跳动 */
   }
 
   if (target === null) return;
 
-  /* 关键：设置滚动同步抑制标志。预览区回车后 cursorFollowPlugin 会在 rAF 中滚动编辑器，
-   * 该编辑器 scroll 事件会触发 editor→preview 同步（scrollPreviewToLine），把预览区拉离底部，
-   * 覆盖此处滚动 → 新行/光标再次出窗。抑制 200ms 覆盖那一轮 rAF 滚动及其 scroll 事件。 */
-  _cursorSyncActive = true;
   previewEl.scrollTop = target;
-  setTimeout(() => { _cursorSyncActive = false; }, 200);
+  if (needGuard) {
+    /* 仅末尾回车：抑制 200ms 内 cursorFollowPlugin 编辑器滚动触发的 editor→preview 同步，
+     * 防止预览区被拉离底部 */
+    _cursorSyncActive = true;
+    setTimeout(() => { _cursorSyncActive = false; }, 200);
+  }
 }
 
 /* ============ 执行预览区 Enter 键 ============ */
