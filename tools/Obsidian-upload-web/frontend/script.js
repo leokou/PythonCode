@@ -937,6 +937,15 @@ previewEl.addEventListener("keydown", (e) => {
     }
   }
 
+  /* ============ Delete / Backspace → 跨块边界时在 markdown 层合并 ============ */
+  if ((e.key === "Delete" || e.key === "Backspace") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (_doPreviewDelete(e.key === "Backspace")) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    return; /* 未接管则交给浏览器原生处理（块内删除，现有 diff 同步可正确覆盖） */
+  }
+
   /* ============ Enter 键 → 在 markdown 中插入换行 ============ */
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -1177,6 +1186,194 @@ function _scrollPreviewCursorIntoView() {
     _cursorSyncActive = true;
     setTimeout(() => { _cursorSyncActive = false; }, 200);
   }
+}
+
+/* ============ 预览区跨块删除合并 ============ */
+
+/* 光标是否在块的末尾（忽略换行符，但不忽略空格——空格可能是软换行标记） */
+function _isCaretAtBlockEdge(block, atEnd) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || !block) return false;
+  const range = sel.getRangeAt(0);
+  if (!range.collapsed) return false; /* 有选区时是普通删除，不接管 */
+  const probe = range.cloneRange();
+  probe.selectNodeContents(block);
+  if (atEnd) {
+    probe.setStart(range.endContainer, range.endOffset);
+  } else {
+    probe.setEnd(range.startContainer, range.startOffset);
+  }
+  return probe.toString().replace(/[\n\r]/g, "").length === 0;
+}
+
+/* 计算块对应的 markdown 行范围 [startLine, endLine]（endLine = 下一块 data-line - 1） */
+function _getBlockLineRange(blockLine, doc) {
+  const allBlocks = previewEl.querySelectorAll("[data-line]");
+  let endLine = doc.lines;
+  for (const b of allBlocks) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl > blockLine) { endLine = bl - 1; break; }
+  }
+  if (endLine > doc.lines) endLine = doc.lines;
+  return { startLine: blockLine, endLine };
+}
+
+/* 剥离行首的块级 markdown 语法前缀，返回纯内容。
+ * 返回 null 表示该行属于结构化块（代码块/表格/分隔线），不可安全剥离。 */
+function _stripBlockPrefix(line) {
+  const t = line.trim();
+  if (t === "") return "";
+  /* 结构化块：剥前缀会破坏语义，拒绝合并 */
+  if (/^(```|~~~)/.test(t)) return null;      /* 围栏代码块 */
+  if (/^\|/.test(t)) return null;              /* 表格行 */
+  if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) return null; /* 分隔线（须在列表判断之前） */
+  /* 可安全剥离的块级前缀 */
+  return line
+    .replace(/^\s*#{1,6}\s+/, "")              /* 标题 */
+    .replace(/^\s*>\s?/, "")                   /* 引用 */
+    .replace(/^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/, ""); /* 列表 / 任务列表 */
+}
+
+/* 按纯文本偏移在块内定位光标 */
+function _placeCursorInBlockAtOffset(block, offset) {
+  if (!block) return;
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  range.selectNodeContents(block);
+  let remaining = offset;
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT, null);
+  let node, found = false;
+  while ((node = walker.nextNode())) {
+    const len = node.nodeValue.length;
+    if (remaining <= len) {
+      range.setStart(node, Math.max(0, Math.min(remaining, len)));
+      range.collapse(true);
+      found = true;
+      break;
+    }
+    remaining -= len;
+  }
+  if (!found) { range.selectNodeContents(block); range.collapse(false); }
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/* 跨块合并删除：把 nextLine 所在块的首行内容并入 curLine 所在块的末尾。
+ * 必须在 markdown 层做——交给 contenteditable 原生处理会把下一块的 DOM 合并进当前块，
+ * 而 diff 同步只覆盖当前块的行范围，下一块的 markdown 语法行原封不动残留 → 格式被破坏。
+ * 返回 true 表示已接管。 */
+function _mergeBlocksInMarkdown(curLine, nextLine, caretOffset) {
+  const tab = currentTab();
+  if (!tab) return false;
+  const doc = tab.state.doc;
+  if (curLine > doc.lines || nextLine > doc.lines) return false;
+
+  const curRange = _getBlockLineRange(curLine, doc);
+  const nextFirstLine = doc.line(nextLine);
+  const stripped = _stripBlockPrefix(nextFirstLine.text);
+  if (stripped === null) return false; /* 代码块/表格/分隔线：拒绝合并，保护格式 */
+
+  /* 当前块末尾：取块行范围内最后一个【非空行】的行尾。
+   * 不能直接用 doc.line(curRange.endLine).to——endLine 是「下一块 data-line - 1」，
+   * 通常落在块之间的空行上；从空行末尾开始删会残留一个多余换行，使 ATX 标题这类
+   * 单行块合并后仍被解析为独立块（视觉上「按了没反应」）。 */
+  let contentEndLine = curRange.endLine;
+  while (contentEndLine > curRange.startLine && doc.line(contentEndLine).text.trim() === "") {
+    contentEndLine--;
+  }
+  const curEndPos = doc.line(contentEndLine).to;
+  /* 删除 [当前块内容末尾, 下一块首行末尾]（含中间空行与下一块的语法标记），
+   * 插入剥离后的纯内容。下一块的剩余行保持不动。 */
+  const from = curEndPos;
+  const to = nextFirstLine.to;
+  if (to < from) return false;
+
+  _savePreviewHistory();
+  _previewEditing = true;
+  _skipPreviewRerender = true;
+
+  view.dispatch({
+    changes: { from, to, insert: stripped },
+    selection: { anchor: from },
+  });
+  tab.state = view.state;
+
+  const savedScroll = previewEl.scrollTop;
+  renderPreview();
+  previewEl.scrollTop = savedScroll;
+
+  /* 光标落在合并接合点。caretOffset 由调用方按【合并前当前块的 innerText 长度】给出——
+   * 这是精确值；用 markdown 行长度估算会被行内语法（**粗体**、[链接](url)）带偏。 */
+  const mergedBlock = _findPreviewBlockByLine(curLine);
+  if (mergedBlock) {
+    const newDoc = tab.state.doc;
+    const r = _getBlockLineRange(curLine, newDoc);
+    _placeCursorInBlockAtOffset(mergedBlock, caretOffset);
+    _oldBlockLine = curLine;
+    _oldBlockMarkdown = newDoc.sliceString(newDoc.line(r.startLine).from, newDoc.line(r.endLine).to);
+    _oldBlockPlainText = mergedBlock.innerText;
+    _lastEditedBlock = mergedBlock;
+  }
+
+  _previewEditing = false;
+  _skipPreviewRerender = false;
+  _scrollPreviewCursorIntoView();
+
+  if (tab.pageId) {
+    scheduleOrSave(tab.pageId, tab.state.doc.toString());
+  } else if (tab.extPath) {
+    Storage.scheduleExternal(tab.extPath, tab.state.doc.toString());
+  }
+  return true;
+}
+
+/* 处理预览区 Delete / Backspace 的跨块边界场景。返回 true 表示已接管。 */
+function _doPreviewDelete(isBackspace) {
+  let block = _findCursorBlock();
+  if (!block) return false;
+  /* 仅在块边界接管；块内删除交给浏览器原生处理（现有 diff 同步已能正确覆盖）。
+   * 边界判断放在 flush 之前：非边界场景可立即返回，零开销、行为与改动前完全一致。 */
+  if (!_isCaretAtBlockEdge(block, !isBackspace)) return false;
+
+  /* flush 挂起的 debounce 同步，否则按 data-line 算出的行范围与实际 markdown 错位。
+   * 注意：flush 会 dispatch → updateListener → renderPreview() 重建预览区 DOM，
+   * 上面取到的 block 引用随之失效，必须重新获取，否则后续 indexOf 返回 -1
+   * 直接退化回浏览器原生行为（修复形同虚设）。 */
+  if (_previewSyncTimer) {
+    clearTimeout(_previewSyncTimer);
+    _previewSyncTimer = null;
+    _syncPreviewToEditor();
+    block = _findCursorBlock();
+    if (!block) return false;
+  }
+
+  /* 按 data-line 去重，每行只保留 DOM 序最后一个（最深嵌套）。
+   * 否则 <ul data-line="5"> 与其首个 <li data-line="5"> 会同时入列，
+   * Backspace 时 blocks[idx-1] 取到父级 ul → curLine === nextLine → 合并失败退化。 */
+  const seen = new Map();
+  for (const b of previewEl.querySelectorAll("[data-line]")) {
+    const bl = parseInt(b.getAttribute("data-line"), 10);
+    if (bl > 0) seen.set(bl, b);
+  }
+  const blocks = Array.from(seen.values());
+  const idx = blocks.indexOf(block);
+  if (idx === -1) return false;
+
+  /* Backspace 在块首 == 在上一块末尾按 Delete */
+  const curEl = isBackspace ? blocks[idx - 1] : block;
+  const nextEl = isBackspace ? block : blocks[idx + 1];
+  if (!curEl || !nextEl) return true; /* 文首/文末：接管但不操作，避免浏览器破坏结构 */
+
+  const curLine = parseInt(curEl.getAttribute("data-line"), 10);
+  const nextLine = parseInt(nextEl.getAttribute("data-line"), 10);
+  if (!curLine || !nextLine || nextLine <= curLine) return false;
+
+  /* 合并接合点 = 当前块合并前的纯文本长度（去掉尾部换行） */
+  const caretOffset = curEl.innerText.replace(/[\n\r]+$/, "").length;
+
+  _mergeBlocksInMarkdown(curLine, nextLine, caretOffset);
+  return true; /* 无论合并是否被拒（代码块/表格），都接管以避免浏览器破坏格式 */
 }
 
 /* ============ 执行预览区 Enter 键 ============ */
