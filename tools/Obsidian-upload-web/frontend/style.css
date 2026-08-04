@@ -220,7 +220,7 @@ body { display: flex; flex-direction: column; }
   min-width: 180px;
   max-height: 320px;
   overflow-y: auto;
-  background: var(--toast-bg);
+  background: var(--bg-3);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   box-shadow: var(--shadow);
@@ -577,7 +577,7 @@ body.resizing { cursor: col-resize; user-select: none; }
   flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
-  padding: 16px 22px;
+  padding: 16px 22px 32px; /* 底部留白：保证末尾回车产生的空行光标不被裁切在窗底边 */
   background: var(--bg-preview);
   color: var(--text-color);
   line-height: 1.6;

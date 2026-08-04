@@ -78,6 +78,11 @@ const ThemeManager = (() => {
   function get() { return { ...current }; }
 
   function init() {
+    /* 设置窗等"自行管理主题"的页面（见 settings.html body[data-theme-managed]）：
+     * 不自动加载、不轮询，由页面显式调用 apply 保持与来源窗口一致。 */
+    if (document.body && document.body.getAttribute("data-theme-managed") === "self") {
+      return;
+    }
     waitForApi().then(() => {
       load();
       startPolling(2000);

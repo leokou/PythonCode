@@ -89,6 +89,7 @@ _state = {"quitting": False}
 _windows = {}           # key -> window（四个独立窗口引用）
 _tools_window = None    # 工具箱窗口引用
 _settings_window = None  # 设置窗口引用
+_settings_api = None     # 设置窗口 js_api 引用（用于写入来源窗口类型）
 _canvas_window = None    # 画布窗口引用
 _canvas_server = None    # 画布本地 HTTP 服务（Drawnix 需 HTTP 加载 ES Module）
 _last_active = "flash"  # 最近激活的编辑窗口 key（工具箱工具派发目标）
@@ -288,7 +289,7 @@ def _flush_all_windows():
 
 
 def main():
-    global _windows, _hotkeys, _tools_window, _settings_window, _canvas_window, _canvas_server
+    global _windows, _hotkeys, _tools_window, _settings_window, _settings_api, _canvas_window, _canvas_server
 
     _perf_mark("main_start")
     cfg = load_config()
@@ -456,10 +457,11 @@ def main():
         if not os.path.exists(settings_html):
             log_error("找不到设置界面: %s" % settings_html)
         stx, sty = get_center_position(720, 640)
+        settings_api = SettingsApi(cfg)
         settings_win = webview.create_window(
             SETTINGS_TITLE,
             url=settings_html,
-            js_api=SettingsApi(cfg),
+            js_api=settings_api,
             width=720,
             height=640,
             x=stx,
@@ -467,6 +469,7 @@ def main():
             min_size=(600, 480),
             hidden=True,
         )
+        _settings_api = settings_api
 
         def on_settings_closing(*_args):
             if _state["quitting"]:

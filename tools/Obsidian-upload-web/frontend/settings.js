@@ -149,6 +149,8 @@ tabsContainer.addEventListener("click", (e) => {
   currentWindowType = wt;
   // 加载新页签的主题
   applyTabTheme(allThemeData[wt]);
+  // 实时预览：设置窗外观切换为该窗口主题（与打开它的窗口一致）
+  applyWindowThemeToSelf(wt);
 });
 
 function saveCurrentTabValues() {
@@ -265,6 +267,19 @@ async function submitTheme() {
 
 themeSubmitBtn.addEventListener("click", submitTheme);
 
+/* 把指定窗口的主题应用到设置窗自身，使弹窗外观与来源窗口一致（实时预览） */
+async function applyWindowThemeToSelf(wt) {
+  const a = api();
+  if (!a || !a.get_theme) return;
+  try {
+    const theme = await a.get_theme(wt);
+    if (theme) {
+      if (window.ThemeLoader) { try { await window.ThemeLoader.applyAll(theme); } catch (e) {} }
+      if (window.ThemeManager) { try { window.ThemeManager.apply(theme); } catch (e) {} }
+    }
+  } catch (e) { /* ignore */ }
+}
+
 /* ---- 初始化 ---- */
 (async function init() {
   try {
@@ -274,4 +289,21 @@ themeSubmitBtn.addEventListener("click", submitTheme);
   await loadMsConfig();
   await loadPicgoSwitch();
   await loadThemes();
+  /* 让设置窗默认选中并应用"打开它的来源窗口"的主题（与来源窗口一致） */
+  const a = api();
+  if (a && a.get_source_window) {
+    try {
+      const res = await a.get_source_window();
+      if (res && res.ok && res.windowType && allThemeData[res.windowType]) {
+        const wt = res.windowType;
+        saveCurrentTabValues();
+        document.querySelectorAll(".set-theme-tab").forEach((b) =>
+          b.classList.toggle("active", b.dataset.window === wt));
+        currentWindowType = wt;
+        applyTabTheme(allThemeData[wt]);
+      }
+    } catch (e) { /* 失败则沿用默认 FlashNote 页签 */ }
+  }
+  /* 应用来源窗口主题到设置窗自身（与打开它的窗口保持一致） */
+  if (currentWindowType) await applyWindowThemeToSelf(currentWindowType);
 })();

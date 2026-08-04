@@ -937,6 +937,9 @@ class Api:
     # ---- 打开设置窗口 ----
     def open_settings(self):
         if _main._settings_window is not None:
+            # 记录来源窗口，使设置窗主题与打开它的窗口保持一致
+            if _main._settings_api is not None:
+                _main._settings_api.source_window = self.window_type
             _main._safe_show_window(_main._settings_window)
             log_info("打开设置窗口（来源: %s）" % self.window_type)
         return True
@@ -967,6 +970,11 @@ class SettingsApi:
 
     def __init__(self, cfg):
         self.cfg = cfg
+        self.source_window = "flash"   # 打开设置窗口的来源窗口（用于让设置窗主题与来源一致）
+
+    def get_source_window(self):
+        """返回打开设置窗口的来源窗口类型（flash/inbox/log/capture）。"""
+        return {"ok": True, "windowType": self.source_window}
 
     def get_settings(self):
         return {"ok": True,
