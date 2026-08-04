@@ -1182,6 +1182,14 @@ function _scrollPreviewCursorIntoView() {
 
   if (target === null) return;
 
+  /* DEBUG: 若是标题块，打日志定位异常光标/滚动 */
+  if (block.querySelector("h1,h2,h3,h4,h5,h6")) {
+    const h = block.querySelector("h1,h2,h3,h4,h5,h6").textContent.trim().substring(0, 50);
+    const stack = new Error().stack || "";
+    const caller = (stack.split("\n")[2] || "").trim();
+    console.warn(`[_scrollPreviewCursorIntoView→header] "${h}" delta=${delta} | caller: ${caller}`);
+  }
+
   previewEl.scrollTop = target;
   if (needGuard) {
     /* 仅末尾回车：抑制 200ms 内 cursorFollowPlugin 编辑器滚动触发的 editor→preview 同步，
@@ -2732,6 +2740,14 @@ function scrollPreviewToLine(line, ratio) {
   if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
   const b = findPreviewBlockForLine(line);
   if (b) {
+    /* DEBUG: 检测是否有异常调用把预览滚到了标题行 */
+    if (b.querySelector("h1,h2,h3,h4,h5,h6")) {
+      const h = b.querySelector("h1,h2,h3,h4,h5,h6").textContent.trim().substring(0, 50);
+      const stack = new Error().stack || "";
+      const caller = (stack.split("\n")[2] || "").trim();
+      console.warn(`[scrollPreviewToLine] → #${line} "${h}" | caller: ${caller}`);
+      if (typeof toast === "function") toast(`📌 跳转到: ${h} (行${line})`, "info");
+    }
     /* ratio: 目标行在视口中的目标相对位置（0=顶部, 1=底部），默认 0.2 */
     const r = (typeof ratio === "number") ? Math.max(0, Math.min(1, ratio)) : 0.2;
     previewEl.scrollTop = Math.max(0, b.offsetTop - previewEl.clientHeight * r);
