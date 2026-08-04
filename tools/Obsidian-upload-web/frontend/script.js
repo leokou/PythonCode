@@ -686,6 +686,7 @@ let _skipPreviewRerender = false;
 let _previewSyncTimer = null;
 let _previewCursorInfo = null;
 let _previewInputActive = false;  /* 当前是否处于输入会话中 */
+let _skipNextInputFlag = false;  /* 一次性：跳过由 <br> 插入引发的下一个杂散 input 事件 */
 
 /* 预览区失焦时重置输入会话标记 */
 previewEl.addEventListener("blur", () => {
@@ -1190,13 +1191,12 @@ function _doPreviewEnter(isSoftEnter) {
   const newToPos = (newEndLine <= newDoc.lines) ? newDoc.line(newEndLine).to : newDoc.length;
   _oldBlockMarkdown = newDoc.sliceString(newFromPos, newToPos);
   _oldBlockPlainText = block.innerText;
-
-  /* 延迟恢复 _previewEditing：插入 <br> 会异步派发 input 事件，
-   * 该事件触发 _syncPreviewToEditor → 检测 innerText 中的换行 → 向 markdown 追加多余 \n
-   * → 编辑区出现预览区没有的空白行（"按回车出两行/出空行"）。延一帧跳过该杂散 input。
-   * 注意：_skipPreviewRerender 立即恢复（dispatch 已完成），仅 defer _previewEditing。 */
+  /* 插入 <br> 会异步派发 input 事件 → 该 input 若被 _syncPreviewToEditor 处理将追加多余 \n。
+   * 用一次性标志 _skipNextInputFlag 精准跳过该杂散 input；_previewEditing /
+   * _skipPreviewRerender 立即恢复，确保后续真实输入（退格/键入）的 beforeinput 不受影响。 */
+  _previewEditing = false;
   _skipPreviewRerender = false;
-  setTimeout(() => { _previewEditing = false; }, 0);
+  _skipNextInputFlag = true;
 
   /* 回车后光标已移到新行，滚动预览区确保新行可见（长文档末尾回车不丢光标） */
   _scrollPreviewCursorIntoView();
@@ -1409,6 +1409,11 @@ previewEl.addEventListener("beforeinput", () => {
 
 previewEl.addEventListener("input", () => {
   if (_previewEditing || _pendingAction) return;
+
+  /* 阻截 _doPreviewEnter 中 range.insertNode(br) 产生的杂散 input：
+   * 该 input 会触发 _syncPreviewToEditor → 错误 diff 追加多余 \n → 两侧内容分歧。
+   * 用一次性标志跳过，不影响后续真实用户输入。 */
+  if (_skipNextInputFlag) { _skipNextInputFlag = false; return; }
 
   /* 首次输入：保存历史快照用于撤销 */
   if (!_previewInputActive) {
