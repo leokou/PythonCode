@@ -435,6 +435,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 - 主题 CSS 由 `frontend/js/theme-loader.js` 按需加载当前激活主题，切换时移除旧 `<link>`（先加载新再移除旧，避免切换瞬间无样式）。
 - `editor.html` / `settings.html` / `tools.html` 均已接入 ThemeLoader。
 - 新增窗口必须遵循：HTML 中只保留 `theme.css` + 结构样式，主题 CSS 由 ThemeLoader 动态注入。
+- **编辑器语法高亮**：`script.js` 用 `HighlightStyle.define`（`window.CodeMirrorBundle.HighlightStyle/tags`，已在 `vendor/cm6.min.js` 补挂载导出）定义 `themeHighlightStyle`，把语法 tag 映射到 `--cm-*` 主题变量，注册在 `syntaxHighlighting(defaultHighlightStyle, {fallback:true})` 之后。原因：CM6 默认 `defaultHighlightStyle` 标记色（meta `#404740` 等）是浅色主题配色，深色主题下不可见；且 CM6 生成 `ͼxx` 哈希类名，`editor-syntax.css` 的 `.cm-formatting`/`.cm-heading` 等语义类选择器不匹配、不生效（死规则，保留无害）。**注意**：CM6 markdown 把 `# - * 1. > \`` 等标记标为 `meta` tag；`tags.list` 会命中段落正文，禁止染色；后注册 style 按 tag 粒度整体接管同 tag 规则（含 fontStyle/fontWeight），自定义规则须补齐样式属性；改 `vendor/cm6.min.js` 须保留 `HighlightStyle:Gi,tags:p` 导出。
 
 ### 3. 内存缓存 + 延迟写盘（pages.py 模式）
 - `pages.json` 已实现内存缓存 `_db`：首次访问加载，后续 `load_pages` / `find_page` 零磁盘 IO。
@@ -500,6 +501,15 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 
 - `_cursorSyncActive` 标志：光标驱动的滚动同步期间置 `true`，200ms 后释放，防止 scroll 事件反向触发造成循环。
 - 滚动条拖拽走的原有滚动同步（`syncing` 标志 + `syncing` 变量），与光标驱动同步互斥。
+
+### 3.1 光标跟随滚动（cursorFollowPlugin）
+
+- 位置：`frontend/script.js` 的 `editorExtensions` + `_ensureEditorCursorVisible()`。
+- 背景（实测确认）：CM6 内置光标滚动在编辑器**无焦点**事务（预览区编辑同步、工具栏插入、粘贴上传等）下完全不生效；`scrollIntoView`/`scrollHeight` 在新增行未布局时（rAF 阶段浏览器布局未更新）会按旧值 clamp，滚动距离不足。
+- 机制：doc/selection 变化且选区为空 → rAF 阶段用 `view.lineBlockAt(head)` 检查光标行是否离开视口（顶部 10px / 底部 40px 边距）→ **直接设置 `scrollDOM.scrollTop`（不做手动 clamp，浏览器自动兜底）** → 下一帧复测（布局已完成）若仍越界再补滚。
+- 跳过场景：编辑区隐藏（clientHeight=0）、非空选区（拖选交给 CM6 内置）。
+- 验证：`test/cursor-follow-test.html`（Edge headless）——无焦点事务下内置 scrollTop 保持 0，插件滚动到位且光标行完整可见。
+- 预览区（contenteditable）同侧保障：`_scrollPreviewCursorIntoView()` 在 `_doPreviewEnter`（回车）、`_placeCursorAtDocEnd`、图片插入预览区后调用，光标所在块越界时滚动预览区。
 
 ### 4. 预览区编辑同步
 
@@ -630,6 +640,7 @@ Python 后端：clipboard_parser 解析 → image_handler 保存图片 → html_
 - `_processImageEmbeds()` 在 `renderPreview()` 中被调用（在 wikilink 处理之前，避免 `![[x]]` 被 `[[x]]` 误匹配）
 - 首次加载通过 `get_attachment_data_url` 异步获取 base64 data URL（缓存到 `_embedImgCache`）
 - 图片加载完成前透明度 0.3，加载后恢复原值，过渡动画 0.2s
+- **图片放大预览**：`_setupImageZoom()` 在 `renderPreview()` 末尾执行，将预览区所有 `<img>`（本地附件 `![[...]]` 与 PicGo 远程图 `![alt](url)` 统一处理）包入 `.img-zoom-wrap` 并挂放大镜按钮；hover 显示、点击打开 `.img-lightbox` 遮罩（点击背景 / ✕ / Esc 关闭）。按钮用内联 SVG（无文本节点），避免污染预览区 `innerText` 的 diff 同步。
 
 ### 6. 模块依赖
 
@@ -719,3 +730,54 @@ api.py（编排三个模块，暴露给前端）
 - **`_lastClickedPath` 回溯**：Ctrl 首次点击时 `selectedPaths` 为空，需要把 `_lastClickedPath`（之前普通点击的锚点）加入多选，否则之前点过的文件不会出现在批量操作中
 
 > 本规范为强制性执行标准。所有 AI 辅助开发必须严格遵守。如有特殊需求，需与团队评审并修改本规范。
+
+---
+
+## 十七、Markdown 工具栏（编辑区 + 预览区）
+
+### 1. 文件与职责
+
+| 文件 | 职责 |
+|------|------|
+| `frontend/toolbar/toolbar_config.json` | 按钮定义（fetch 加载，失败回退 FALLBACK_CONFIG）。**改按钮必须同步 FALLBACK_CONFIG** |
+| `frontend/toolbar/toolbar.js` | 渲染工具栏、颜色按钮（label + 透明 input[type=color]）、pointerdown 捕获预览选区、`EDIT_COMMANDS` 集合、命令分发 |
+| `frontend/toolbar/commands.js` | 命令实现（纯逻辑，不依赖 DOM，可独立测试） |
+| `frontend/toolbar/toolbar.css` | 按钮 / 分隔线 / 颜色取色器样式 |
+
+宿主能力由 `script.js` 在 `Toolbar.init(ctx)` 注入：`getView` / `copyMarkdown` / `revealFile` / `toast` / `capturePreviewRange` / `applyPreviewRangeToEditor`。工具栏本模块不直接依赖全局函数。
+
+### 2. 按钮布局（当前唯一事实源：toolbar_config.json）
+
+- **编辑区（16 按钮，2 分隔线）**，顺序固定：
+  1. 文字样式组：`B` 加粗 → `I` 斜体 → `U` 下划线 → `S` 删除线
+  2. `H1` `H2` `H3` `H4` 标题
+  3. `1.` 有序列表 → `•` 无序列表 → `☑` 任务列表 → 引用（内联 SVG 引号图标）→ 代码块（内联 SVG `</>` 图标）→ `🖍️` 荧光笔高亮 → `A` 文字颜色 → `A` 底色（颜色/底色是 label + 透明取色器）
+- **预览区（6 按钮，1 分隔线）**：`📖` 阅读模式 → `📋` 复制 → `📂` 定位文件 ｜ `🔗` 链接 → `🖼️` 图片 → `⛓️` 双链
+- **已移除**：`📑` 目录、`⟳` 刷新预览（按钮已从配置删除；`previewCommands` 中 `toggleToc`/`refresh` 处理器保留但不可达，勿恢复按钮）。
+- **按钮顺序即配置顺序**：想交换/对调按钮只需改 `toolbar_config.json`（并同步 FALLBACK_CONFIG），无需改 JS。
+- **SVG 图标**：引用/代码块用内联 `<svg>`（`fill="currentColor"`，自动跟随按钮文字颜色）。配置 icon 以 `<svg` 开头时 `toolbar.js` 用 `innerHTML` 渲染，否则 `textContent`；按钮加 `class: "md-tb-svg"`（toolbar.css 负责 flex 居中）。
+
+### 3. 命令语义（commands.js）
+
+- **包裹 toggle**：`wrapToggle(view, before, after)` —— 选区首尾已等长包裹则取消，否则包裹；无选区时插入占位、光标居中。下划线 `<u>`、删除线 `~~`、高亮 `<mark>`、颜色/底色 `<span style>` 均走此逻辑（`spanWrap`）。
+- **标题**：`heading(args=1..6)`，同级别再点取消、跨级切换。
+- **有序列表** `orderedList`：覆盖行正则 `/^\d+\.\s+/` 全命中则去除编号，否则加 `1. ` 前缀（渲染器自动编号）。
+- **行前缀**（`list` / `quote` / `taskList` / `orderedList`）：空行跳过；全命中才移除。
+- **链接/图片/双链**：`[文本](链接)`（选中 url 占位）、`![[文件名]]`、`[[文件名]]`（选中名称占位便于直接改名）。**注意 image/wikilink 输出 Obsidian 嵌入语法，非 `![]()`**。
+- **任务列表预览渲染陷阱**：`script.js` 的自定义 `marked.use({renderer:{list}})` 会覆盖 marked 默认的 GFM task checkbox 渲染。list 渲染器内**必须**保留 `item.task` 分支：`itemBody += '<input type="checkbox" disabled' + (item.checked ? ' checked' : '') + ' class="md-task-checkbox"> ';`，否则 `- [ ]` 在预览区不显示勾选框。
+- **任务列表一行显示（关键）**：marked 的 `Parser.parse(tokens, t)` 第二参数为 `true` 时会把 `text` token 包成 `<p>`（这是该版本 Parser 内部 `case "text"` 行为）。默认 `listitem` 渲染器调用的是 `this.parser.parse(item.tokens, item.loose)`，而自定义 list 渲染器若漏传第二参数，checkbox 与文本会变两行。**必须**写 `itemBody += this.parser.parse(item.tokens, item.loose);`。
+- **快捷键**：`Ctrl+B` / `Ctrl+I` / `Ctrl+U` = 加粗/斜体/下划线（tooltip 已标注）。keymap 在 `defaultKeymap` 之前注册 `Mod-b/Mod-i/Mod-u` → `ToolbarCommands.execute(...)`；预览区 keydown（Ctrl+Z/Y 同一 handler）对 Ctrl+B/I/U 先 `_capturePreviewRange()` → `_applyPreviewRangeToEditor()` 再执行，防 contenteditable 原生格式化。
+- **格式按钮 active 状态**：光标所在格式实时高亮按钮（含颜色/底色按钮的色条与取色器值同步）。`commands.js` 的纯函数 `getActiveState(view)`（形参为 `{state}`，取 `view.state.selection.main.head` + `view.state.doc`）检测：行内包裹用 `before.lastIndexOf(open)>=0 && after.indexOf(close)>=0`；斜体用 `findLoneStar` 跳过相邻星号区分 `*i*`/`**b**`；`codeBlock` 检测当前行 ` ``` ` 或前方围栏计数，代码块内抑制其他格式；颜色/底色提取 hex（`/color:\s*(#[0-9a-fA-F]{3,8})/`）。`toolbar.js` 的 `updateActiveState(view)` 映射按钮 `.active`（taskList→id `task`、heading 按 data-args、ol 对应 orderedList），颜色 active 时同步 `.md-tb-color-bar` 与 `input[type=color].value`；`script.js` updateListener 在 `selectionSet||docChanged` 分支调用。
+
+### 4. 预览选区 → 编辑器映射（关键机制）
+
+- 编辑命令（`EDIT_COMMANDS`）在预览区选中后点击工具栏按钮，会先把预览选区映射为编辑器选区再执行。
+- `toolbar.js` 工具栏 `pointerdown`（先于 click 触发）调用 `ctx.capturePreviewRange()` 缓存 `_pendingPreviewRange`；`executeCommand` 命中 `EDIT_COMMANDS` 且存在缓存时先 `ctx.applyPreviewRangeToEditor(range)` 再执行，执行后清空。
+- `EDIT_COMMANDS` **必须包含 link/image/wikilink**——它们虽在预览工具栏，仍是修改 Markdown 的编辑命令，否则预览选区不会被映射。
+- 颜色按钮由 `input[type=color]` 的 `change` 事件驱动，普通 click 被 `md-toolbar-color` 检查跳过，避免空白点击触发空包裹。
+
+### 5. 在资源管理器中定位当前文件（revealFile）
+
+- 入口：预览工具栏 `📂` → `ctx.revealFile()` → `script.js` 的 `syncExplorerWithTab()` → `Explorer.reveal(tab.extPath || tab.file)`。
+- **历史 Bug（已修复）**：`restoreTab()`（启动恢复 Tab）曾不设置 `tab.file`，导致恢复的页签点「定位」无任何反应。**新建/恢复/外部 Tab 都必须带文件路径**：`addTab` 异步设置 `tab.file`、`restoreTab` 设置 `tab.file = page.file`、`addExternalTab` 设置 `tab.extPath`。
+- `Explorer.reveal` 仅在工作区文件夹内的路径生效（`relativeSegments` 逐层 `expandTo` 懒加载 + `setActive` 高亮）；路径不在工作区时静默返回，不影响当前高亮。

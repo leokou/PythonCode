@@ -11,7 +11,7 @@ const {
   markdown, syntaxHighlighting, defaultHighlightStyle, bracketMatching,
   indentOnInput, foldGutter, foldKeymap, highlightSelectionMatches, searchKeymap,
   autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap,
-  ViewPlugin, Decoration,
+  ViewPlugin, Decoration, HighlightStyle, tags,
 } = window.CodeMirrorBundle;
 
 const editorEl = document.getElementById("editor");
@@ -535,6 +535,13 @@ function _highlightLine(lineNum, scrollTarget) {
 
 /* ============ 预览区链接点击 → 默认浏览器打开 / wikilink ============ */
 previewEl.addEventListener("click", (e) => {
+  /* 图片放大镜按钮点击（放大逻辑已由按钮自身处理，这里拦截防止光标/链接干扰） */
+  if (e.target.closest(".img-zoom-btn")) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
   /* wikilink 点击 */
   const wikilink = e.target.closest(".wikilink");
   if (wikilink) {
@@ -925,6 +932,29 @@ function _placeCursorAtDocEnd() {
   if (!blocks.length) return;
   const lastBlock = blocks[blocks.length - 1];
   _placeCursorAtBlockEnd(lastBlock);
+  _scrollPreviewCursorIntoView();
+}
+
+/* 预览区：确保光标所在块在视口内（nearest 语义，光标已在视口内则不滚动）
+ * 用 getBoundingClientRect 差值计算（offsetTop 依赖定位祖先，preview 无 position 时坐标系不对） */
+function _scrollPreviewCursorIntoView() {
+  const block = _findCursorBlock();
+  if (!block) return;
+  const sh = previewEl.clientHeight;
+  if (sh === 0) return;
+  const pr = previewEl.getBoundingClientRect();
+  const br = block.getBoundingClientRect();
+  const relTop = br.top - pr.top;       /* 块顶相对预览区视口（含已滚动偏移） */
+  const relBottom = br.bottom - pr.top; /* 块底相对预览区视口 */
+  let delta = 0;
+  if (relTop < 10) {
+    delta = relTop - 10;                /* 块在视口上方：向上滚 */
+  } else if (relBottom > sh - 24) {
+    delta = relBottom - (sh - 24);      /* 块在视口下方：向下滚 */
+  }
+  if (delta === 0) return;
+  const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
+  previewEl.scrollTop = Math.max(0, Math.min(previewEl.scrollTop + delta, maxScroll));
 }
 
 /* ============ 执行预览区 Enter 键 ============ */
@@ -1038,6 +1068,9 @@ function _doPreviewEnter(isSoftEnter) {
 
   _previewEditing = false;
   _skipPreviewRerender = false;
+
+  /* 回车后光标已移到新行，滚动预览区确保新行可见（长文档末尾回车不丢光标） */
+  _scrollPreviewCursorIntoView();
 
   /* 触发保存 */
   if (tab.pageId) {
@@ -1795,6 +1828,81 @@ async function wikilinkCompletionSource(ctx) {
   };
 }
 
+/* ============ 光标跟随滚动（编辑区） ============ */
+/* CM6 内置光标滚动仅在编辑器持焦点时生效，且 scrollIntoView 在新增行
+ * 尚未布局时可能按过期的 scrollHeight clamp，滚动距离不足。
+ * 本插件不依赖焦点：事务后 rAF（DOM 已布局）直接设置 scrollTop，最可靠。 */
+const _CURSOR_MARGIN_TOP = 10;
+const _CURSOR_MARGIN_BOTTOM = 40; /* 底部留白，光标不贴边 */
+
+function _ensureEditorCursorVisible() {
+  const v = view;
+  if (!v) return;
+  const main = v.state.selection.main;
+  if (!main.empty) return; /* 拖拽/多选交给 CM6 内置行为 */
+  const scroller = v.scrollDOM;
+  const sh = scroller.clientHeight;
+  if (sh === 0) return; /* 编辑区隐藏/未布局时跳过 */
+  const block = v.lineBlockAt(main.head);
+  const st = scroller.scrollTop;
+  let target = null;
+  if (block.top < st + _CURSOR_MARGIN_TOP) {
+    target = Math.max(0, block.top - _CURSOR_MARGIN_TOP);
+  } else if (block.bottom > st + sh - _CURSOR_MARGIN_BOTTOM) {
+    target = Math.max(0, block.bottom + _CURSOR_MARGIN_BOTTOM - sh);
+  }
+  if (target === null) return; /* 光标行已在视口内 */
+  /* 直接设置 scrollTop（不做手动 clamp）：浏览器会自动限制到实际最大滚动位置。
+   * 不用 scrollHeight / documentHeight 手动 clamp——rAF 阶段浏览器 scrollHeight
+   * 可能仍是旧布局值（新增行未计入），clamp 后滚动距离不足导致光标行被裁。 */
+  if (Math.abs(scroller.scrollTop - target) > 1) {
+    scroller.scrollTop = target;
+    /* 下一帧复测：此时布局已完成（scrollHeight 已更新），若光标行仍越界则补滚 */
+    requestAnimationFrame(() => {
+      const b2 = v.lineBlockAt(v.state.selection.main.head);
+      const st2 = scroller.scrollTop;
+      const sh2 = scroller.clientHeight;
+      if (b2.bottom > st2 + sh2 - _CURSOR_MARGIN_BOTTOM) {
+        scroller.scrollTop = Math.min(
+          b2.bottom + _CURSOR_MARGIN_BOTTOM - sh2,
+          Math.max(0, scroller.scrollHeight - sh2)
+        );
+      }
+    });
+  }
+}
+
+const cursorFollowPlugin = ViewPlugin.fromClass(class {
+  update(update) {
+    if (!(update.docChanged || update.selectionSet)) return;
+    /* rAF 阶段执行：CM6 内置同步滚动已尝试，此处为可靠兜底 */
+    requestAnimationFrame(_ensureEditorCursorVisible);
+  }
+});
+
+/* 主题化语法高亮：CM6 defaultHighlightStyle 内置的标记色(#404740 等)是浅色主题配色，
+ * 在深色主题下不可见。这里用 HighlightStyle.define 将各语法元素映射到 --cm-* 主题变量，
+ * 与 themes/editor/*.css 联动（同 tag 冲突时靠后定义的规则优先，后注册 style 整体接管同 tag）。
+ * 注意：CM6 markdown 把格式化标记（# - * 1. > ` 等）标为 meta tag；
+ *       而 tags.list 会命中段落等普通正文，因此不做 list 染色，避免正文被误染。 */
+const themeHighlightStyle = HighlightStyle.define([
+  { tag: tags.strong, color: "var(--cm-strong-color)", fontWeight: "bold" },
+  { tag: tags.emphasis, color: "var(--cm-emphasis-color)", fontStyle: "italic" },
+  { tag: tags.strikethrough, color: "var(--cm-strikethrough-color)", textDecoration: "line-through" },
+  { tag: tags.link, color: "var(--cm-link-color)", textDecoration: "underline" },
+  { tag: tags.url, color: "var(--cm-url-color)" },
+  { tag: tags.monospace, color: "var(--cm-inline-code-color)" },
+  { tag: tags.quote, color: "var(--cm-blockquote-color)" },
+  { tag: tags.meta, color: "var(--cm-formatting-color)" },
+  { tag: tags.heading, color: "var(--cm-heading1-color)", fontWeight: "bold" },
+  { tag: tags.heading6, color: "var(--cm-heading6-color)" },
+  { tag: tags.heading5, color: "var(--cm-heading5-color)" },
+  { tag: tags.heading4, color: "var(--cm-heading4-color)" },
+  { tag: tags.heading3, color: "var(--cm-heading3-color)" },
+  { tag: tags.heading2, color: "var(--cm-heading2-color)" },
+  { tag: tags.heading1, color: "var(--cm-heading1-color)" },
+]);
+
 const editorExtensions = [
   lineNumbers(),
   highlightActiveLineGutter(),
@@ -1810,8 +1918,12 @@ const editorExtensions = [
   crosshairCursor(),
   indentOnInput(),
   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  syntaxHighlighting(themeHighlightStyle),
   highlightSelectionMatches(),
   wikilinkPlugin,
+  cursorFollowPlugin,
+  /* 内置滚动（编辑器聚焦时）预留边距，与光标跟随滚动体验一致 */
+  EditorView.scrollMargins.of(() => ({ top: _CURSOR_MARGIN_TOP, bottom: _CURSOR_MARGIN_BOTTOM })),
   keymap.of([
     ...completionKeymap,
     ...closeBracketsKeymap,
