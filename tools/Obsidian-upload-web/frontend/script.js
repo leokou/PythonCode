@@ -943,17 +943,40 @@ let _previewHistory = [];    /* 撤销栈：保存 markdown 文本快照 */
 let _previewRedoStack = [];   /* 重做栈 */
 const MAX_HISTORY = 200;
 
-/* 在每次预览区编辑前保存快照 */
+/* 在每次预览区编辑前保存快照。
+ * 去重策略即输入分组：input 事件触发时 _syncPreviewToEditor 尚未执行（200ms debounce），
+ * tab.state.doc 仍是本次编辑之前的状态——正是要存的快照。连续快速输入期间 doc 不变，
+ * 读到的快照与栈顶相同 → 跳过 → 自动合并为一个撤销组；停顿超过 debounce 周期后 doc 更新
+ * → 下次输入读到新内容 → 开启新的撤销组。无需额外计时器。 */
 function _savePreviewHistory() {
   const tab = currentTab();
   if (!tab) return;
-  _previewHistory.push(tab.state.doc.toString());
+  const snapshot = tab.state.doc.toString();
+  if (_previewHistory.length && _previewHistory[_previewHistory.length - 1] === snapshot) return;
+  _previewHistory.push(snapshot);
   if (_previewHistory.length > MAX_HISTORY) _previewHistory.shift();
+  _previewRedoStack = [];
+}
+
+/* 清空预览区历史栈（切换 Tab 时必须调用：历史栈是全局的，
+ * 不清会把上一个 Tab 的整篇内容通过 Ctrl+Z 写进当前 Tab） */
+function _clearPreviewHistory() {
+  _previewHistory = [];
   _previewRedoStack = [];
 }
 
 /* 执行预览区撤销/重做 */
 function _doPreviewUndoRedo(type) {
+  /* 关键：先 flush 挂起的 200ms debounce 同步。
+   * 否则「输入后 200ms 内按 Ctrl+Z」会出现两个故障：
+   *   1. tab.state.doc 尚未包含最新输入 → pop 出的快照与当前 doc 相同 → 撤销看起来无效果
+   *   2. 200ms 到点后 pending sync 仍会执行 → 把 DOM 内容写回 markdown → 覆盖掉撤销结果 */
+  if (_previewSyncTimer) {
+    clearTimeout(_previewSyncTimer);
+    _previewSyncTimer = null;
+    _syncPreviewToEditor();
+  }
+
   const tab = currentTab();
   if (!tab) return;
 
@@ -963,7 +986,9 @@ function _doPreviewUndoRedo(type) {
   let newDoc;
   if (type === "undo") {
     newDoc = _previewHistory.pop();
-    if (!newDoc) {
+    /* 必须用 === undefined 判空：空文档快照是 ""，!"" 为 true 会被误判成栈空，
+     * 导致「撤销回到空文档」这一步永远做不到 */
+    if (newDoc === undefined) {
       _previewEditing = false;
       _skipPreviewRerender = false;
       return;
@@ -972,7 +997,7 @@ function _doPreviewUndoRedo(type) {
     _previewRedoStack.push(tab.state.doc.toString());
   } else {
     newDoc = _previewRedoStack.pop();
-    if (!newDoc) {
+    if (newDoc === undefined) {
       _previewEditing = false;
       _skipPreviewRerender = false;
       return;
@@ -1092,6 +1117,14 @@ function _scrollPreviewCursorIntoView() {
 
 /* ============ 执行预览区 Enter 键 ============ */
 function _doPreviewEnter(isSoftEnter) {
+  /* 先 flush 挂起的 debounce 同步：否则 tab.state.doc 还是旧文档，
+   * 下面按 data-line 算出的行范围与实际 markdown 错位 → 换行插到错误位置 */
+  if (_previewSyncTimer) {
+    clearTimeout(_previewSyncTimer);
+    _previewSyncTimer = null;
+    _syncPreviewToEditor();
+  }
+
   const tab = currentTab();
   if (!tab) return;
 
@@ -1422,11 +1455,11 @@ previewEl.addEventListener("input", () => {
    * 用一次性标志跳过，不影响后续真实用户输入。 */
   if (_skipNextInputFlag) { _skipNextInputFlag = false; return; }
 
-  /* 首次输入：保存历史快照用于撤销 */
-  if (!_previewInputActive) {
-    _savePreviewHistory();
-    _previewInputActive = true;
-  }
+  /* 每次输入都尝试入栈；_savePreviewHistory 内部按内容去重自动合并同一输入会话。
+   * 旧实现用 _previewInputActive 门控「仅首次输入存快照」→ 一次 focus 期间撤销栈里
+   * 永远只有 1 个快照 → 第一次 Ctrl+Z 直接跳回进入预览区时的状态、第二次栈空无反应。 */
+  _savePreviewHistory();
+  _previewInputActive = true;
 
   clearTimeout(_previewSyncTimer);
   _previewSyncTimer = setTimeout(_syncPreviewToEditor, 200);
@@ -1436,6 +1469,9 @@ let _lastEditedBlock = null;
 
 /* 核心同步：用文本 diff 保留 Markdown 语法 */
 function _syncPreviewToEditor() {
+  /* 进入即清 timer 句柄：debounce 触发后变量仍保留旧 id（truthy），
+   * 会让外部「是否有挂起同步」的判断误判并重复 flush */
+  _previewSyncTimer = null;
   if (_previewEditing || _pendingAction) return;
   const tab = currentTab();
   if (!tab) return;
@@ -3037,6 +3073,7 @@ function setActiveTab(id) {
     prev.previewScroll = previewEl.scrollTop;
   }
   activeTabId = id;
+  _clearPreviewHistory(); /* 历史栈是全局的，不清会把上个 Tab 的内容 Ctrl+Z 写进当前 Tab */
   const tab = currentTab();
   view.setState(tab.state);
   renderTabs();
