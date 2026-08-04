@@ -2701,6 +2701,69 @@ function renderTabs() {
   manageOverflow();
 }
 
+/* ============ 页签拖拽排序（拖动自定义顺序 + 重启保持） ============ */
+function initTabDrag() {
+  if (!listEl) return;
+
+  function getDragAfterElement(x) {
+    const els = [...listEl.querySelectorAll(".tab:not(.dragging)")];
+    let closest = null;
+    let closestOffset = Number.NEGATIVE_INFINITY;
+    for (const el of els) {
+      const box = el.getBoundingClientRect();
+      const offset = x - box.left - box.width / 2;
+      if (offset < 0 && offset > closestOffset) {
+        closestOffset = offset;
+        closest = el;
+      }
+    }
+    return closest;
+  }
+
+  listEl.addEventListener("dragstart", (e) => {
+    const el = e.target.closest(".tab");
+    if (!el) return;
+    el.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", el.dataset.id);
+  });
+
+  listEl.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const dragging = listEl.querySelector(".tab.dragging");
+    if (!dragging) return;
+    const after = getDragAfterElement(e.clientX);
+    if (after == null) listEl.insertBefore(dragging, addBtnEl);
+    else listEl.insertBefore(dragging, after);
+  });
+
+  listEl.addEventListener("drop", (e) => { e.preventDefault(); });
+
+  listEl.addEventListener("dragend", (e) => {
+    const el = e.target.closest(".tab");
+    if (el) el.classList.remove("dragging");
+
+    const order = [...listEl.querySelectorAll(".tab")].map((t) => Number(t.dataset.id));
+    if (!order.length) return;
+
+    /* 同步内存 tabs 数组到拖拽后的 DOM 顺序（保持 active / 滚动等状态） */
+    const map = {};
+    for (const t of tabs) map[t.id] = t;
+    const newTabs = order.map((id) => map[id]).filter(Boolean);
+    if (newTabs.length) {
+      tabs.length = 0;
+      tabs.push(...newTabs);
+    }
+
+    /* 仅持久化本窗口的页面页签（外部打开文件不持久化，无需保存顺序） */
+    const pageIds = newTabs.filter((t) => t.pageId).map((t) => t.pageId);
+    if (pageIds.length && typeof pywebview !== "undefined" && pywebview.api && pywebview.api.save_tab_order) {
+      pywebview.api.save_tab_order(pageIds).catch(() => {});
+    }
+  });
+}
+
 /* 新建 Tab：先建内存 tab，再异步创建对应 Markdown 文件 */
 const NEW_PAGE_DEFAULT = "# \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 function addTab() {
@@ -3510,6 +3573,9 @@ async function handleStartupRestore() {
       ? { extPath: t.extPath, content: t.state.doc.toString() }
       : { pageId: t.pageId, content: t.state.doc.toString() })
   );
+
+  /* 页签拖拽排序（拖动自定义顺序 + 重启保持） */
+  initTabDrag();
 
   await handleStartupRestore();
   Storage.startInsurance();

@@ -133,6 +133,24 @@ def save_pages(pages):
         return _persist()
 
 
+def reorder_pages(ordered_ids):
+    """按给定 id 顺序重排 pages.json（仅重排列表中的页面，其余保持原相对顺序）。
+
+    用于前端拖拽排序 Tab 后持久化：重启时 get_pages 按 _db 顺序恢复页面。
+    键统一按 str 比较，兼容字符串 / 整数 id。
+    """
+    with _lock:
+        _ensure_loaded()
+        if not ordered_ids:
+            return False
+        id_to_pos = {str(i): n for n, i in enumerate(ordered_ids)}
+        ordered = [p for p in _db if str(p.get("id")) in id_to_pos]
+        others = [p for p in _db if str(p.get("id")) not in id_to_pos]
+        ordered.sort(key=lambda p: id_to_pos[str(p.get("id"))])
+        _db[:] = ordered + others
+        return _persist()
+
+
 def add_page(page):
     """原子追加一条页面记录并立即落盘（页面数量变化是关键操作）。"""
     with _lock:

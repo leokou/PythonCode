@@ -524,6 +524,17 @@ class Api:
             log_error("获取页面列表失败: %s" % e)
             return {"ok": False, "msg": "获取页面列表失败"}
 
+    def save_tab_order(self, page_ids):
+        """保存 Tab 拖拽排序结果（按页面 id 顺序重排 pages.json，重启按新顺序恢复）。"""
+        try:
+            ordered = list(page_ids) if page_ids else []
+            ok = page_store.reorder_pages(ordered)
+            log_info("保存 Tab 排序(%s): %s" % (self.window_type, "成功" if ok else "失败"))
+            return ok
+        except Exception as e:
+            log_error("保存 Tab 排序失败(%s): %s" % (self.window_type, e))
+            return False
+
     def restore_page(self, page_id):
         """读取页面文件内容（用于恢复未保存页面）。"""
         try:

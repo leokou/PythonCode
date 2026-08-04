@@ -104,6 +104,7 @@ window.TabManager = (() => {
       const el = document.createElement("div");
       el.className = "tab" + (tab.id === activeId ? " active" : "") + (tab.pinned ? " pinned" : "");
       el.dataset.id = String(tab.id);
+      el.draggable = true;
       el.title = tab.title || "未命名";
       el.innerHTML = tabHTML(tab, activeId);
       el.addEventListener("click", (e) => {

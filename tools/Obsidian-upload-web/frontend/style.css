@@ -100,6 +100,9 @@ body { display: flex; flex-direction: column; }
   transition: background .15s, border-color .15s;
 }
 .tab:hover { background: var(--hover-bg); }
+.tab { cursor: grab; }
+.tab:active { cursor: grabbing; }
+.tab.dragging { opacity: .4; }
 .tab.active {
   background: var(--accent-strong);
   color: #fff;
@@ -559,14 +562,11 @@ body.resizing { cursor: col-resize; user-select: none; }
   font-size: 16px;
   line-height: 1.6;
 }
-#editor .cm-editor { background: var(--bg-editor); color: var(--text-color); }
-#editor .cm-gutters {
-  background: var(--bg-editor);
-  border-right: 1px solid var(--border-color);
-  color: var(--text-dim);
-}
-#editor .cm-activeLine { background: var(--accent-soft); }
-#editor .cm-activeLineGutter { background: var(--accent-gutter); color: var(--text-color); }
+/* 编辑器颜色现已由三层架构管理：
+ *   editor-layout.css  → 布局（字号、行高、Padding 等）
+ *   editor-syntax.css  → 语法高亮（引用 CSS 变量）
+ *   themes/editor/*.css → 主题配色（仅 CSS 变量定义）
+ * 以下旧样式已移除，避免覆盖主题变量 */
 /* 跨区行高亮：黄色 */
 #editor .cm-crossHighlightLine {
   background: rgba(255, 200, 0, 0.25) !important;
@@ -607,6 +607,84 @@ body.resizing { cursor: col-resize; user-select: none; }
 
 .preview-body img { max-width: 100%; border-radius: 6px; }
 .preview-body img.embed-image { transition: opacity 0.2s; display: block; margin: 8px 0; }
+/* ---- 预览区图片放大镜：悬浮右上角显示，点击放大（普通附件 / PicGo 通用） ---- */
+.preview-body .img-zoom-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+.preview-body .img-zoom-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, .45);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-in;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, background .15s ease, transform .1s ease;
+  z-index: 5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .3);
+}
+.preview-body .img-zoom-wrap:hover .img-zoom-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+.preview-body .img-zoom-btn:hover {
+  background: rgba(20, 20, 20, .7);
+  transform: scale(1.1);
+}
+/* ---- 图片放大预览（lightbox 遮罩） ---- */
+.img-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, .72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: imgLightboxIn .18s ease;
+}
+@keyframes imgLightboxIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.img-lightbox img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 6px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .5);
+  cursor: default;
+}
+.img-lightbox-close {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease;
+}
+.img-lightbox-close:hover { background: rgba(255, 255, 255, .3); }
 .preview-body h1, .preview-body h2, .preview-body h3 {
   margin: 18px 0 10px;
   border-bottom: 1px solid var(--border-color);
@@ -618,6 +696,22 @@ body.resizing { cursor: col-resize; user-select: none; }
 .preview-body h3 { font-size: 19px; }
 .preview-body h4, .preview-body h5, .preview-body h6 { margin: 12px 0 6px; color: var(--title-color); }
 .preview-body a { color: var(--accent); }
+/* 预览区任务列表 checkbox（- [ ] / - [x]） */
+.preview-body input[type="checkbox"].md-task-checkbox {
+  width: 15px;
+  height: 15px;
+  margin: 0 4px 0 0;
+  vertical-align: -2px;
+  accent-color: var(--accent, #7c3aed);
+  cursor: default;
+}
+/* 预览区 <mark> 高亮（工具栏「高亮」按钮） */
+.preview-body mark {
+  background-color: #ffe08a;
+  color: #333;
+  border-radius: 3px;
+  padding: 0 2px;
+}
 /* 预览区跨区高亮：黄色背景 */
 .preview-body [data-line].cross-highlight {
   background: rgba(255, 200, 0, 0.25) !important;
@@ -637,19 +731,7 @@ body.resizing { cursor: col-resize; user-select: none; }
   background: rgba(255, 200, 0, 0.2);
   text-decoration: underline;
 }
-/* 编辑器区 [[wikilink]] 装饰样式 */
-.cm-wikilink {
-  color: var(--accent, #7c3aed);
-  background: rgba(124, 58, 237, 0.08);
-  border-radius: 3px;
-  padding: 0 1px;
-  font-weight: 500;
-}
-.cm-wikilink-unfinished {
-  background: rgba(255, 200, 0, 0.12);
-  border-bottom: 1px dashed rgba(255, 200, 0, 0.5);
-  font-weight: 400;
-}
+/* 编辑器区 wikilink 样式已迁移到 editor-layout.css + editor-syntax.css，使用 --cm-* 变量 */
 .preview-body code {
   background: var(--code-bg);
   color: var(--code-text);
