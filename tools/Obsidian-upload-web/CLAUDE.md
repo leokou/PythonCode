@@ -519,6 +519,9 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 - 预览区 `contenteditable="true"`，用户可在预览区直接编辑。
 - 编辑内容通过 `_syncPreviewToEditor()` 同步回编辑器，核心逻辑：保存旧块纯文本 → 计算 diff → 映射到 markdown 源码位置 → 插入/删除对应字符。
 - `_previewEditing` 标志防止循环同步，`_skipPreviewRerender` 用于 Enter 等操作时跳过预览重新渲染。
+- **编辑前基准必须在 `beforeinput` 捕获**（DOM 变更前，`innerText` 是编辑前文本）；若在 `input` 里保存，`innerText` 已是编辑后文本 → 首次编辑 diff 恒 null 不同步，后续删除/输入位置错位（曾导致"删除键跳过最后一个字删前面的字"）。
+- **光标恢复 clamp 陷阱**：`_restorePreviewCursor` 中 `Math.min(remaining, len - 1)` 会把光标从文本末尾挪到倒数第二个字符后，下次 Backspace 删错字——必须用 `Math.min(remaining, len)`。
+- 验证：`test/preview-delete-test.html`（Edge headless）——修复前首次删除 diff null 不同步、光标被 clamp 到 len-1；修复后删除/输入正确、光标落位末尾。
 
 ### 5. 预览区图片粘贴上传
 
@@ -548,6 +551,23 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 - **预览区图片粘贴必须通过捕获阶段**：`document.addEventListener("paste", ..., true)` 必须在捕获阶段拦截，否则 `previewEl` 的 keydown 或 contenteditable 默认行为可能先消化事件导致图片丢失。
 - **预览区粘贴纯文本**：`navigator.clipboard.readText()` 在 pywebview 环境中不可靠，必须用 `e.clipboardData.getData("text/plain")` 直接读取。
 - **预览区 Enter 不重新渲染**：标记 `_skipPreviewRerender = true` 阻止 updateListener 中的 `renderPreview()` 回调，避免 marked 重新解析导致 data-line 错位。
+
+### 8. data-line 行号锚点与嵌套块禁则
+
+**机制**：预览区通过自定义 `marked.use({ renderer })` 给块级元素（h1-h6 / p / blockquote / pre / hr / ul / ol / li / table）注入 `data-line` 属性，值由 `_lineOf(raw)` 通过 `_renderDoc.indexOf(raw, _renderPos)` 查找 raw 文本在原文中的行号（1 起）。
+
+**核心陷阱 — 嵌套块 data-line="0"**：
+- marked.js 将 `li` / `blockquote` 内的内容包裹为 paragraph token，触发 `paragraph` 渲染器嵌套调用 `_lineOf(para_raw)`
+- 此时 `_renderPos` 已被父块（list/blockquote）的 `_lineOf` 推进到父块之后，嵌套块的 raw 文本位于 `_renderPos` **之前** → `indexOf` 返回 -1 → `_lineOf` 返回 0
+- 产生的 `<p data-line="0">` 假锚点会拦截 `_findCursorBlock()` 向上遍历，导致点击列表项时返回 paragraph 而非 `<li>`，高亮错位
+
+**修复规则（2026-08-05）**：
+1. `_lineOf()`：raw 不可见时返回 `0`（原返回 `_renderDoc.slice(0, _renderPos).split("\n").length`，产生错误的正数行号）
+2. 所有可能嵌套的渲染器（paragraph / blockquote / code / table）：`line > 0` 时才输出 `data-line`，否则不输出
+3. `_findCursorBlock()` 防御性跳过 `parseInt(data-line) > 0` 不成立的元素
+4. `_highlightLine()` 防御性 `if (lineNum <= 0) return`
+
+**验证**：`node -e` 模拟渲染确认无 `data-line="0"`；`test/highlight-bug-test.html` 浏览器手动验证。
 
 ---
 
