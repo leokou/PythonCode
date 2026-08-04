@@ -708,6 +708,7 @@ let _previewSyncTimer = null;
 let _previewCursorInfo = null;
 let _previewInputActive = false;  /* 当前是否处于输入会话中 */
 let _skipNextInputFlag = false;  /* 一次性：跳过由 <br> 插入引发的下一个杂散 input 事件 */
+let _previewSyncActive = false;  /* 预览区驱动的同步进行中：屏蔽编辑器被 dispatch 抢焦点后反向滚动预览区 */
 
 /* 预览区失焦时重置输入会话标记 */
 previewEl.addEventListener("blur", () => {
@@ -1292,6 +1293,7 @@ function _mergeBlocksInMarkdown(curLine, nextLine, caretOffset) {
   _savePreviewHistory();
   _previewEditing = true;
   _skipPreviewRerender = true;
+  _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
 
   view.dispatch({
     changes: { from, to, insert: stripped },
@@ -1319,6 +1321,8 @@ function _mergeBlocksInMarkdown(curLine, nextLine, caretOffset) {
   _previewEditing = false;
   _skipPreviewRerender = false;
   _scrollPreviewCursorIntoView();
+  previewEl.focus(); /* 焦点交还预览区：否则编辑器持焦会触发 focus 监听反向滚动预览 */
+  requestAnimationFrame(() => { _previewSyncActive = false; });
 
   if (tab.pageId) {
     scheduleOrSave(tab.pageId, tab.state.doc.toString());
@@ -1432,6 +1436,7 @@ function _doPreviewEnter(isSoftEnter) {
 
   _previewEditing = true;
   _skipPreviewRerender = true;
+  _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
 
   /* 在 markdown 中插入换行符（删除尾部空格） */
   view.dispatch({
@@ -1501,6 +1506,8 @@ function _doPreviewEnter(isSoftEnter) {
 
   /* 回车后光标已移到新行，滚动预览区确保新行可见（长文档末尾回车不丢光标） */
   _scrollPreviewCursorIntoView();
+  previewEl.focus(); /* 焦点交还预览区：否则编辑器持焦会触发 focus 监听反向滚动预览 */
+  requestAnimationFrame(() => { _previewSyncActive = false; });
 
   /* 触发保存 */
   if (tab.pageId) {
@@ -1775,6 +1782,7 @@ function _syncPreviewToEditor() {
     const newMarkdown = _applyDiffToMarkdown(currentMarkdown, _oldBlockPlainText, newPlainText, diff);
     _previewEditing = true;
     _skipPreviewRerender = true;
+    _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
 
     view.dispatch({
       changes: { from: fromPos, to: toPos, insert: newMarkdown }
@@ -1790,6 +1798,7 @@ function _syncPreviewToEditor() {
     _skipPreviewRerender = false;
 
     previewEl.focus();
+    requestAnimationFrame(() => { _previewSyncActive = false; });
 
     requestAnimationFrame(() => {
       _restorePreviewCursor(blockLine, newPlainText, diff);
@@ -2002,6 +2011,7 @@ function _fallbackReplace(markdown, newPlain) {
 function _doFullReplace(newText, tab) {
   _previewEditing = true;
   _skipPreviewRerender = true;
+  _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
 
   view.dispatch({
     changes: { from: 0, to: tab.state.doc.length, insert: newText }
@@ -2013,6 +2023,7 @@ function _doFullReplace(newText, tab) {
   _skipPreviewRerender = false;
 
   previewEl.focus();
+  requestAnimationFrame(() => { _previewSyncActive = false; });
 
   requestAnimationFrame(() => {
     _restorePreviewCursor(null, _previewCursorInfo);
@@ -2499,6 +2510,7 @@ view = new EditorView({ parent: editorEl, extensions: editorExtensions });
     _highlightLine(lineNum, "preview");
   });
   view.dom.addEventListener("focus", () => {
+    if (_previewSyncActive) return; /* 预览区同步途中：编辑器被 dispatch 临时抢焦点，勿反向滚动/高亮预览 */
     const head = view.state.selection.main.head;
     const doc = view.state.doc;
     const lineNum = doc.lineAt(head).number;
@@ -2729,7 +2741,7 @@ function scrollEditorToLine(line, ratio) {
 }
 
 view.scrollDOM.addEventListener("scroll", () => {
-  if (syncing || _cursorSyncActive) return;
+  if (syncing || _cursorSyncActive || _previewSyncActive) return;
   syncing = true;
   const pos = view.lineBlockAtHeight(view.scrollDOM.scrollTop).from;
   const line = view.state.doc.lineAt(pos).number;
