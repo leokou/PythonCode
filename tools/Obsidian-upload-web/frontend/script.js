@@ -711,6 +711,7 @@ let _previewInputActive = false;  /* 当前是否处于输入会话中 */
 let _skipNextInputFlag = false;  /* 一次性：跳过由 <br> 插入引发的下一个杂散 input 事件 */
 let _previewSyncActive = false;  /* 预览区驱动的同步进行中：屏蔽编辑器被 dispatch 抢焦点后反向滚动预览区 */
 let _previewSyncSafety = null;   /* 安全兜底：预览区编辑 500ms 后自动复位 _previewSyncActive */
+let _savedPreviewScrollBeforeEdit = null; /* 编辑前预览区滚动位置：同步完成后复原以抵消浏览器原生 contenteditable 滚动 */
 
 /* 预览区失焦时重置输入会话标记 */
 previewEl.addEventListener("blur", () => {
@@ -1330,6 +1331,7 @@ function _mergeBlocksInMarkdown(curLine, nextLine, caretOffset) {
 
   _previewEditing = false;
   _skipPreviewRerender = false;
+  _savedPreviewScrollBeforeEdit = null; /* 手动管理滚动：避免 input 处理器的快照恢复覆盖 */
   _scrollPreviewCursorIntoView();
   previewEl.focus(); /* 焦点交还预览区：否则编辑器持焦会触发 focus 监听反向滚动预览 */
   requestAnimationFrame(() => { _previewSyncActive = false; });
@@ -1702,6 +1704,7 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
 previewEl.addEventListener("beforeinput", () => {
   if (_previewEditing || _pendingAction) return;
   _previewSyncActive = true; /* 抑制双向滚动同步：原生 contenteditable 编辑期间两侧内容短期不同步 */
+  _savedPreviewScrollBeforeEdit = previewEl.scrollTop; /* 保存编辑前位置：同步后复原以抵消浏览器原生滚动 */
   clearTimeout(_previewSyncSafety);
   _previewSyncSafety = setTimeout(() => { _previewSyncActive = false; }, 500);
   const block = _findCursorBlock();
@@ -1741,6 +1744,13 @@ previewEl.addEventListener("input", () => {
    * 永远只有 1 个快照 → 第一次 Ctrl+Z 直接跳回进入预览区时的状态、第二次栈空无反应。 */
   _savePreviewHistory();
   _previewInputActive = true;
+
+  /* 立即恢复编辑前滚动位置：抵消浏览器原生 contenteditable 删除导致的
+   * scrollTop 自动调整（目录常亮项的跳转根源）。单帧内复原，用户无感知。 */
+  if (_savedPreviewScrollBeforeEdit !== null) {
+    previewEl.scrollTop = _savedPreviewScrollBeforeEdit;
+    _savedPreviewScrollBeforeEdit = null;
+  }
 
   clearTimeout(_previewSyncTimer);
   _previewSyncTimer = setTimeout(_syncPreviewToEditor, 200);
