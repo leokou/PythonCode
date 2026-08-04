@@ -424,6 +424,9 @@ function _processWikilinks() {
 let _lastHighlightedLine = -1;
 /* 光标驱动的滚动同步标志：防止 scroll 事件反向触发造成循环 */
 let _cursorSyncActive = false;
+/* 抑制 cursorFollowPlugin 的编辑器滚动。预览区撤销/重做走全文替换 dispatch，
+ * 会让 cursorFollowPlugin 把编辑区滚到光标处 → 编辑区乱飘。置位期间保持编辑区视图不动。 */
+let _suppressCursorFollow = false;
 
 function _clearCrossHighlight() {
   /* 清除预览区高亮 */
@@ -965,6 +968,14 @@ function _clearPreviewHistory() {
   _previewRedoStack = [];
 }
 
+/* 新旧文档的公共前缀长度 = 撤销/重做实际生效的位置 */
+function _commonPrefixLen(a, b) {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+  return i;
+}
+
 /* 执行预览区撤销/重做 */
 function _doPreviewUndoRedo(type) {
   /* 关键：先 flush 挂起的 200ms debounce 同步。
@@ -1006,13 +1017,23 @@ function _doPreviewUndoRedo(type) {
     _previewHistory.push(tab.state.doc.toString());
   }
 
-  /* 替换整篇文档：光标置于新文档末尾（避免落在 0 → cursorFollowPlugin 滚到首页） */
-  syncing = true; /* 抑制 dispatch 引发的 editor↔preview 滚动同步，防止飘首页 */
+  /* 替换整篇文档。光标落在「实际变更点」（新旧文档公共前缀末尾）而非文档末尾——
+   * 落末尾会让 cursorFollowPlugin 把编辑区一路滚到文末，即「编辑区乱飘」。 */
+  const oldDoc = tab.state.doc.toString();
+  const anchor = Math.min(_commonPrefixLen(oldDoc, newDoc), newDoc.length);
+
+  const savedEditorScroll = view.scrollDOM.scrollTop;
+  syncing = true;               /* 抑制 editor↔preview 的 scroll 事件互相触发 */
+  _suppressCursorFollow = true; /* 抑制 cursorFollowPlugin 主动滚动编辑区 */
+
   view.dispatch({
-    changes: { from: 0, to: tab.state.doc.length, insert: newDoc },
-    selection: { anchor: newDoc.length },
+    changes: { from: 0, to: oldDoc.length, insert: newDoc },
+    selection: { anchor },
   });
   tab.state = view.state;
+  view.scrollDOM.scrollTop = savedEditorScroll; /* dispatch 后 CM6 重排，立即回位 */
+  /* 兜底：rAF 链若因异常中断，防止抑制标志永久置位导致光标跟随彻底失效 */
+  setTimeout(() => { _suppressCursorFollow = false; }, 300);
 
   /* dispatch 已完成，立即恢复标志（避免 rAF 窗口内编辑区 docChanged 跳过预览渲染） */
   _previewEditing = false;
@@ -1026,11 +1047,16 @@ function _doPreviewUndoRedo(type) {
 
     syncing = true;
     previewEl.scrollTop = savedScrollTop;
+    /* 编辑区同样回位：renderPreview 与 CM6 重排都可能改动 scrollTop */
+    view.scrollDOM.scrollTop = savedEditorScroll;
     /* 不再强制 _placeCursorAtDocEnd()——它会把滚动条拉到底部，
      * 导致撤销前后的视图位置相同（若撤销前也在末尾），撤销"无效果"。
-     * renderPreview() 已保存/恢复 scroll，此处只保保持视图不动。 */
+     * renderPreview() 已保存/恢复 scroll，此处只保持视图不动。 */
 
-    requestAnimationFrame(() => { syncing = false; });
+    requestAnimationFrame(() => {
+      syncing = false;
+      _suppressCursorFollow = false;
+    });
 
     if (tab.pageId) {
       scheduleOrSave(tab.pageId, tab.state.doc.toString());
@@ -2024,6 +2050,7 @@ const _CURSOR_MARGIN_TOP = 10;
 const _CURSOR_MARGIN_BOTTOM = 40; /* 底部留白，光标不贴边 */
 
 function _ensureEditorCursorVisible() {
+  if (_suppressCursorFollow) return; /* 预览区撤销/重做期间：编辑区视图保持不动 */
   const v = view;
   if (!v) return;
   const main = v.state.selection.main;
