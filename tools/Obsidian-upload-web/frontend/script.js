@@ -142,9 +142,7 @@ marked.use({
       let body = "";
       for (let i = 0; i < items.length; i++) {
         const line = itemLines[i] || 0;
-        /* 用 parseInline 而非 parse：列表项只有行内内容（文本、code、加粗等），
-         * parse 会生成多余的 <p> 标签干扰 data-line 精确匹配 */ 
-        body += `<li data-line="${line}">${this.parser.parseInline(items[i].tokens)}</li>`;
+        body += `<li data-line="${line}">${this.parser.parse(items[i].tokens)}</li>`;
       }
       return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
     },
