@@ -1183,12 +1183,11 @@ function _scrollPreviewCursorIntoView() {
 
   if (target === null) return;
 
-  /* DEBUG: 若是标题块，打日志定位异常光标/滚动 */
-  if (block.querySelector("h1,h2,h3,h4,h5,h6")) {
-    const h = block.querySelector("h1,h2,h3,h4,h5,h6").textContent.trim().substring(0, 50);
-    const stack = new Error().stack || "";
-    const caller = (stack.split("\n")[2] || "").trim();
-    console.warn(`[_scrollPreviewCursorIntoView→header] "${h}" delta=${delta} | caller: ${caller}`);
+  /* DEBUG: 每次实际滚动都 toast，定位是否为本函数导致跳转 */
+  if (typeof toast === "function") {
+    const h = block.querySelector("h1,h2,h3,h4,h5,h6");
+    const label = h ? h.textContent.trim().substring(0, 30) : block.textContent.trim().substring(0, 30);
+    toast(`📜 scrollCursor: ${label} delta=${Math.round(delta)}`, "info");
   }
 
   previewEl.scrollTop = target;
@@ -1746,10 +1745,14 @@ previewEl.addEventListener("input", () => {
   _previewInputActive = true;
 
   /* 立即恢复编辑前滚动位置：抵消浏览器原生 contenteditable 删除导致的
-   * scrollTop 自动调整（目录常亮项的跳转根源）。单帧内复原，用户无感知。 */
+   * scrollTop 自动调整。浏览器调整发生在 layout（input 事件之后），
+   * 故必须在 rAF 中复原（layout 后、paint 前）。 */
   if (_savedPreviewScrollBeforeEdit !== null) {
-    previewEl.scrollTop = _savedPreviewScrollBeforeEdit;
+    const saved = _savedPreviewScrollBeforeEdit;
     _savedPreviewScrollBeforeEdit = null;
+    requestAnimationFrame(() => {
+      previewEl.scrollTop = saved;
+    });
   }
 
   clearTimeout(_previewSyncTimer);
