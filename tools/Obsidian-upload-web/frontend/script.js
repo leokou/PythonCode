@@ -957,11 +957,38 @@ function _placeCursorAtDocEnd() {
 
 /* 预览区：确保光标所在块在视口内（nearest 语义，光标已在视口内则不滚动）
  * 用 getBoundingClientRect 差值计算（offsetTop 依赖定位祖先，preview 无 position 时坐标系不对） */
+function _isCaretAtDocEnd() {
+  /* 光标是否在【最后一个 data-line 块】的【末尾】
+   * （末尾回车产生 trailing <br>，块不增高，getBoundingClientRect 无法感知，需单独处理） */
+  const block = _findCursorBlock();
+  if (!block) return false;
+  const blocks = previewEl.querySelectorAll("[data-line]");
+  if (!blocks.length) return false;
+  if (block !== blocks[blocks.length - 1]) return false;
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  if (!range.collapsed) return false;
+  const tail = range.cloneRange();
+  tail.selectNodeContents(block);
+  tail.setStart(range.endContainer, range.endOffset);
+  return tail.toString().trim().length === 0;
+}
+
 function _scrollPreviewCursorIntoView() {
   const block = _findCursorBlock();
   if (!block) return;
   const sh = previewEl.clientHeight;
   if (sh === 0) return;
+
+  /* 末尾空行特殊处理：trailing <br> 不增加块高度，getBoundingClientRect 测不到，
+   * 直接滚到预览区底部，配合 .preview-body 的 padding-bottom 保证金光标行不贴边可见 */
+  if (_isCaretAtDocEnd()) {
+    const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
+    if (previewEl.scrollTop < maxScroll) previewEl.scrollTop = maxScroll;
+    return;
+  }
+
   const pr = previewEl.getBoundingClientRect();
   const br = block.getBoundingClientRect();
   const relTop = br.top - pr.top;       /* 块顶相对预览区视口（含已滚动偏移） */

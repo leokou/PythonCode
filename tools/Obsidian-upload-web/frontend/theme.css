@@ -46,4 +46,73 @@
   --glass-bg: rgba(255, 255, 255, .88);
   --glass-border: rgba(0, 0, 0, .10);
   --glass-shadow: 0 8px 28px rgba(0, 0, 0, .14);
+
+  /* ===== 编辑器默认配色（三层架构 fallback） =====
+   * 当未选择编辑器主题时，以下变量作为默认值，
+   * 确保 editor-syntax.css 和 EditorView.theme() 能正常渲染。
+   * 选择主题后由 themes/editor/*.css 覆盖。 */
+  --cm-bg: #FFFFFF;
+  --cm-fg: #24292F;
+  --cm-gutter-bg: #FFFFFF;
+  --cm-gutter-fg: #6E7781;
+  --cm-gutter-border: #D0D7DE;
+  --cm-active-line: rgba(246,248,250,.6);
+  --cm-active-line-gutter: rgba(246,248,250,.9);
+  --cm-cursor: #24292F;
+  --cm-selection: rgba(175,184,193,.5);
+  --cm-search-match: rgba(255,220,0,.45);
+  --cm-fold-bg: #FFFFFF;
+  --cm-fold-border: #D0D7DE;
+  --cm-fold-fg: #6E7781;
+  --cm-heading1-color: #0550AE;
+  --cm-heading2-color: #0969DA;
+  --cm-heading3-color: #1F2328;
+  --cm-heading4-color: #24292F;
+  --cm-heading5-color: #24292F;
+  --cm-heading6-color: #57606A;
+  --cm-strong-color: #CF222E;
+  --cm-emphasis-color: #8250DF;
+  --cm-strikethrough-color: #6E7781;
+  --cm-highlight-bg: #FFF3CD;
+  --cm-highlight-color: #24292F;
+  --cm-inline-code-bg: #EFF1F3;
+  --cm-inline-code-color: #0550AE;
+  --cm-codeblock-bg: #F6F8FA;
+  --cm-codeblock-border: #D0D7DE;
+  --cm-codeblock-color: #24292F;
+  --cm-link-color: #0969DA;
+  --cm-url-color: #0969DA;
+  --cm-wikilink-color: #0969DA;
+  --cm-wikilink-bg: rgba(9,105,218,.08);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #1A7F37;
+  --cm-blockquote-color: #57606A;
+  --cm-blockquote-bg: rgba(175,184,193,.15);
+  --cm-blockquote-border: #D0D7DE;
+  --cm-list-marker-color: #CF222E;
+  --cm-task-done-color: #1A7F37;
+  --cm-task-undone-color: #6E7781;
+  --cm-table-border: #D0D7DE;
+  --cm-table-header-bg: #F6F8FA;
+  --cm-hr-color: #D0D7DE;
+  --cm-yaml-bg: #F6F8FA;
+  --cm-yaml-border: #D0D7DE;
+  --cm-yaml-key-color: #CF222E;
+  --cm-yaml-value-color: #0550AE;
+  --cm-formatting-color: #8B949E;
+  --cm-section-indent: 32px;
+  --cm-heading1-size: 1.8em;
+  --cm-heading1-weight: 800;
+  --cm-heading2-size: 1.5em;
+  --cm-heading2-weight: 700;
+  --cm-heading3-size: 1.25em;
+  --cm-heading3-weight: 600;
+  --cm-heading4-size: 1.1em;
+  --cm-heading4-weight: 600;
+  --cm-heading5-size: 1em;
+  --cm-heading5-weight: 600;
+  --cm-heading6-size: 0.9em;
+  --cm-heading6-weight: 600;
+  --cm-heading-spacing-top: 10px;
 }

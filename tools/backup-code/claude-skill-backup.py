@@ -14,7 +14,7 @@ if sys.platform == 'win32':
 
 SOURCE = r"C:\Users\leokou\.claude\skills"
 BACKUP_ROOT = r"D:\project\skill备份"
-MAX_BACKUPS = 10
+MAX_BACKUPS = 50
 
 TASK_NAME = "Claude Skill备份"
 

@@ -25,7 +25,7 @@ SKIP_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg',
                    '.zip', '.rar', '.7z', '.tar', '.gz',
                    '.pdf', '.epub', '.mobi'}
 
-MAX_BACKUPS = 20
+MAX_BACKUPS = 50
 
 TASK_NAME = "Obsidian笔记备份"
 

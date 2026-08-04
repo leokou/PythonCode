@@ -14,7 +14,7 @@ if sys.platform == 'win32':
 
 SOURCE = r"D:\Python"
 BACKUP_ROOT = r"D:\project\python备份"
-MAX_BACKUPS = 10
+MAX_BACKUPS = 50
 
 TASK_NAME = "Python代码本地备份"
 
