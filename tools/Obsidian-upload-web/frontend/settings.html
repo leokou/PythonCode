@@ -54,6 +54,18 @@
     </div>
 
     <div class="set-section">
+      <label class="set-label">图片上传方式</label>
+      <div class="set-toggle-row">
+        <label class="set-switch">
+          <input type="checkbox" id="set-picgo-switch">
+          <span class="set-switch-slider"></span>
+        </label>
+        <span class="set-switch-text">粘贴图片时上传到 PicGo / Cloudflare</span>
+      </div>
+      <div class="set-hint">开启后，编辑区/预览区粘贴图片（截图、图片文件）将上传到 PicGo 并插入远程链接；关闭（默认）则直接保存为本地附件。保存后立即生效。</div>
+    </div>
+
+    <div class="set-section">
       <label class="set-label" for="set-ms-client-id">Microsoft To Do 客户端 ID</label>
       <div class="set-path-row">
         <input type="text" id="set-ms-client-id" class="set-input" spellcheck="false"

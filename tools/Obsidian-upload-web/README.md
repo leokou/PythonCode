@@ -16,7 +16,7 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 - **工作区资源管理器**：左侧文件夹树浏览工作区文件，点击 `.md` 以页签打开（编辑+预览同步），支持名称/时间排序与展开/折叠全部；文件右键菜单（复制文件名 / 复制完整路径 / 资源管理器显示 / VSCode 打开 / 复制副本 / 移动文件 / 重命名 / 删除到回收站），目录右键菜单（复制名称·路径 / 资源管理器显示 / 复制副本 / 移动文件夹 / 新建文件夹 / 新建文件 / 重命名 / 删除到回收站）；`Ctrl+H` 在工作区内全量搜索文件内容（按扩展名分组展示），点击结果定位到命中行
 - **多窗口**：Inbox / FlashNote / Daily Log / 📥 Capture 四个独立窗口，同时存在、互不影响、独立编辑状态
 - **多标签页**：每个窗口独立多个页签，首行标题自动命名、自动重命名文件、滚轮切换；页签右键菜单支持**关闭当前 / 关闭其他 / 关闭右侧 / 全部关闭 / 锁定**；`Ctrl+W` 快捷关闭当前标签；页签过多时自动折叠为「▼」下拉清单（按页签顺序列出全部隐藏页签，点击一键切换）
-- **关闭即保存**：关闭单个标签或批量关闭标签（右键菜单）时，自动保存当前内容，无需弹窗确认；锁定标签后防止误关闭
+- **关闭标签弹窗确认**：Inbox / FlashNote / 日志记录窗口关闭标签时弹出确认对话框，可选择「保存」（保存到聚合文件后关闭）或「删除」（不保存直接移除）；Capture 窗口保持原有关闭即保存逻辑
 - **自动保存防丢失**：编辑变化 3 秒 debounce 覆盖写入 Tab 文件 + 每 60 秒保险保存 + 退出程序后台保存全部页签，**不丢内容**
 - **图片粘贴上传**：`Ctrl+V` 剪贴板图片 → PicGo HTTP API → Cloudflare R2 → 自动插入 `![图片](URL)`，预览立即显示，不保存本地图片
 - **历史记录**：最近打开/编辑的文件按时间分组展示，可搜索、可点击重新打开
@@ -39,7 +39,7 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 
 | 窗口 | 快捷键 | 保存目标 |
 |------|--------|----------|
-| 📥 My-Inbox | `Alt+E` | 保存 Inbox → `D:\Obsidian\LeoDiary\My-Inbox.md` |
+| 📦 Inbox | `Alt+E` | 保存 Inbox → `D:\Obsidian\LeoDiary\📦 inbox.md` |
 | 🧠 FlashNote | `Alt+S` | 保存 FlashNote → `D:\Obsidian\LeoDiary\🧠 FlashNote.md` |
 | 📅 日志记录 | `Alt+R` | 保存日志 → `log_dir\yyyy-MM-dd 周X.md`（按日期自动命名，追加不覆盖） |
 | 📥 Capture | `Alt+D` | 保存 Capture → `D:\Obsidian\LeoDiary\A📥 收集（Capture）\Capture.md` |
@@ -49,7 +49,8 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
      所有窗口（Inbox / FlashNote / Daily Log / Capture）：
      - 支持资源管理器打开文件
      - 有保存 / 同步按钮
-     - **关闭标签即保存**：关闭单个标签、右键批量关闭（关闭其他 / 关闭右侧 / 全部关闭）时，自动保存当前内容，无需弹窗确认
+     - **Inbox / FlashNote / 日志记录**：关闭标签弹窗确认，可选择「保存」（保存到聚合文件后关闭）或「删除」（不保存直接移除）
+     - **Capture 窗口**：关闭标签即保存，无需弹窗确认
      - **锁定标签**：右键菜单锁定后，`Ctrl+W` 和关闭按钮均不可关闭，防止误操作
 
      ---
@@ -95,7 +96,7 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 ```
 
 - **四个窗口独立布局**：FlashNote / Inbox / 日志 默认仅显示编辑+预览；Capture 默认显示工作区+编辑+预览；各窗口面板显隐与宽度独立保存，互不影响
-- **📥 工作区**：左侧资源管理器栏，点左上角窗口名称（如 `📥 My-Inbox`）显示/收起，宽度可拖拽（160-400px）；支持名称/时间排序、展开/折叠全部
+- **📥 工作区**：左侧资源管理器栏，点左上角窗口名称（如 `📦 Inbox`）显示/收起，宽度可拖拽（160-400px）；支持名称/时间排序、展开/折叠全部
 - **📑 目录**：解析当前文档标题生成章节大纲，点击跳转编辑区与预览区，光标移动高亮当前章节
 - **🕘 历史**：最近文件记录面板，见下节
 - 点击「目录 / 历史」按钮切换第三栏内容，再次点击收起/展开；当前选择（`pane_mode`）、各栏宽度、工作区显隐（`workspace_visible`）、宽度（`workspace_width`）与资源树排序（`explorer_sort`）写入 `layout_<type>` 配置（如 `layout_flash`），重启保持
@@ -106,7 +107,7 @@ LeoDiary Capture 是运行在 Windows 的桌面快速采集工具：四个独立
 
 快速浏览与检索工作区（Obsidian 仓库 / 项目目录）文件。
 
-- **入口**：左上角窗口名称（`brand`，如 `📥 My-Inbox`），点击显示、再次点击收起（显隐与宽度自动记忆）
+- **入口**：左上角窗口名称（`brand`，如 `📦 Inbox`），点击显示、再次点击收起（显隐与宽度自动记忆）
 - **添加文件夹**：栏内「＋ 添加文件夹」→ Windows 文件夹选择对话框 → 加入工作区，存于 `%APPDATA%\Obsidian-upload\workspace.json`
 - **文件树**：文件夹可展开/收起（懒加载，逐层扫描），支持按名称/时间排序与展开/折叠全部；点击 `.md` 等文件以新页签打开，恢复编辑与预览同步
 - **右键操作**：文件与文件夹均支持右键菜单，操作成功自动局部刷新树（不整树重建）：
@@ -179,7 +180,7 @@ Capture → capture_file 所在目录（默认 D:\Obsidian\LeoDiary\A📥 收集
 
 **2. 聚合文件（点「保存」按钮 / 日志）**
 - 格式：`#### yyyy-MM-dd HH:mm:ss` + 正文 + `---`，**追加**，禁止覆盖旧内容
-- Inbox → `inbox_file`（默认 `D:\Obsidian\LeoDiary\My-Inbox.md`）
+- Inbox → `inbox_file`（默认 `D:\Obsidian\LeoDiary\📦 inbox.md`）
 - FlashNote → `flashnote_file`（默认 `D:\Obsidian\LeoDiary\🧠 FlashNote.md`）
 - Daily Log → `log_dir\yyyy-MM-dd 周X.md`
 - Capture → `capture_file`（默认 `D:\Obsidian\LeoDiary\A📥 收集（Capture）\Capture.md`）
@@ -333,7 +334,7 @@ frontend/themes/
 项目采用三层包结构（`lib/core` + `lib/backend` + `lib/modules`），前端资源在 `frontend/`，配置在 `config/`：
 
 ```
-Obsidian-upload - web/
+Obsidian-upload-web/
 ├── lib/                        Python 包根
 │   ├── __init__.py
 │   ├── core/                   核心层（入口与编排）
@@ -420,7 +421,7 @@ Obsidian-upload - web/
 {
   "picgo_api": "http://127.0.0.1:36677/upload",
   "cloudflare_domain": "https://pub-xxx.r2.dev",
-  "inbox_file": "D:\\Obsidian\\LeoDiary\\My-Inbox.md",
+  "inbox_file": "D:\\Obsidian\\LeoDiary\\📦 inbox.md",
   "flashnote_file": "D:\\Obsidian\\LeoDiary\\🧠 FlashNote.md",
   "log_dir": "D:\\Obsidian\\LeoDiary\\Journals",
   "capture_file": "D:\\Obsidian\\LeoDiary\\A📥 收集（Capture）\\Capture.md",

@@ -1,8 +1,8 @@
 # LeoDiary Capture 项目开发规范
 
-项目名称：LeoDiary Capture（Obsidian-upload - web）
+项目名称：LeoDiary Capture（Obsidian-upload-web）
 技术栈：Python + HTML/CSS/JS + Edge WebView2（pywebview 6.x）+ CodeMirror 6 + marked.js
-打包：PyInstaller 单文件 EXE
+打包：PyInstaller 单文件 EXE（由用户手动运行 build.bat 打包，AI 禁止自动执行打包命令）
 
 > 本文档仅记录项目特定约束与陷阱。通用编程原则（错误处理、日志、测试、Git 规范等）AI 本身已掌握，不再赘述。功能介绍详见 README.md。
 
@@ -17,13 +17,14 @@
 - **不改变技术栈**：禁止用 Tkinter / PyQt / AutoHotkey 替代 Web UI；旧入口 `Obsidian-upload.py`（Tkinter）已删除，禁止恢复。
 - **不随意修改 to-do 模块**：`tools/to-do/` 是独立子模块，无用户明确指令**禁止修改**其中任何文件（auth / api / sync / ui 等）。该模块登录状态持久化机制经过多轮调试才稳定，改动极易引入回归。**尤其警惕"保存"相关逻辑**（`token_cache.json` / `login_state.json` / `save_cache()` / `is_logged_in()`），这是多轮调试才稳定的核心机制，任何改动都可能导致「每次重启都要重新登录」的回归。
 - **新增功能原则**：独立模块 / 可插拔 / 低耦合 / 复用已有能力 / 不依赖 UI 与网络（便于独立测试）。
+- **不自动打包 EXE（用户手动打包）**：AI 禁止执行 `build.bat` 或 `pyinstaller` 任何命令。用户手动运行 `build.bat` 打包 EXE。AI 不得以任何理由自动执行打包操作。
 
 ---
 
 ## 二、项目目录结构（重构后）
 
 ```
-Obsidian-upload - web/
+Obsidian-upload-web/
 ├── lib/                    Python 包根
 │   ├── __init__.py
 │   ├── core/               核心层（入口与编排）
@@ -74,7 +75,7 @@ Obsidian-upload - web/
 ├── scripts/make_icon.py    生成 app.ico
 ├── spec/                   PyInstaller spec 输出目录
 ├── test/test-theme-run.py  主题调试脚本
-├── build.bat               打包脚本
+├── build.bat               打包脚本（用户手动执行）
 ├── app.ico
 ├── CLAUDE.md
 └── README.md
@@ -232,7 +233,19 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 
 ---
 
-## 九、打包命令（build.bat 关键参数）
+## 九、关闭标签行为
+
+### Inbox / FlashNote / 日志记录 窗口
+- 关闭标签时弹出确认对话框，提供两个按钮：
+  - **删除**：不保存内容，直接从页签栏移除
+  - **保存**：保存到聚合文件（如 `📦 inbox.md`）后关闭页签
+
+### Capture 窗口
+- 保持原有关闭即保存逻辑，无弹窗确认。
+
+---
+
+## 十、打包命令（build.bat 关键参数）
 
 ```bash
 pyinstaller --noconfirm --clean ^
@@ -272,12 +285,14 @@ pyinstaller --noconfirm --clean ^
   lib\core\main.py
 ```
 
+> **AI 禁止自动执行打包命令**，用户手动运行 `build.bat` 打包。
+
 输出：`dist\Obsidian-upload.exe`（单文件，无控制台）。
 config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）。
 
 ---
 
-## 十、AI 修改代码流程
+## 十一、AI 修改代码流程
 
 ### 修改前分析阶段
 
@@ -331,6 +346,7 @@ config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）�
 3. 重写整个模块
 4. 修改无关代码
 5. 修改公共接口名称
+6. 自动执行打包命令
 
 **新增功能必须**：独立文件、明确输入输出、有错误处理、有日志记录
 
@@ -369,6 +385,8 @@ config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）�
 - ✅ 图片上传正常
 - ✅ 历史记录正常
 - ✅ 工作区正常
+- ✅ Inbox/FlashNote/Log 关闭标签弹窗正常（保存/删除）
+- ✅ Capture 关闭标签保持原有关闭即保存
 
 **日志**：
 - ✅ app.log / shortcut_error.log / upload_debug.log
@@ -377,7 +395,7 @@ config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）�
 - ✅ config.json / settings.json / pages.json / workspace.json / history.json
 
 **打包**：
-- ✅ build.bat 正常
+- ✅ build.bat 正常（用户手动执行）
 - ✅ EXE 正常启动
 
 ### 性能要求
@@ -404,7 +422,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 
 ---
 
-## 十一、性能优化规范
+## 十二、性能优化规范
 
 ### 1. 启动优化
 - 启动延迟已从 1.5s 降到 0.3s（`main.py` show_default）。
@@ -453,7 +471,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 
 ---
 
-## 十二、编辑区与预览区联动机制
+## 十三、编辑区与预览区联动机制
 
 ### 1. 跨区行高亮（黄色高亮）
 
@@ -520,7 +538,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 
 ---
 
-## 十二、Obsidian Wikilink 双链支持
+## 十四、Obsidian Wikilink 双链支持
 
 ### 1. 编辑器高亮（ViewPlugin）
 
@@ -559,7 +577,7 @@ AI 开发 LeoDiary Capture 必须遵守：小步修改、模块隔离、接口�
 
 ---
 
-## 十三、剪贴板富文本粘贴（网页复制 → Obsidian Markdown）
+## 十五、剪贴板富文本粘贴（网页复制 → Obsidian Markdown）
 
 ### 1. 整体流程
 
@@ -629,7 +647,7 @@ api.py（编排三个模块，暴露给前端）
 
 ---
 
-## 十四、资源管理区文件多选与批量操作
+## 十六、资源管理区文件多选与批量操作
 
 ### 1. 多选状态管理
 

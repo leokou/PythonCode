@@ -191,3 +191,55 @@ body { display: flex; flex-direction: column; }
 .toast.show { opacity: 1; }
 .toast.ok { border-color: var(--success); color: var(--success); }
 .toast.err { border-color: var(--error); color: var(--error); }
+
+/* ---- 图片上传方式：左右滑动的开关（toggle switch） ---- */
+.set-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.set-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex: 0 0 auto;
+}
+.set-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.set-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-preview);
+  border: 1px solid var(--border-color);
+  border-radius: 26px;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.set-switch-slider::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 2px;
+  top: 2px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: transform .18s, background .18s;
+}
+.set-switch input:checked + .set-switch-slider {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.set-switch input:checked + .set-switch-slider::before {
+  transform: translateX(22px);
+  background: #fff;
+}
+.set-switch-text {
+  font-size: 13px;
+  color: var(--title-color);
+  user-select: none;
+}

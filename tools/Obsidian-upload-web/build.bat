@@ -17,6 +17,18 @@ rem            frontend (HTML/CSS/JS) / commands / tools / config
 rem ============================================
 cd /d "%~dp0"
 
+rem ============================================
+rem 清理旧环境：杀掉运行中的程序 + 删除 dist 旧 EXE
+rem 原因：正在运行的 Obsidian-upload.exe 会锁定 dist\Obsidian-upload.exe，
+rem       导致 PyInstaller 覆盖失败（build\ 产物生成但 dist 不更新）。
+rem 注意：强制结束进程，最后几秒未保存内容可能丢失（程序 3s/60s 自动保存已兜底）。
+rem ============================================
+echo [1/3] 关闭运行中的 Obsidian-upload 进程...
+taskkill /IM Obsidian-upload.exe /F >nul 2>&1
+echo [1/3] 删除 dist 旧 EXE...
+if exist "dist\Obsidian-upload.exe" del /F /Q "dist\Obsidian-upload.exe" >nul 2>&1
+echo [2/3] 开始打包（PyInstaller）...
+
 pyinstaller --noconfirm --clean ^
   --onefile ^
   --windowed ^
@@ -88,6 +100,6 @@ if not exist spec mkdir spec
 if exist Obsidian-upload.spec move /Y Obsidian-upload.spec spec\ >nul 2>&1
 
 echo.
-echo [OK] dist\Obsidian-upload.exe generated successfully
+echo [3/3] dist\Obsidian-upload.exe generated successfully
 echo Tip: config.json is embedded, copy beside EXE to customize.
 pause

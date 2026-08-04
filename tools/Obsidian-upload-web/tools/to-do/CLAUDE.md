@@ -1,6 +1,6 @@
 # Leo Todo Engine 开发规范
 
-> Leo 自己的任务管理系统（SQLite 本地核心）。Microsoft To Do **只是外部任务同步来源**（经 Graph API），不是存储本体。宿主应用：LeoDiary Capture（`Obsidian-upload - web`），通过 `lib/modules/todo_window.py` 以独立窗口接入工具箱「✅ To Do」。
+> Leo 自己的任务管理系统（SQLite 本地核心）。Microsoft To Do **只是外部任务同步来源**（经 Graph API），不是存储本体。宿主应用：LeoDiary Capture（`Obsidian-upload-web`），通过 `lib/modules/todo_window.py` 以独立窗口接入工具箱「✅ To Do」。
 
 ---
 

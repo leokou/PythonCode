@@ -17,6 +17,8 @@ const themeSelects = {
 const msInput = document.getElementById("set-ms-client-id");
 const msSaveBtn = document.getElementById("btn-ms-save");
 
+const picgoSwitch = document.getElementById("set-picgo-switch");
+
 let toastTimer = null;
 function toast(msg, kind) {
   toastEl.textContent = msg;
@@ -93,6 +95,39 @@ msSaveBtn.addEventListener("click", saveMsConfig);
 msInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") saveMsConfig();
 });
+
+/* ---- 图片上传方式开关：加载 / 保存 ---- */
+async function loadPicgoSwitch() {
+  const a = api();
+  if (!a || !a.get_picgo_upload) return;
+  try {
+    const res = await a.get_picgo_upload();
+    if (res && res.ok) picgoSwitch.checked = !!res.enabled;
+  } catch (e) { /* ignore */ }
+}
+
+async function savePicgoSwitch() {
+  const a = api();
+  if (!a || !a.save_picgo_upload) {
+    toast("非桌面环境，无法保存", "err");
+    return;
+  }
+  const enabled = picgoSwitch.checked;
+  try {
+    const res = await a.save_picgo_upload(enabled);
+    if (res && res.ok) {
+      toast(enabled ? "已开启：粘贴图片上传到 PicGo / Cloudflare" : "已关闭：粘贴图片保存为附件", "ok");
+    } else {
+      toast((res && res.msg) || "保存失败", "err");
+      picgoSwitch.checked = !enabled;
+    }
+  } catch (e) {
+    toast("保存出错：" + e, "err");
+    picgoSwitch.checked = !enabled;
+  }
+}
+
+picgoSwitch.addEventListener("change", savePicgoSwitch);
 
 /* ---- 主题：四个窗口页签切换 ---- */
 const tabsContainer = document.getElementById("theme-tabs");
@@ -237,5 +272,6 @@ themeSubmitBtn.addEventListener("click", submitTheme);
   } catch (e) { /* ignore */ }
   await loadSettings();
   await loadMsConfig();
+  await loadPicgoSwitch();
   await loadThemes();
 })();

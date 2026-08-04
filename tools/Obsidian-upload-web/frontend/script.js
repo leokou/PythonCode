@@ -2078,27 +2078,32 @@ function _isFocusInPreview() {
   return false;
 }
 
+/* 插入上传成功结果：焦点在预览区 → 插入到预览区光标所在块末尾；否则编辑器光标处 */
+function insertUploadResult(res) {
+  if (_isFocusInPreview()) {
+    _insertImageToPreview(res);
+  } else {
+    view.focus();
+    const insert = res.markdown + "\n";
+    const pos = view.state.selection.main.head;
+    view.dispatch({
+      changes: { from: pos, insert },
+      selection: { anchor: pos + insert.length },
+    });
+  }
+  toast("图片已上传：已插入 " + res.url, "ok");
+  setStatus("上传成功：" + res.url);
+}
+
 async function uploadAndInsert(imgItem) {
   setStatus("正在上传图片到 PicGo…");
   try {
-    const blob = imgItem.getAsFile ? imgItem.getAsFile() : imgItem;
+    const blob = (imgItem && imgItem.getAsFile) ? imgItem.getAsFile() : imgItem;
+    if (!blob) throw new Error("无法读取图片数据");
     const dataUrl = await blobToDataURL(blob);
     const res = await pywebview.api.upload_image(dataUrl);
     if (res.ok) {
-      /* 焦点在预览区 → 插入到预览区光标所在块末尾 */
-      if (_isFocusInPreview()) {
-        _insertImageToPreview(res);
-      } else {
-        view.focus();
-        const insert = res.markdown + "\n";
-        const pos = view.state.selection.main.head;
-        view.dispatch({
-          changes: { from: pos, insert },
-          selection: { anchor: pos + insert.length },
-        });
-      }
-      toast("图片已上传：已插入 " + res.url, "ok");
-      setStatus("上传成功：" + res.url);
+      insertUploadResult(res);
     } else {
       toast("上传失败：" + res.msg, "err");
       setStatus("上传失败");
@@ -2256,10 +2261,58 @@ async function pasteHtmlContent(html, cd) {
   }
 }
 
-/* 图片粘贴（截图）：优先保存为附件，失败回退到 PicGo 上传 */
+/* 图片粘贴（截图 / 图片文件）：
+ * 开关开启（设置 → 图片上传到 PicGo）→ 直接走 PicGo 上传（→ Cloudflare），插入远程链接；
+ * 开关关闭（默认）→ 保存为本地附件，失败回退 PicGo 上传。 */
 async function pasteClipboardImage(imgItem) {
   setStatus("正在保存图片…");
   const a = (typeof pywebview !== "undefined" && pywebview.api) ? pywebview.api : null;
+  /* 实时读取图片上传开关（设置窗口修改后立即生效） */
+  let usePicgo = false;
+  if (a && a.get_picgo_upload) {
+    try {
+      const r = await a.get_picgo_upload();
+      usePicgo = !!(r && r.ok && r.enabled);
+    } catch (e) { /* 读取失败按关闭处理 */ }
+  }
+  if (usePicgo) {
+    /* 能拿到图片文件数据（复制图片文件）→ 前端直接上传 */
+    const blob = (imgItem && imgItem.getAsFile) ? imgItem.getAsFile() : imgItem;
+    if (blob) {
+      uploadAndInsert(imgItem);
+      return;
+    }
+    /* 剪贴板位图（截图）：getAsFile 返回 null，由后端读剪贴板位图上传；
+     * 上传失败时降级保存本地附件，保证截图不丢失。 */
+    if (a && a.upload_clipboard_image) {
+      try {
+        const res = await a.upload_clipboard_image();
+        if (res && res.ok && res.markdown) {
+          insertUploadResult(res);
+        } else {
+          toast("上传失败：" + (res && res.msg), "err");
+          setStatus("上传失败，回退本地附件");
+          const fb = await a.paste_clipboard_image();
+          if (fb && fb.ok && fb.markdown) {
+            _insertPasteText(fb.markdown);
+            toast("已回退保存到本地附件", "ok");
+          }
+        }
+        return;
+      } catch (err) {
+        toast("上传出错：" + err, "err");
+        setStatus("上传出错，回退本地附件");
+        try {
+          const fb = await a.paste_clipboard_image();
+          if (fb && fb.ok && fb.markdown) {
+            _insertPasteText(fb.markdown);
+            toast("已回退保存到本地附件", "ok");
+          }
+        } catch (e2) { /* 忽略 */ }
+        return;
+      }
+    }
+  }
   if (a && a.paste_clipboard_image) {
     try {
       const res = await a.paste_clipboard_image();
@@ -2558,7 +2611,7 @@ function setActiveTab(id) {
   });
 }
 
-/* 关闭 Tab：弹确认框（删除=红 / 保存=绿）；锁定页签不允许直接关闭 */
+/* 关闭 Tab：Inbox/FlashNote/日志弹窗确认（保存/删除），Capture 保持原有关闭即保存 */
 function closeTab(id) {
   const idx = tabs.findIndex((t) => t.id === id);
   if (idx < 0) return;
@@ -2567,20 +2620,36 @@ function closeTab(id) {
     toast("该页签已锁定，请先解锁后再关闭", "err");
     return;
   }
-  /* 关闭即保存：直接保存并关闭，不弹窗 */
-  doCloseTab(tab, false);
+  /* Capture 窗口：保持原有关闭即保存逻辑 */
+  if (CFG.windowType === "capture") {
+    doCloseTab(tab, false, false);
+    return;
+  }
+  /* Inbox / FlashNote / 日志：弹窗确认 */
+  TabManager.confirmClose(tab.title || "未命名", () => {
+    /* 删除：不保存，直接从页签栏消失 */
+    doCloseTab(tab, false, true);
+  }, () => {
+    /* 保存：保存内容后再关闭 */
+    doCloseTab(tab, false, false);
+  });
 }
 
-async function doCloseTab(tab, deleteFile) {
-  /* 关闭即保存：确保内容落盘 */
-  if (tab.external && tab.extPath) {
-    const content = tab.state.doc.toString();
-    await Storage.saveNowExternal(tab.extPath, content).catch(() => {});
-    /* 外部文件：不调用 closePage */
-  } else if (tab.pageId) {
-    const content = tab.state.doc.toString();
-    await Storage.saveNow(tab.pageId, content).catch(() => {});
-    await Storage.closePage(tab.pageId, false).catch(() => {});
+async function doCloseTab(tab, deleteFile, skipSave) {
+  /* 不保存模式：跳过保存，直接从页签栏消失 */
+  if (!skipSave) {
+    /* 关闭即保存：确保内容落盘 */
+    if (tab.external && tab.extPath) {
+      const content = tab.state.doc.toString();
+      await Storage.saveNowExternal(tab.extPath, content).catch(() => {});
+      /* 外部文件：不调用 closePage */
+    } else if (tab.pageId) {
+      const content = tab.state.doc.toString();
+      if (content.trim()) {
+        /* 保存到聚合文件（如 📦 inbox.md），触发完整保存流程 */
+        await pywebview.api.save_with_page(tab.pageId, content, false).catch(() => {});
+      }
+    }
   }
   clearTimeout(renameTimers[tab.id]);
   delete renameTimers[tab.id];

@@ -79,6 +79,7 @@ class Api:
             "layout": layout_store.load_layout(self.window_type),
             "theme": theme_store.get_theme(self.window_type),
             "attachmentsDir": self._attachments_dir(),
+            "picgoUpload": settings_store.get_picgo_upload(),
         }
 
     def _attachments_dir(self):
@@ -654,6 +655,10 @@ class Api:
             return False, "保存失败：%s" % e
 
     # ---- 图片上传 ----
+    def get_picgo_upload(self):
+        """图片上传开关（编辑窗口粘贴图片时实时读取，设置窗口改后立即生效）。"""
+        return {"ok": True, "enabled": settings_store.get_picgo_upload()}
+
     def upload_image(self, data_url):
         log_info("图片上传开始（%s）" % self.window_type)
         try:
@@ -665,7 +670,9 @@ class Api:
             ok, url, debug = uploader.upload_to_picgo(
                 png, name, self.cfg["picgo_api"])
             if not ok:
-                msg = debug.get("hint") or debug.get("service_status") or "上传失败"
+                msg = debug.get("hint") or debug.get("service_status") or (
+                    "上传失败（PicGo 返回格式异常，HTTP %s）"
+                    % debug.get("status", "?"))
                 mdlib.log_debug(
                     "==================\nUpload Failed\n==================\n%s"
                     % json.dumps(debug, ensure_ascii=False, indent=2),
@@ -683,6 +690,47 @@ class Api:
         except Exception as e:
             log_error("图片处理异常: %s" % e)
             return {"ok": False, "msg": "图片处理失败：%s" % e}
+
+    def upload_clipboard_image(self):
+        """剪贴板位图（截图）→ PicGo 上传 → 返回 Markdown 链接。
+
+        前端对剪贴板位图无法用 getAsFile 取到文件数据（返回 null），
+        必须由后端读剪贴板位图再上传。返回结构与 upload_image 一致。
+        """
+        log_info("剪贴板位图上传开始（%s）" % self.window_type)
+        try:
+            from lib.backend import uploader
+            from lib.backend import markdown as mdlib
+            img, err = uploader.clipboard_image()
+            if img is None:
+                return {"ok": False, "url": "", "markdown": "",
+                        "msg": err or "剪贴板没有图片"}
+            png = uploader.image_to_png_bytes(img)
+            name = uploader.picgo_filename()
+            ok, url, debug = uploader.upload_to_picgo(
+                png, name, self.cfg["picgo_api"])
+            if not ok:
+                msg = debug.get("hint") or debug.get("service_status") or (
+                    "上传失败（PicGo 返回格式异常，HTTP %s）"
+                    % debug.get("status", "?"))
+                mdlib.log_debug(
+                    "==================\nUpload Failed (clipboard)\n"
+                    "==================\n%s"
+                    % json.dumps(debug, ensure_ascii=False, indent=2),
+                    _main.log_dir())
+                log_error("剪贴板图片上传失败: %s" % msg)
+                return {"ok": False, "url": "", "markdown": "", "msg": msg}
+            link = uploader.generate_markdown(url)
+            mdlib.log_debug(
+                "==================\nUpload Success (clipboard)\n"
+                "==================\nOriginal File:\n%s\n\nRemote URL:\n%s\n\n"
+                "Markdown:\n%s\n==================" % (name, url, link),
+                _main.log_dir())
+            log_info("剪贴板图片上传成功: %s" % url)
+            return {"ok": True, "url": url, "markdown": link}
+        except Exception as e:
+            log_error("剪贴板图片处理异常: %s" % e)
+            return {"ok": False, "url": "", "markdown": "", "msg": "图片处理失败：%s" % e}
 
     # ---- 富文本粘贴：解析 HTML → 保存图片 → 返回 Obsidian Markdown ----
     def paste_html(self, content):
@@ -927,6 +975,18 @@ class SettingsApi:
         self.cfg["default_save_path"] = p
         log_info("设置窗口: 默认保存路径已更新: %s" % p)
         return {"ok": True, "path": p}
+
+    # ---- 图片上传开关（PicGo / 附件） ----
+    def get_picgo_upload(self):
+        return {"ok": True, "enabled": settings_store.get_picgo_upload()}
+
+    def save_picgo_upload(self, enabled):
+        """保存图片上传开关：True=粘贴图片走 PicGo（→ Cloudflare），False=存本地附件。"""
+        if not settings_store.save_picgo_upload(enabled):
+            return {"ok": False, "msg": "设置写入失败"}
+        log_info("设置窗口: 图片上传开关已更新: %s"
+                 % ("PicGo" if enabled else "附件"))
+        return {"ok": True, "enabled": bool(enabled)}
 
     # ---- 主题：选项列表 / 读取 / 保存（per-window 四个页签） ----
     def get_themes(self):

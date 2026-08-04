@@ -56,7 +56,7 @@ APP_TITLE = "LeoDiary Capture"
 DEFAULT_CONFIG = {
     "picgo_api": "http://127.0.0.1:36677/upload",
     "cloudflare_domain": "",
-    "inbox_file": r"D:\Obsidian\LeoDiary\My-Inbox.md",
+    "inbox_file": r"D:\Obsidian\LeoDiary\📦 inbox.md",
     "flashnote_file": r"D:\Obsidian\LeoDiary\🧠 FlashNote.md",
     "log_dir": r"D:\Obsidian\LeoDiary\Journals",
     "capture_file": r"D:\Obsidian\LeoDiary\A📥 收集（Capture）\Capture.md",
@@ -657,26 +657,40 @@ def main():
             _log_flush()
         except Exception:
             pass
+        # 关闭窗口可能阻塞：pywebview 销毁窗口内部用 WinForms Control.Invoke 同步分发
+        # 到 GUI 线程，在托盘线程调用存在死锁风险（实测偶发卡住，进程不退、托盘图标残留）。
+        # 因此把销毁动作放到后台线程并设置超时，无论销毁是否完成，超时后强制退出，
+        # 保证进程与托盘图标必定消失（数据已在上方 flush 落盘，os._exit 不会丢数据）。
+        def _shutdown_ui():
+            try:
+                for w in _windows.values():
+                    w.destroy()
+                for w in (_tools_window, _settings_window, _canvas_window):
+                    if w is not None:
+                        w.destroy()
+                todo_window.close()
+            except Exception:
+                pass
+            try:
+                if _canvas_server is not None:
+                    _canvas_server.stop()
+            except Exception:
+                pass
+
         try:
-            for w in _windows.values():
-                w.destroy()
-            if _tools_window is not None:
-                _tools_window.destroy()
-            if _settings_window is not None:
-                _settings_window.destroy()
-            if _canvas_window is not None:
-                _canvas_window.destroy()
-            todo_window.close()
+            _shutdown_t = threading.Thread(target=_shutdown_ui, daemon=True)
+            _shutdown_t.start()
+            _shutdown_t.join(timeout=5.0)
+            if _shutdown_t.is_alive():
+                log_warn("窗口销毁超时（5秒），强制退出进程")
         except Exception:
             pass
+
         try:
-            if _canvas_server is not None:
-                _canvas_server.stop()
-        except Exception:
-            pass
-        finally:
             _kill_other_instances()
-            os._exit(0)
+        except Exception:
+            pass
+        os._exit(0)
 
     threading.Thread(target=tray_run, daemon=True).start()
 

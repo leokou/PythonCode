@@ -50,6 +50,28 @@ def get_default_save_path(cfg=None):
     return DEFAULT_SAVE_PATH
 
 
+PICGO_UPLOAD_DEFAULT = False
+
+
+def get_picgo_upload():
+    """读取图片上传开关：True=粘贴图片上传到 PicGo（→ Cloudflare），False=保存为本地附件。"""
+    val = load_settings().get("picgo_upload")
+    return bool(val) if val is not None else PICGO_UPLOAD_DEFAULT
+
+
+def save_picgo_upload(enabled):
+    """写入图片上传开关到 settings.json（保留其他字段），返回是否成功。"""
+    try:
+        os.makedirs(os.path.dirname(settings_path()), exist_ok=True)
+        data = load_settings()
+        data["picgo_upload"] = bool(enabled)
+        with open(settings_path(), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
 def get_microsoft_config():
     """读取 settings.json 中的 microsoft 覆盖配置（可能不存在，返回空字典）。"""
     return load_settings().get("microsoft") or {}
