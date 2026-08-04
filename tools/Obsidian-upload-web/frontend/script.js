@@ -97,6 +97,24 @@ function _lineOf(raw) {
   return _renderDoc.slice(0, _renderPos).split("\n").length;
 }
 
+/* 从列表原始文本中提取每个 <li> 的起始行号（1 起），返回长度 = count 的数组。
+ * 扫描 raw 逐行识别列表标记（- / * / + / 数字.），按出现顺序分配行号。 */
+function _findListItemLines(raw, count) {
+  const lines = raw.split("\n");
+  const result = [];
+  const baseLine = _renderDoc.slice(0, _renderDoc.indexOf(raw, _renderPos) >= 0
+    ? _renderDoc.indexOf(raw, _renderPos) : _renderPos).split("\n").length;
+  for (let i = 0; i < lines.length && result.length < count; i++) {
+    const t = lines[i].trimStart();
+    if (/^[-*+]\s/.test(t) || /^\d+\.\s/.test(t)) {
+      result.push(baseLine + i);
+    }
+  }
+  /* 补齐：若 raw 解析出的标记行不足 items 数量（如多行 item），用最后一个行号兜底 */
+  while (result.length < count) result.push(result.length ? result[result.length - 1] + 1 : baseLine);
+  return result;
+}
+
 marked.use({
   renderer: {
     heading({ tokens, depth, raw }) {
@@ -119,9 +137,12 @@ marked.use({
     list({ ordered, start, items, raw }) {
       const tag = ordered ? "ol" : "ul";
       const startAttr = ordered && start !== 1 ? ` start="${start}"` : "";
+      /* 计算每个 <li> 的行号：扫描 raw 文本，识别列表标记行（- / * / + / 数字.） */
+      const itemLines = _findListItemLines(raw, items.length);
       let body = "";
-      for (const item of items) {
-        body += `<li>${this.parser.parse(item.tokens)}</li>`;
+      for (let i = 0; i < items.length; i++) {
+        const line = itemLines[i] || 0;
+        body += `<li data-line="${line}">${this.parser.parse(items[i].tokens)}</li>`;
       }
       return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
     },
@@ -152,6 +173,9 @@ function renderPreview() {
 
   /* 处理 [[wikilink]] 链接 */
   _processWikilinks();
+
+  /* 为预览区图片挂载放大镜按钮（本地附件 / PicGo 通用） */
+  _setupImageZoom();
 
   /* 清除上一轮的跨区高亮 */
   _clearCrossHighlight();
@@ -249,6 +273,85 @@ async function _resolveEmbedImages(pending) {
       }
     } catch (e) { /* ignore single image failure */ }
   }
+}
+
+/* ============ 预览区图片放大镜：悬浮按钮 + 点击放大预览 ============ */
+/* 覆盖两种图片：本地附件嵌入 ![[image.png]]（data URL）与 PicGo 远程图 ![alt](url) */
+function _setupImageZoom() {
+  const imgs = previewEl.querySelectorAll("img");
+  for (const img of imgs) {
+    if (img.closest(".img-zoom-wrap")) continue; /* 已包装（重复渲染防抖） */
+    const wrap = document.createElement("span");
+    wrap.className = "img-zoom-wrap";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "img-zoom-btn";
+    btn.title = "放大预览";
+    btn.tabIndex = -1;
+    btn.setAttribute("aria-label", "放大预览");
+    /* 内联 SVG 放大镜：无文本节点，不影响预览区 innerText diff 同步 */
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+    /* 阻止 mousedown 在 contenteditable 中移动光标 / 抢焦点 */
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      _openImageLightbox(img);
+    });
+    wrap.appendChild(btn);
+    img.parentNode.insertBefore(wrap, img);
+    wrap.appendChild(img);
+  }
+}
+
+/* 放大预览（lightbox）：支持本地附件 data URL 与 PicGo 远程 URL */
+let _imgLightboxEl = null;
+
+function _openImageLightbox(img) {
+  if (!img || !img.src) return;
+  _closeImageLightbox();
+
+  const overlay = document.createElement("div");
+  overlay.className = "img-lightbox";
+
+  const big = document.createElement("img");
+  big.src = img.src;
+  big.alt = img.alt || "";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "img-lightbox-close";
+  closeBtn.title = "关闭（Esc）";
+  closeBtn.setAttribute("aria-label", "关闭");
+  closeBtn.textContent = "✕";
+
+  overlay.appendChild(big);
+  overlay.appendChild(closeBtn);
+  document.body.appendChild(overlay);
+  _imgLightboxEl = overlay;
+
+  /* 点击背景 / ✕ / Esc 关闭；点击图片本身不关闭（便于查看细节） */
+  overlay.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeImageLightbox();
+  });
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _closeImageLightbox();
+  });
+  big.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("keydown", _imgLightboxKeydown);
+}
+
+function _imgLightboxKeydown(e) {
+  if (e.key === "Escape") _closeImageLightbox();
+}
+
+function _closeImageLightbox() {
+  if (!_imgLightboxEl) return;
+  _imgLightboxEl.remove();
+  _imgLightboxEl = null;
+  document.removeEventListener("keydown", _imgLightboxKeydown);
 }
 
 /* ============ 预览区 [[wikilink]] 处理 ============ */
