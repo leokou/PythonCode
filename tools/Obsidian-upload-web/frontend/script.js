@@ -2416,15 +2416,38 @@ const editorExtensions = [
       if (update.docChanged) {
         updateTabName(tab);
 
-        /* 跨区高亮跟随光标行更新。高亮只由 mouseup / 方向键 / focus 触发，打字和删除都不触发，
+        /* 跨区高亮跟随【变更点】更新。高亮只由 mouseup / 方向键 / focus 触发，打字和删除都不触发，
          * 而两侧高亮又是会被重排抹掉的纯 DOM class —— 这就是「删掉一个词后高亮消失、
-         * 要再点一下才亮」的成因。光标即编辑位置；预览区来源的变更经 CM6 change mapping
-         * 后光标同样落在编辑点。必须在 renderPreview 之前更新行号，否则那一帧会闪旧高亮。
+         * 要再点一下才亮」的成因。
+         *
+         * 注意不能用 state.selection.main.head：_syncPreviewToEditor 的 dispatch 不设 selection，
+         * CM6 的 change mapping 只把旧 selection 按 changes 平移、不会把光标移到编辑点，
+         * 于是预览区删词时读到的是「上一次编辑器操作留下的位置」→ 高亮跳到上次删除的那行。
+         * 变更点才是本次实际改动位置；编辑区自身编辑时它与光标一致，行为不变。
+         *
+         * 变更范围本身还不够精确：_applyDiffToMarkdown 是整块替换（fromB 指向块首行），
+         * _doPreviewUndoRedo / _doFullReplace 是整篇替换（fromB 恒为 0，会把高亮拽到第 1 行）。
+         * 故在范围内再取新旧文本的公共前缀末尾，定位到真正改动的字符。
+         *
+         * 必须在 renderPreview 之前更新行号，否则那一帧会闪旧高亮。
          * 仅在此前已有高亮时重建，不凭空产生高亮。 */
         const needRehighlight = _lastHighlightedLine > 0;
         if (needRehighlight) {
+          let changePos = -1;
           try {
-            _lastHighlightedLine = update.state.doc.lineAt(update.state.selection.main.head).number;
+            update.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+              if (changePos !== -1) return; /* 只取第一处变更 */
+              const oldText = update.startState.doc.sliceString(fromA, toA);
+              const newText = update.state.doc.sliceString(fromB, toB);
+              let i = 0;
+              const n = Math.min(oldText.length, newText.length);
+              while (i < n && oldText.charCodeAt(i) === newText.charCodeAt(i)) i++;
+              changePos = fromB + i;
+            });
+            if (changePos >= 0) {
+              changePos = Math.min(changePos, update.state.doc.length);
+              _lastHighlightedLine = update.state.doc.lineAt(changePos).number;
+            }
           } catch (e) { /* 保留原值 */ }
         }
 
