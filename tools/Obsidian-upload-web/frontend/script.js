@@ -142,7 +142,9 @@ marked.use({
       let body = "";
       for (let i = 0; i < items.length; i++) {
         const line = itemLines[i] || 0;
-        body += `<li data-line="${line}">${this.parser.parse(items[i].tokens)}</li>`;
+        /* 用 parseInline 而非 parse：列表项只有行内内容（文本、code、加粗等），
+         * parse 会生成多余的 <p> 标签干扰 data-line 精确匹配 */ 
+        body += `<li data-line="${line}">${this.parser.parseInline(items[i].tokens)}</li>`;
       }
       return `<${tag}${startAttr} data-line="${_lineOf(raw)}">${body}</${tag}>`;
     },
@@ -485,8 +487,11 @@ function _highlightLine(lineNum, scrollTarget) {
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
-  /* 高亮预览区对应 data-line 的块（预览区不虚拟化，总是可以高亮） */
-  let previewBlock = previewEl.querySelector(`[data-line="${lineNum}"]`);
+  /* 高亮预览区对应 data-line 的块（预览区不虚拟化，总是可以高亮）
+   * 可能有多个元素共享 data-line（如 <ul> 与 <li>），取 DOM 序最后一个（最深嵌套），
+   * 避免高亮到容器元素导致多行全亮。 */
+  const allMatches = previewEl.querySelectorAll(`[data-line="${lineNum}"]`);
+  let previewBlock = allMatches.length ? allMatches[allMatches.length - 1] : null;
   if (!previewBlock) {
     const allBlocks = previewEl.querySelectorAll("[data-line]");
     let bestBlock = null;
@@ -1249,16 +1254,11 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
 }
 
 /* ============ 预览区普通输入同步（保留 Markdown 语法） ============ */
-previewEl.addEventListener("input", () => {
+/* beforeinput：DOM 变更前捕获编辑前基准（innerText 此时还是编辑前文本）。
+ * 若在 input 事件里保存基准，innerText 已是编辑后文本 → 首次编辑 diff 基准
+ * 与 newPlainText 相同 → diff null 不同步；后续删除/输入位置错位。 */
+previewEl.addEventListener("beforeinput", () => {
   if (_previewEditing || _pendingAction) return;
-
-  /* 首次输入：保存历史快照用于撤销 */
-  if (!_previewInputActive) {
-    _savePreviewHistory();
-    _previewInputActive = true;
-  }
-
-  /* 保存编辑前的状态：用于 diff 计算和光标恢复 */
   const block = _findCursorBlock();
   if (block && block !== _lastEditedBlock) {
     _lastEditedBlock = block;
@@ -1276,10 +1276,20 @@ previewEl.addEventListener("input", () => {
         }
         const lineEnd = (endLine <= doc.lines) ? doc.line(endLine).to : doc.length;
         _oldBlockMarkdown = doc.sliceString(lineStart, lineEnd);
-        _oldBlockPlainText = block.innerText;
+        _oldBlockPlainText = block.innerText; /* 编辑前文本 */
         _oldBlockLine = blockLine;
       }
     }
+  }
+});
+
+previewEl.addEventListener("input", () => {
+  if (_previewEditing || _pendingAction) return;
+
+  /* 首次输入：保存历史快照用于撤销 */
+  if (!_previewInputActive) {
+    _savePreviewHistory();
+    _previewInputActive = true;
   }
 
   clearTimeout(_previewSyncTimer);
@@ -1610,7 +1620,9 @@ function _restorePreviewCursor(targetLine, newPlainText, diff) {
   while ((node = walker.nextNode())) {
     const len = node.nodeValue.length;
     if (remaining <= len) {
-      range.setStart(node, Math.max(0, Math.min(remaining, len - 1)));
+      /* 注意：不能 clamp 到 len-1——光标位于文本末尾（remaining === len）时
+       * 会被挪到倒数第二个字符后，下次 Backspace 删错字 */
+      range.setStart(node, Math.max(0, Math.min(remaining, len)));
       range.collapse(true);
       found = true;
       break;
