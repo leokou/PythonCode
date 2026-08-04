@@ -534,7 +534,7 @@ function _getPreviewBlockRatio(block) {
 function _highlightLine(lineNum, scrollTarget) {
   /* 防御：无效行号（如嵌套块产生的 data-line="0"）不处理 */
   if (lineNum <= 0) return;
-  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的滚动触发 */
+  if (_previewSyncActive || _inPreviewSync()) return; /* 预览区同步期间：阻止任何来源的滚动触发 */
   _clearCrossHighlight();
   _lastHighlightedLine = lineNum;
 
@@ -711,6 +711,8 @@ let _previewInputActive = false;  /* 当前是否处于输入会话中 */
 let _skipNextInputFlag = false;  /* 一次性：跳过由 <br> 插入引发的下一个杂散 input 事件 */
 let _previewSyncActive = false;  /* 预览区驱动的同步进行中：屏蔽编辑器被 dispatch 抢焦点后反向滚动预览区 */
 let _previewSyncSafety = null;   /* 安全兜底：预览区编辑 500ms 后自动复位 _previewSyncActive */
+let _previewSyncUntil = 0;       /* 预览区同步窗口截止时间戳(ms)：覆盖 input+debounce(200ms)+dispatch+渲染，消除 rAF 复位与 focus 事件派发的竞态 */
+function _inPreviewSync() { return Date.now() < _previewSyncUntil; }
 let _savedPreviewScrollBeforeEdit = null; /* 编辑前预览区滚动位置：同步完成后复原以抵消浏览器原生 contenteditable 滚动 */
 
 /* 预览区失焦时重置输入会话标记 */
@@ -1183,13 +1185,6 @@ function _scrollPreviewCursorIntoView() {
 
   if (target === null) return;
 
-  /* DEBUG: 每次实际滚动都 toast，定位是否为本函数导致跳转 */
-  if (typeof toast === "function") {
-    const h = block.querySelector("h1,h2,h3,h4,h5,h6");
-    const label = h ? h.textContent.trim().substring(0, 30) : block.textContent.trim().substring(0, 30);
-    toast(`📜 scrollCursor: ${label} delta=${Math.round(delta)}`, "info");
-  }
-
   previewEl.scrollTop = target;
   if (needGuard) {
     /* 仅末尾回车：抑制 200ms 内 cursorFollowPlugin 编辑器滚动触发的 editor→preview 同步，
@@ -1304,6 +1299,7 @@ function _mergeBlocksInMarkdown(curLine, nextLine, caretOffset) {
   _previewEditing = true;
   _skipPreviewRerender = true;
   _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
+    _previewSyncUntil = Date.now() + 600; /* deadline：覆盖 input+debounce+dispatch+渲染，消除与 focus 事件派发的竞态 */
 
   view.dispatch({
     changes: { from, to, insert: stripped },
@@ -1448,6 +1444,7 @@ function _doPreviewEnter(isSoftEnter) {
   _previewEditing = true;
   _skipPreviewRerender = true;
   _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
+    _previewSyncUntil = Date.now() + 600; /* deadline：覆盖 input+debounce+dispatch+渲染，消除与 focus 事件派发的竞态 */
 
   /* 在 markdown 中插入换行符（删除尾部空格） */
   view.dispatch({
@@ -1703,6 +1700,7 @@ function _findPlainOffsetFromMdPos(mdText, mdOffset) {
 previewEl.addEventListener("beforeinput", () => {
   if (_previewEditing || _pendingAction) return;
   _previewSyncActive = true; /* 抑制双向滚动同步：原生 contenteditable 编辑期间两侧内容短期不同步 */
+    _previewSyncUntil = Date.now() + 600; /* deadline：覆盖 input+debounce+dispatch+渲染，消除与 focus 事件派发的竞态 */
   _savedPreviewScrollBeforeEdit = previewEl.scrollTop; /* 保存编辑前位置：同步后复原以抵消浏览器原生滚动 */
   clearTimeout(_previewSyncSafety);
   _previewSyncSafety = setTimeout(() => { _previewSyncActive = false; }, 500);
@@ -1811,6 +1809,7 @@ function _syncPreviewToEditor() {
     _previewEditing = true;
     _skipPreviewRerender = true;
     _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
+    _previewSyncUntil = Date.now() + 600; /* deadline：覆盖 input+debounce+dispatch+渲染，消除与 focus 事件派发的竞态 */
 
     view.dispatch({
       changes: { from: fromPos, to: toPos, insert: newMarkdown }
@@ -2040,6 +2039,7 @@ function _doFullReplace(newText, tab) {
   _previewEditing = true;
   _skipPreviewRerender = true;
   _previewSyncActive = true; /* 屏蔽编辑器 dispatch 抢占焦点后反向滚动预览区 */
+    _previewSyncUntil = Date.now() + 600; /* deadline：覆盖 input+debounce+dispatch+渲染，消除与 focus 事件派发的竞态 */
 
   view.dispatch({
     changes: { from: 0, to: tab.state.doc.length, insert: newText }
@@ -2538,7 +2538,7 @@ view = new EditorView({ parent: editorEl, extensions: editorExtensions });
     _highlightLine(lineNum, "preview");
   });
   view.dom.addEventListener("focus", () => {
-    if (_previewSyncActive) return; /* 预览区同步途中：编辑器被 dispatch 临时抢焦点，勿反向滚动/高亮预览 */
+    if (_previewSyncActive || _inPreviewSync()) return; /* 预览区同步途中：编辑器被 dispatch 临时抢焦点，勿反向滚动/高亮预览 */
     const head = view.state.selection.main.head;
     const doc = view.state.doc;
     const lineNum = doc.lineAt(head).number;
@@ -2750,17 +2750,9 @@ function findPreviewBlockForLine(line) {
 }
 
 function scrollPreviewToLine(line, ratio) {
-  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
+  if (_previewSyncActive || _inPreviewSync()) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
   const b = findPreviewBlockForLine(line);
   if (b) {
-    /* DEBUG: 检测是否有异常调用把预览滚到了标题行 */
-    if (b.querySelector("h1,h2,h3,h4,h5,h6")) {
-      const h = b.querySelector("h1,h2,h3,h4,h5,h6").textContent.trim().substring(0, 50);
-      const stack = new Error().stack || "";
-      const caller = (stack.split("\n")[2] || "").trim();
-      console.warn(`[scrollPreviewToLine] → #${line} "${h}" | caller: ${caller}`);
-      if (typeof toast === "function") toast(`📌 跳转到: ${h} (行${line})`, "info");
-    }
     /* ratio: 目标行在视口中的目标相对位置（0=顶部, 1=底部），默认 0.2 */
     const r = (typeof ratio === "number") ? Math.max(0, Math.min(1, ratio)) : 0.2;
     previewEl.scrollTop = Math.max(0, b.offsetTop - previewEl.clientHeight * r);
@@ -2768,7 +2760,7 @@ function scrollPreviewToLine(line, ratio) {
 }
 
 function scrollEditorToLine(line, ratio) {
-  if (_previewSyncActive) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
+  if (_previewSyncActive || _inPreviewSync()) return; /* 预览区同步期间：阻止任何来源的反向滚动 */
   const doc = view.state.doc;
   if (line < 1 || line > doc.lines) return;
   const block = view.lineBlockAt(doc.line(line).from);
@@ -2779,7 +2771,7 @@ function scrollEditorToLine(line, ratio) {
 }
 
 view.scrollDOM.addEventListener("scroll", () => {
-  if (syncing || _cursorSyncActive || _previewSyncActive) return;
+  if (syncing || _cursorSyncActive || _previewSyncActive || _inPreviewSync()) return;
   syncing = true;
   const pos = view.lineBlockAtHeight(view.scrollDOM.scrollTop).from;
   const line = view.state.doc.lineAt(pos).number;
@@ -2788,7 +2780,7 @@ view.scrollDOM.addEventListener("scroll", () => {
 });
 
 previewEl.addEventListener("scroll", () => {
-  if (syncing || _cursorSyncActive || _previewSyncActive) return;
+  if (syncing || _cursorSyncActive || _previewSyncActive || _inPreviewSync()) return;
   syncing = true;
   const blocks = previewEl.querySelectorAll("[data-line]");
   const viewTop = previewEl.scrollTop + 10;
