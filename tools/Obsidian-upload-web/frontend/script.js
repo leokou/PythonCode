@@ -1761,7 +1761,11 @@ function _restorePreviewCursor(targetLine, newPlainText, diff) {
 
   sel.removeAllRanges();
   sel.addRange(range);
-  targetBlock.scrollIntoView({ block: "nearest", behavior: "auto" });
+  /* 用 _scrollPreviewCursorIntoView 代替 scrollIntoView：
+   * scrollIntoView 会遍历所有可滚动祖先（可能滚动外层容器 → 跳首页/乱飘），
+   * 且 block:nearest 在未重新渲染时（diff 同步场景）完全多余。
+   * _scrollPreviewCursorIntoView 用 getBoundingClientRect + delta 仅在需要时滚动，体验平滑。 */
+  _scrollPreviewCursorIntoView();
 }
 
 /* ============ 预览区右键菜单：复制/剪切/粘贴/全选 ============ */
