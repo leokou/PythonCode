@@ -89,16 +89,10 @@ const Outline = (() => {
     }
   }
 
-  /* 光标位置变化 → 高亮最近标题章节 */
-  function highlightAtPos(pos) {
-    const line = lineFromPos(pos);
-    let best = null;
-    for (const it of items) {
-      if (it.line <= line) best = it; else break;
-    }
-    const nextActive = best ? best.line : 0;
-    if (nextActive === activeLine) return;
-    activeLine = nextActive;
+  /* 统一设置当前高亮章节（点击与光标移动共用）：切换 active 类并把该项滚入可视区 */
+  function setActive(line) {
+    if (line === activeLine) return;
+    activeLine = line;
     if (!container) return;
     const prev = container.querySelector(".outline-item.active");
     if (prev) prev.classList.remove("active");
@@ -109,6 +103,16 @@ const Outline = (() => {
         scrollActiveIntoView();
       }
     }
+  }
+
+  /* 光标位置变化 → 高亮最近标题章节 */
+  function highlightAtPos(pos) {
+    const line = lineFromPos(pos);
+    let best = null;
+    for (const it of items) {
+      if (it.line <= line) best = it; else break;
+    }
+    setActive(best ? best.line : 0);
   }
 
   function bind(hooks) {
@@ -126,7 +130,9 @@ const Outline = (() => {
       const item = e.target.closest(".outline-item");
       if (!item) return;
       const line = parseInt(item.getAttribute("data-line"), 10);
-      if (isFinite(line)) scrollToLine(line);
+      if (!isFinite(line)) return;
+      setActive(line);      /* 点击即高亮选中，不依赖后续光标移动 */
+      scrollToLine(line);   /* 同时定位编辑器 + 预览区到该标题 */
     });
   }
 
