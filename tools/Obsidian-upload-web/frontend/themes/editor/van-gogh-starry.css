@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Van Gogh Starry（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="van-gogh-starry"] {
+  --cm-bg: #101A33;
+  --cm-fg: #DCE4F2;
+  --cm-gutter-bg: #101A33;
+  --cm-gutter-fg: #8393B8;
+  --cm-gutter-border: #27355C;
+  --cm-active-line: rgba(255,255,255,.045);
+  --cm-active-line-gutter: rgba(255,255,255,.075);
+  --cm-cursor: #F2C14E;
+  --cm-selection: rgba(78,124,196,.32);
+  --cm-search-match: rgba(58,58,24,.75);
+  --cm-fold-bg: #1A2647;
+  --cm-fold-border: #27355C;
+  --cm-fold-fg: #8393B8;
+  --cm-heading1-color: #F2C14E;
+  --cm-heading2-color: #6BB8C4;
+  --cm-heading3-color: #A8C4E8;
+  --cm-heading4-color: #B49AE0;
+  --cm-heading5-color: #DCE4F2;
+  --cm-heading6-color: #8393B8;
+  --cm-strong-color: #F2A03C;
+  --cm-emphasis-color: #B49AE0;
+  --cm-strikethrough-color: #8393B8;
+  --cm-highlight-bg: #3A3A18;
+  --cm-highlight-color: #DCE4F2;
+  --cm-inline-code-bg: #1A2647;
+  --cm-inline-code-color: #7FE0C4;
+  --cm-codeblock-bg: #1A2647;
+  --cm-codeblock-border: #27355C;
+  --cm-codeblock-color: #DCE4F2;
+  --cm-link-color: #7FB2F0;
+  --cm-url-color: #7FB2F0;
+  --cm-wikilink-color: #7FB2F0;
+  --cm-wikilink-bg: rgba(127,178,240,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #8FC46B;
+  --cm-blockquote-color: #8393B8;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #27355C;
+  --cm-list-marker-color: #F2C14E;
+  --cm-task-done-color: #8FC46B;
+  --cm-task-undone-color: #8393B8;
+  --cm-table-border: #27355C;
+  --cm-table-header-bg: #1A2647;
+  --cm-hr-color: #27355C;
+  --cm-yaml-bg: #1A2647;
+  --cm-yaml-border: #27355C;
+  --cm-yaml-key-color: #F2C14E;
+  --cm-yaml-value-color: #7FB2F0;
+  --cm-formatting-color: #8A9AC0;
+}

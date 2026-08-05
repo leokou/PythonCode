@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body{margin:0}
+#preview{height:300px;overflow-y:auto;padding:16px 22px;background:#fff;font-size:16px;line-height:1.6}
+#preview p{margin:0;padding:4px 0}
+</style>
+</head>
+<body>
+<div id="preview" contenteditable="true"></div>
+<pre id="result">PENDING</pre>
+<script>
+"use strict";
+const previewEl = document.getElementById("preview");
+/* 构造 200 个块 */
+let html = "";
+for (let i = 1; i <= 200; i++) html += `<p data-line="${i}">line ${i} - 0123456789 文本内容</p>`;
+previewEl.innerHTML = html;
+
+/* 复刻 _findCursorBlock */
+function _findCursorBlock() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  let node = sel.anchorNode;
+  if (!node) return null;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+  while (node && node !== previewEl) {
+    if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute && node.hasAttribute("data-line")) return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+/* 复刻 _scrollPreviewCursorIntoView（getBoundingClientRect 版） */
+function _scrollPreviewCursorIntoView() {
+  const block = _findCursorBlock();
+  if (!block) return;
+  const sh = previewEl.clientHeight;
+  if (sh === 0) return;
+  const pr = previewEl.getBoundingClientRect();
+  const br = block.getBoundingClientRect();
+  const relTop = br.top - pr.top;
+  const relBottom = br.bottom - pr.top;
+  let delta = 0;
+  if (relTop < 10) delta = relTop - 10;
+  else if (relBottom > sh - 24) delta = relBottom - (sh - 24);
+  if (delta === 0) return;
+  const maxScroll = Math.max(0, previewEl.scrollHeight - sh);
+  previewEl.scrollTop = Math.max(0, Math.min(previewEl.scrollTop + delta, maxScroll));
+}
+
+/* 光标放到最后一个块末尾 */
+const blocks = previewEl.querySelectorAll("[data-line]");
+const last = blocks[blocks.length - 1];
+const sel = window.getSelection();
+const r = document.createRange();
+r.selectNodeContents(last);
+r.collapse(false);
+sel.removeAllRanges();
+sel.addRange(r);
+
+const st0 = previewEl.scrollTop;
+_scrollPreviewCursorIntoView();
+const st1 = previewEl.scrollTop;
+
+/* 验证：滚动后光标块是否在视口内 */
+const pr = previewEl.getBoundingClientRect();
+const br = last.getBoundingClientRect();
+const visible = br.top >= pr.top - 1 && br.bottom <= pr.bottom + 1;
+
+document.getElementById("result").textContent =
+  "RESULT=" + JSON.stringify({ st0, st1, scrollHeight: previewEl.scrollHeight,
+    clientHeight: previewEl.clientHeight, cursorBlockVisible: visible,
+    relTop: br.top - pr.top, relBottom: br.bottom - pr.top });
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Saul Bass Noir（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="saul-bass-noir"] {
+  --cm-bg: #121212;
+  --cm-fg: #EDE7DD;
+  --cm-gutter-bg: #121212;
+  --cm-gutter-fg: #9A9187;
+  --cm-gutter-border: #33302C;
+  --cm-active-line: rgba(255,255,255,.045);
+  --cm-active-line-gutter: rgba(255,255,255,.075);
+  --cm-cursor: #E03C31;
+  --cm-selection: rgba(240,138,36,.32);
+  --cm-search-match: rgba(74,42,20,.75);
+  --cm-fold-bg: #1E1C1A;
+  --cm-fold-border: #33302C;
+  --cm-fold-fg: #9A9187;
+  --cm-heading1-color: #E03C31;
+  --cm-heading2-color: #F08A24;
+  --cm-heading3-color: #C4A87A;
+  --cm-heading4-color: #D9B26B;
+  --cm-heading5-color: #EDE7DD;
+  --cm-heading6-color: #9A9187;
+  --cm-strong-color: #FF5C4D;
+  --cm-emphasis-color: #D9B26B;
+  --cm-strikethrough-color: #9A9187;
+  --cm-highlight-bg: #4A2A14;
+  --cm-highlight-color: #EDE7DD;
+  --cm-inline-code-bg: #1E1C1A;
+  --cm-inline-code-color: #F2765C;
+  --cm-codeblock-bg: #1E1C1A;
+  --cm-codeblock-border: #33302C;
+  --cm-codeblock-color: #EDE7DD;
+  --cm-link-color: #E8A33C;
+  --cm-url-color: #E8A33C;
+  --cm-wikilink-color: #E8A33C;
+  --cm-wikilink-bg: rgba(232,163,60,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #8FA35B;
+  --cm-blockquote-color: #9A9187;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #33302C;
+  --cm-list-marker-color: #E03C31;
+  --cm-task-done-color: #8FA35B;
+  --cm-task-undone-color: #9A9187;
+  --cm-table-border: #33302C;
+  --cm-table-header-bg: #1E1C1A;
+  --cm-hr-color: #33302C;
+  --cm-yaml-bg: #1E1C1A;
+  --cm-yaml-border: #33302C;
+  --cm-yaml-key-color: #E03C31;
+  --cm-yaml-value-color: #E8A33C;
+  --cm-formatting-color: #A09589;
+}

@@ -1,0 +1,30 @@
+/* 窗口主题 —— Material 3 淡紫（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="material3-purple"] {
+  --bg-main: #FEF7FF;  /* 窗口主背景 */
+  --bg-editor: #FFFBFF;  /* 编辑区背景 */
+  --bg-preview: #FFFFFF;  /* 预览区背景 */
+  --bg-2: #F3EDF7;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #E8DEF8;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #EFE7F6;  /* 悬浮背景 */
+  --text-color: #1D1B20;  /* 普通正文 */
+  --title-color: #21005D;  /* 标题文字 */
+  --h1-color: #21005D;  /* 一级标题 */
+  --text-dim: #79747E;  /* 辅助文字 */
+  --border-color: #CAC4D0;  /* 边框 */
+  --quote-color: #B9B2C4;  /* 引用竖线 */
+  --scroll-thumb: #CAC4D0;  /* 滚动条 */
+  --accent: #6750A4;  /* 强调色 */
+  --accent-strong: #4F378B;  /* 强调色加深 */
+  --accent-soft: rgba(103,80,164,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(103,80,164,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(0,0,0,.06);  /* 图标按钮悬浮 */
+  --success: #146C2E;  /* 成功色 */
+  --error: #B3261E;  /* 错误色 */
+  --code-bg: #F0EAF6;  /* 代码块背景 */
+  --code-text: #1D1B20;  /* 代码块文字 */
+  --toast-bg: #322F35;  /* Toast 背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.10);  /* 阴影 */
+  --glass-bg: rgba(243,237,247,.80);  /* 玻璃面板背景 */
+  --glass-border: rgba(202,196,208,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.10);  /* 玻璃面板阴影 */
+}

@@ -80,6 +80,8 @@ class Api:
             "theme": theme_store.get_theme(self.window_type),
             "attachmentsDir": self._attachments_dir(),
             "picgoUpload": settings_store.get_picgo_upload(),
+            "zoom": settings_store.get_zoom(),
+            "previewToolbarOrder": settings_store.get_preview_toolbar_order(),
         }
 
     def _attachments_dir(self):
@@ -112,6 +114,28 @@ class Api:
         ok, msg, theme = theme_store.save_theme(self.window_type, window_theme, editor, preview)
         log_info("主题已保存 (%s): %s" % (self.window_type, theme))
         return {"ok": ok, "msg": msg, "theme": theme}
+
+    # ---- 显示缩放：读取 / 保存（编辑区 + 预览区，百分比整数） ----
+    def get_zoom(self):
+        return settings_store.get_zoom()
+
+    def save_zoom(self, editor_zoom=100, preview_zoom=100):
+        ok = settings_store.save_zoom(editor_zoom, preview_zoom)
+        if ok:
+            log_info("显示缩放已保存(%s): editor=%s preview=%s" % (self.window_type, editor_zoom, preview_zoom))
+        return {"ok": ok}
+
+    # ---- 预览区工具栏顺序：读取 / 保存（拖拽排序，重启保持） ----
+    def get_preview_toolbar_order(self):
+        return settings_store.get_preview_toolbar_order()
+
+    def save_preview_toolbar_order(self, order):
+        if not isinstance(order, list):
+            return {"ok": False, "msg": "顺序数据无效"}
+        ok = settings_store.save_preview_toolbar_order(order)
+        if ok:
+            log_info("预览区工具栏顺序已保存(%s): %s" % (self.window_type, order))
+        return {"ok": ok}
 
     # ---- 历史记录 ----
     def get_history(self, limit=100):
@@ -906,7 +930,7 @@ class Api:
         return True
 
     def open_canvas(self):
-        if _main._canvas_window is not None:
+        if _main._ensure_canvas():
             _main._safe_show_window(_main._canvas_window)
             log_info("打开画布窗口（来源: %s）" % self.window_type)
         return True
@@ -921,8 +945,8 @@ class Api:
     # ---- 导入当前页签 Markdown 到 Drawnix 画布（思维导图） ----
     def import_markdown_to_canvas(self, md_text):
         try:
-            if _main._canvas_server is None:
-                raise RuntimeError("画布 HTTP 服务未启动")
+            if not _main._ensure_canvas():
+                raise RuntimeError("画布初始化失败")
             # markdown 文本交给 Drawnix 官方 parseMarkdownToDrawnix 解析为思维导图
             _main._canvas_server.submit_import({"markdown": md_text or ""})
             if _main._canvas_window is not None:

@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Mondrian Grid（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="mondrian-grid"] {
+  --cm-bg: #FCFCFA;
+  --cm-fg: #111111;
+  --cm-gutter-bg: #FCFCFA;
+  --cm-gutter-fg: #8C8C86;
+  --cm-gutter-border: #D7D7D0;
+  --cm-active-line: rgba(17,17,17,.05);
+  --cm-active-line-gutter: rgba(17,17,17,.09);
+  --cm-cursor: #111111;
+  --cm-selection: rgba(0,63,135,.25);
+  --cm-search-match: rgba(251,239,154,.75);
+  --cm-fold-bg: #F1F1EC;
+  --cm-fold-border: #D7D7D0;
+  --cm-fold-fg: #8C8C86;
+  --cm-heading1-color: #D42027;
+  --cm-heading2-color: #003F87;
+  --cm-heading3-color: #B58900;
+  --cm-heading4-color: #6B21A8;
+  --cm-heading5-color: #111111;
+  --cm-heading6-color: #8C8C86;
+  --cm-strong-color: #A8161C;
+  --cm-emphasis-color: #6B21A8;
+  --cm-strikethrough-color: #8C8C86;
+  --cm-highlight-bg: #FBEF9A;
+  --cm-highlight-color: #111111;
+  --cm-inline-code-bg: #F1F1EC;
+  --cm-inline-code-color: #BE123C;
+  --cm-codeblock-bg: #F1F1EC;
+  --cm-codeblock-border: #D7D7D0;
+  --cm-codeblock-color: #111111;
+  --cm-link-color: #0369A1;
+  --cm-url-color: #0369A1;
+  --cm-wikilink-color: #0369A1;
+  --cm-wikilink-bg: rgba(3,105,161,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #15803D;
+  --cm-blockquote-color: #8C8C86;
+  --cm-blockquote-bg: rgba(17,17,17,.035);
+  --cm-blockquote-border: #D7D7D0;
+  --cm-list-marker-color: #D42027;
+  --cm-task-done-color: #15803D;
+  --cm-task-undone-color: #8C8C86;
+  --cm-table-border: #D7D7D0;
+  --cm-table-header-bg: #F1F1EC;
+  --cm-hr-color: #D7D7D0;
+  --cm-yaml-bg: #F1F1EC;
+  --cm-yaml-border: #D7D7D0;
+  --cm-yaml-key-color: #D42027;
+  --cm-yaml-value-color: #0369A1;
+  --cm-formatting-color: #A8A8A0;
+}

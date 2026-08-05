@@ -1,0 +1,30 @@
+/* 窗口主题 —— 腾讯 TDesign（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="tdesign-blue"] {
+  --bg-main: #F3F3F3;  /* 窗口主背景 */
+  --bg-editor: #FFFFFF;  /* 编辑区背景 */
+  --bg-preview: #FFFFFF;  /* 预览区背景 */
+  --bg-2: #F5F5F5;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #EAEAEA;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #F0F1F5;  /* 悬浮背景 */
+  --text-color: #2B2E33;  /* 普通正文 */
+  --title-color: #181B21;  /* 标题文字 */
+  --h1-color: #181B21;  /* 一级标题 */
+  --text-dim: #767C86;  /* 辅助文字 */
+  --border-color: #DCDCDC;  /* 边框 */
+  --quote-color: #C5C7CB;  /* 引用竖线 */
+  --scroll-thumb: #C0C3C9;  /* 滚动条 */
+  --accent: #0052D9;  /* 强调色 */
+  --accent-strong: #003CAB;  /* 强调色加深 */
+  --accent-soft: rgba(0,82,217,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(0,82,217,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(0,0,0,.06);  /* 图标按钮悬浮 */
+  --success: #2BA471;  /* 成功色 */
+  --error: #D54941;  /* 错误色 */
+  --code-bg: #F3F3F3;  /* 代码块背景 */
+  --code-text: #2B2E33;  /* 代码块文字 */
+  --toast-bg: #242933;  /* Toast 背景 */
+  --shadow: 0 6px 24px rgba(0,0,0,.10);  /* 阴影 */
+  --glass-bg: rgba(245,245,245,.86);  /* 玻璃面板背景 */
+  --glass-border: rgba(220,220,220,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 0 6px 24px rgba(0,0,0,.10);  /* 玻璃面板阴影 */
+}

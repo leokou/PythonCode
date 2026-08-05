@@ -1,0 +1,30 @@
+/* 预览主题 —— Dracula 德古拉（由 gen_preview_themes.py 生成，勿手改） */
+body[data-preview-theme="dracula-preview"] .preview-body {
+  background: #282A36;
+  color: #F8F8F2;
+  font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.75;
+  padding: 36px 44px;
+}
+body[data-preview-theme="dracula-preview"] .preview-body h1 { color: #BD93F9; font-size: 2.0em; font-weight: 700; text-align: left; border-bottom: none; padding-bottom: 0; }
+body[data-preview-theme="dracula-preview"] .preview-body h2 { color: #FF79C6; font-size: 1.55em; font-weight: 700; border-bottom: 1px solid #44475A; padding-bottom: 0.25em; }
+body[data-preview-theme="dracula-preview"] .preview-body h3 { color: #8BE9FD; font-size: 1.25em; font-weight: 600; }
+body[data-preview-theme="dracula-preview"] .preview-body h4,
+body[data-preview-theme="dracula-preview"] .preview-body h5,
+body[data-preview-theme="dracula-preview"] .preview-body h6 { color: #F8F8F2; font-style: normal; }
+body[data-preview-theme="dracula-preview"] .preview-body a { color: #8BE9FD; text-decoration: underline; }
+body[data-preview-theme="dracula-preview"] .preview-body strong { color: #FFB86C; }
+body[data-preview-theme="dracula-preview"] .preview-body em { color: #F1FA8C; }
+body[data-preview-theme="dracula-preview"] .preview-body code { background: #44475A; color: #50FA7B; padding: 0.2em 0.4em; border-radius: 5px; font-size: 85%; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; }
+body[data-preview-theme="dracula-preview"] .preview-body pre { background: #21222C; border: 1px solid #44475A; border-radius: 5px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="dracula-preview"] .preview-body pre code { background: none; padding: 0; color: #F8F8F2; font-size: 85%; }
+body[data-preview-theme="dracula-preview"] .preview-body blockquote { border-left: 4px solid #BD93F9; background: #31333F; color: #BFC0C7; padding: 10px 18px; margin: 16px 0; border-radius: 0 5px 5px 0; font-style: normal; }
+body[data-preview-theme="dracula-preview"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="dracula-preview"] .preview-body th { background: #44475A; color: #F8F8F2; border: 1px solid #44475A; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="dracula-preview"] .preview-body td { border: 1px solid #44475A; padding: 8px 13px; }
+body[data-preview-theme="dracula-preview"] .preview-body hr { border: none; border-top: 1px solid #44475A; margin: 24px 0; }
+body[data-preview-theme="dracula-preview"] .preview-body ul,
+body[data-preview-theme="dracula-preview"] .preview-body ol { padding-left: 1.9em; }
+body[data-preview-theme="dracula-preview"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="dracula-preview"] .preview-body img { max-width: 100%; border-radius: 6px; }
+body[data-preview-theme="dracula-preview"] .preview-body::-webkit-scrollbar-thumb { background: #6272A4; }

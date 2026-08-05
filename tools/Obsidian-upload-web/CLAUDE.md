@@ -2,7 +2,7 @@
 
 项目名称：LeoDiary Capture（Obsidian-upload-web）
 技术栈：Python + HTML/CSS/JS + Edge WebView2（pywebview 6.x）+ CodeMirror 6 + marked.js
-打包：PyInstaller 单文件 EXE（由用户手动运行 build.bat 打包，AI 禁止自动执行打包命令）
+打包：PyInstaller onedir 单文件夹 EXE（由用户手动运行 build.bat 打包，AI 禁止自动执行打包命令）
 
 > 本文档仅记录项目特定约束与陷阱。通用编程原则（错误处理、日志、测试、Git 规范等）AI 本身已掌握，不再赘述。功能介绍详见 README.md。
 
@@ -57,8 +57,8 @@ Obsidian-upload-web/
 │       ├── file_assoc.py   文件关联打开 + 单实例文件转发
 │       ├── history.py      历史记录持久化（record_open / record_edit / rename / move_path / remove_tree）
 │       ├── favorites.py    收藏夹
-│       ├── canvas_server.py 画布本地 HTTP 服务（Drawnix ES Module 需 HTTP 加载，127.0.0.1 随机端口，随启动/随退出）
-│       └── todo_window.py   To Do 窗口编排（复用 tools/to-do 独立模块，hidden 预创建 + show 复用 + 退出销毁）
+│       ├── canvas_server.py 画布本地 HTTP 服务（Drawnix ES Module 需 HTTP 加载，127.0.0.1 随机端口，随首次打开懒启动/随退出）
+│       └── todo_window.py   To Do 窗口编排（复用 tools/to-do 独立模块，懒加载：首次 open_todo 时创建 + show 复用 + 退出销毁；启动不再预创建，避免加载 msal/数据库）
 ├── frontend/              前端资源（原 web/ 目录）
 │   ├── editor.html / settings.html / tools.html
 │   ├── script.js / storage.js / tab-manager.js / explorer.js / context-menu.js / settings.js / tools.js
@@ -217,7 +217,7 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 | `lib/modules/history.py` | 历史记录（record_open / record_edit / query / search / rename / move_path / remove / remove_tree / flush） |
 | `lib/modules/favorites.py` | 收藏夹 |
 | `lib/modules/canvas_server.py` | 画布本地 HTTP 服务（Drawnix 是 Vite/React 的 ES Module 应用，file:// 会被 CORS 拦截，必须 HTTP 承载 tools/drawnix 产物；127.0.0.1 随机端口，start()/stop()，随程序启停） |
-| `lib/modules/todo_window.py` | To Do 窗口编排（复用 tools/to-do 独立模块：hidden 预创建 + show 复用 + 退出销毁，Microsoft 适配器失败降级本地模式） |
+| `lib/modules/todo_window.py` | To Do 窗口编排（复用 tools/to-do 独立模块：懒加载——首次 open_todo 时创建 + show 复用 + 退出销毁，Microsoft 适配器失败降级本地模式；启动不再预创建） |
 | `commands/logger.py` | 结构化日志（app.log，持久句柄 + 目录缓存，flush 退出落盘） |
 | `commands/performance.py` | 性能监控（mark/measure/log/time_call，写 performance.log） |
 | `commands/app_utils.py` | 窗口置顶 / 居中 / 错误弹窗 / pick_folder（ctypes SHBrowseForFolderW，不用 Tkinter） |
@@ -253,7 +253,7 @@ pywebview edgechromium 后台线程调用 `evaluate_js` 会破坏 JS 桥接内�
 
 ```bash
 pyinstaller --noconfirm --clean ^
-  --onefile --windowed ^
+  --onedir --windowed ^
   --name Obsidian-upload --icon app.ico ^
   --paths . ^
   --upx-dir "C:\Users\leokou\AppData\Local\upx\upx-5.2.0-win64" ^
@@ -291,7 +291,7 @@ pyinstaller --noconfirm --clean ^
 
 > **AI 禁止自动执行打包命令**，用户手动运行 `build.bat` 打包。
 
-输出：`dist\Obsidian-upload.exe`（单文件，无控制台）。
+输出：`dist\Obsidian-upload\Obsidian-upload.exe`（onedir 单文件夹，无控制台；分发整个 dist\Obsidian-upload 文件夹）。
 config.json 嵌入 EXE，复制到 EXE 旁可自定义（无需重新打包）。
 
 ---
@@ -769,17 +769,20 @@ api.py（编排三个模块，暴露给前端）
 | `frontend/toolbar/commands.js` | 命令实现（纯逻辑，不依赖 DOM，可独立测试） |
 | `frontend/toolbar/toolbar.css` | 按钮 / 分隔线 / 颜色取色器样式 |
 
-宿主能力由 `script.js` 在 `Toolbar.init(ctx)` 注入：`getView` / `copyMarkdown` / `revealFile` / `toast` / `capturePreviewRange` / `applyPreviewRangeToEditor`。工具栏本模块不直接依赖全局函数。
+宿主能力由 `script.js` 在 `Toolbar.init(ctx)` 注入：`getView` / `copyMarkdown` / `revealFile` / `toast` / `capturePreviewRange` / `applyPreviewRangeToEditor` / `openZoomDialog` / `savePreviewToolbarOrder`（预览区拖拽排序后落盘）。工具栏本模块不直接依赖全局函数。
 
 ### 2. 按钮布局（当前唯一事实源：toolbar_config.json）
 
-- **编辑区（16 按钮，2 分隔线）**，顺序固定：
+- **编辑区（16 按钮，3 分隔线）**，顺序固定：
   1. 文字样式组：`B` 加粗 → `I` 斜体 → `U` 下划线 → `S` 删除线
   2. `H1` `H2` `H3` `H4` 标题
   3. `1.` 有序列表 → `•` 无序列表 → `☑` 任务列表 → 引用（内联 SVG 引号图标）→ 代码块（内联 SVG `</>` 图标）→ `🖍️` 荧光笔高亮 → `A` 文字颜色 → `A` 底色（颜色/底色是 label + 透明取色器）
-- **预览区（6 按钮，1 分隔线）**：`📖` 阅读模式 → `📋` 复制 → `📂` 定位文件 ｜ `🔗` 链接 → `🖼️` 图片 → `⛓️` 双链
+- **预览区（7 按钮，1 分隔线）**：`📖` 阅读模式 → `📋` 复制 → `📂` 定位文件 ｜ `🔗` 链接 → `🖼️` 图片 → `⛓️` 双链 → `缩放`（同心方框 SVG 图标，仅此处有显示缩放按钮）
+- **显示缩放弹窗**：点预览区「缩放」打开 `modal-overlay` 弹窗（复用 `:root` 主题变量，自动适配当前窗体主题），双滑块分别设置编辑区/预览区比例（50%–300%，默认 100%），拖动实时预览；「保存」写入 `settings.json` 的 `zoom` 字段（重启保持），「取消」回滚到上次保存值。链路：`frontend/toolbar/commands.js` 的 `zoom` 命令 → `script.js` 的 `openZoomDialog()` / `applyZoom()`；后端 `lib/core/api.py` 的 `save_zoom` / `lib/core/settings.py` 的 `get_zoom` / `save_zoom`。
+- **预览区工具栏可拖拽自定义顺序**：按钮 `draggable`，拖拽实时换位，`dragend` 时把当前 DOM 顺序（含按钮 id 与分隔线占位 `__sep__N`）经 `ctx.savePreviewToolbarOrder` → `pywebview.api.save_preview_toolbar_order` 写入 `settings.json` 的 `preview_toolbar_order`；启动时 `script.js` 读 `CFG.previewToolbarOrder` 调 `Toolbar.setPreviewOrder` 应用（工具栏异步构建前调用也安全，构建时按 `_previewOrder` 重排）。分隔线随按钮一起参与排序。编辑区工具栏顺序仍由配置固定，不可拖拽。
+  - **两侧缩放机制不同，勿统一**：编辑区改 `.cm-scroller` 的 `font-size`（基准 13px × 比例）并 `view.requestMeasure()`，**不能用 CSS zoom** —— CM6 内部混用 `scrollTop/clientHeight`（局部像素）与 `getBoundingClientRect`（视口像素），加 zoom 会让两套坐标差一个缩放因子，破坏虚拟滚动与光标定位。预览区因 `h1~h6` 等为固定 px，只能用 CSS `zoom` 作用于 `#preview` 自身；`#preview` 仍是滚动容器，`offsetTop / scrollTop / clientHeight` 同属局部坐标系不受影响，唯一混用 rect 的 `_scrollPreviewCursorIntoView()` 已按 `_previewZoom` 除以缩放比补偿（100% 时 z=1，行为与改动前完全一致）。
 - **已移除**：`📑` 目录、`⟳` 刷新预览（按钮已从配置删除；`previewCommands` 中 `toggleToc`/`refresh` 处理器保留但不可达，勿恢复按钮）。
-- **按钮顺序即配置顺序**：想交换/对调按钮只需改 `toolbar_config.json`（并同步 FALLBACK_CONFIG），无需改 JS。
+- **按钮顺序即配置顺序**：想交换/对调按钮只需改 `toolbar_config.json`（并同步 FALLBACK_CONFIG），无需改 JS。**编辑区顺序固定由配置决定**；**预览区顺序用户拖拽后会覆盖配置**，持久化在 `preview_toolbar_order`（见上）。
 - **SVG 图标**：引用/代码块用内联 `<svg>`（`fill="currentColor"`，自动跟随按钮文字颜色）。配置 icon 以 `<svg` 开头时 `toolbar.js` 用 `innerHTML` 渲染，否则 `textContent`；按钮加 `class: "md-tb-svg"`（toolbar.css 负责 flex 居中）。
 
 ### 3. 命令语义（commands.js）

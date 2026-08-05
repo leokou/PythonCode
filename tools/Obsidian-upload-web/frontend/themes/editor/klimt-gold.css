@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Klimt Gold（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="klimt-gold"] {
+  --cm-bg: #14110C;
+  --cm-fg: #E8DCC0;
+  --cm-gutter-bg: #14110C;
+  --cm-gutter-fg: #A6957A;
+  --cm-gutter-border: #35291A;
+  --cm-active-line: rgba(255,255,255,.045);
+  --cm-active-line-gutter: rgba(255,255,255,.075);
+  --cm-cursor: #D4AF37;
+  --cm-selection: rgba(176,141,87,.32);
+  --cm-search-match: rgba(69,53,24,.75);
+  --cm-fold-bg: #221D14;
+  --cm-fold-border: #35291A;
+  --cm-fold-fg: #A6957A;
+  --cm-heading1-color: #D4AF37;
+  --cm-heading2-color: #9EB07A;
+  --cm-heading3-color: #C98B3E;
+  --cm-heading4-color: #B48CC4;
+  --cm-heading5-color: #E8DCC0;
+  --cm-heading6-color: #A6957A;
+  --cm-strong-color: #C4633E;
+  --cm-emphasis-color: #B48CC4;
+  --cm-strikethrough-color: #A6957A;
+  --cm-highlight-bg: #453518;
+  --cm-highlight-color: #E8DCC0;
+  --cm-inline-code-bg: #221D14;
+  --cm-inline-code-color: #E0A85B;
+  --cm-codeblock-bg: #221D14;
+  --cm-codeblock-border: #35291A;
+  --cm-codeblock-color: #E8DCC0;
+  --cm-link-color: #7FA8C4;
+  --cm-url-color: #7FA8C4;
+  --cm-wikilink-color: #7FA8C4;
+  --cm-wikilink-bg: rgba(127,168,196,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #6E9A5E;
+  --cm-blockquote-color: #A6957A;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #35291A;
+  --cm-list-marker-color: #D4AF37;
+  --cm-task-done-color: #6E9A5E;
+  --cm-task-undone-color: #A6957A;
+  --cm-table-border: #35291A;
+  --cm-table-header-bg: #221D14;
+  --cm-hr-color: #35291A;
+  --cm-yaml-bg: #221D14;
+  --cm-yaml-border: #35291A;
+  --cm-yaml-key-color: #D4AF37;
+  --cm-yaml-value-color: #7FA8C4;
+  --cm-formatting-color: #9A8A6A;
+}

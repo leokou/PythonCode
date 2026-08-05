@@ -1,0 +1,30 @@
+/* 预览主题 —— 掘金 Juejin（由 gen_preview_themes.py 生成，勿手改） */
+body[data-preview-theme="juejin-default"] .preview-body {
+  background: #FFFFFF;
+  color: #252933;
+  font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.75;
+  padding: 32px 40px;
+}
+body[data-preview-theme="juejin-default"] .preview-body h1 { color: #1D2129; font-size: 1.85em; font-weight: 700; text-align: left; border-bottom: none; padding-bottom: 0; }
+body[data-preview-theme="juejin-default"] .preview-body h2 { color: #1D2129; font-size: 1.55em; font-weight: 700; border-bottom: 1px solid #E5E6EB; padding-bottom: 0.25em; }
+body[data-preview-theme="juejin-default"] .preview-body h3 { color: #1D2129; font-size: 1.25em; font-weight: 600; }
+body[data-preview-theme="juejin-default"] .preview-body h4,
+body[data-preview-theme="juejin-default"] .preview-body h5,
+body[data-preview-theme="juejin-default"] .preview-body h6 { color: #252933; font-style: normal; }
+body[data-preview-theme="juejin-default"] .preview-body a { color: #1E80FF; text-decoration: underline; }
+body[data-preview-theme="juejin-default"] .preview-body strong { color: #1D2129; }
+body[data-preview-theme="juejin-default"] .preview-body em { color: #515767; }
+body[data-preview-theme="juejin-default"] .preview-body code { background: #F2F3F5; color: #C7254E; padding: 0.2em 0.4em; border-radius: 4px; font-size: 85%; font-family: "JetBrains Mono", Consolas, "Courier New", monospace; }
+body[data-preview-theme="juejin-default"] .preview-body pre { background: #2B2B2B; border: none; border-radius: 4px; padding: 16px; overflow-x: auto; }
+body[data-preview-theme="juejin-default"] .preview-body pre code { background: none; padding: 0; color: #E6E6E6; font-size: 85%; }
+body[data-preview-theme="juejin-default"] .preview-body blockquote { border-left: 4px solid #1E80FF; background: #F7F8FA; color: #515767; padding: 10px 18px; margin: 16px 0; border-radius: 0 4px 4px 0; font-style: normal; }
+body[data-preview-theme="juejin-default"] .preview-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
+body[data-preview-theme="juejin-default"] .preview-body th { background: #F2F3F5; color: #1D2129; border: 1px solid #E5E6EB; padding: 8px 13px; font-weight: 600; }
+body[data-preview-theme="juejin-default"] .preview-body td { border: 1px solid #E5E6EB; padding: 8px 13px; }
+body[data-preview-theme="juejin-default"] .preview-body hr { border: none; border-top: 1px solid #E5E6EB; margin: 24px 0; }
+body[data-preview-theme="juejin-default"] .preview-body ul,
+body[data-preview-theme="juejin-default"] .preview-body ol { padding-left: 1.9em; }
+body[data-preview-theme="juejin-default"] .preview-body li { margin: 4px 0; }
+body[data-preview-theme="juejin-default"] .preview-body img { max-width: 100%; border-radius: 6px; }
+body[data-preview-theme="juejin-default"] .preview-body::-webkit-scrollbar-thumb { background: #C9CDD4; }

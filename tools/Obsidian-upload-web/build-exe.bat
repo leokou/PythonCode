@@ -1,13 +1,24 @@
 @echo off
 chcp 65001 >nul
 rem ============================================
-rem Obsidian-upload EXE Build Script
-rem Output: dist\Obsidian-upload.exe (single file, no console)
+rem Obsidian-upload 构建脚本 - onefile 单文件模式（备选）
+rem
+rem 输出位置：D:\Python\tools\Obsidian-upload-web\dist\Obsidian-upload.exe
+rem            （即本项目根目录下的 dist\Obsidian-upload.exe 单文件）
+rem
+rem 特点：交付物为单个 exe，便于拷贝分发。
+rem        代价：每次启动需将 ~22MB 解包到 %TEMP%\_MEIxxxx（约 0.5-1.5s 延迟 + 解包期内存翻倍）。
+rem        已通过 onedir 懒加载（画布/To Do 改为首次打开创建）抵消部分启动成本，
+rem        但解包开销由 --onefile 模式本身决定，无法消除。
 rem
 rem Optimization:
 rem   - exclude-module numpy   : not used, saves ~30 MB
 rem   - removed collect-all pkg_resources / copy-metadata setuptools : saves ~6 MB
+rem   - exclude pystray non-win32 backends (gtk/cocoa/qt/dummy) + tkinter/PIL TK : 仅保留 _win32
+rem   - exclude gi/PyQt/PySide/cefpython3/tests : 非 Windows 平台依赖，避免误打包
+rem   - 用 --hidden-import=pystray._win32 替代 --collect-submodules=pystray（不再强制打包全部后端）
 rem   - UPX compression (auto-detect) : saves 30-50% on final EXE
+rem   - --upx-exclude System.*/Microsoft.*/netstandard/Python.Runtime : .NET 程序集（pythonnet 运行时）UPX 5.2.0 无法压缩(CantPackException)，跳过以免写坏 bincache；pythonnet 必须保留（edgechromium 后端靠 clr 加载 WebView2）
 rem
 rem Dependencies: pyinstaller, pywebview, Pillow, requests, pystray, keyboard
 rem Structure: lib/core (main/api/window_manager/settings)
@@ -27,7 +38,7 @@ echo [1/3] 关闭运行中的 Obsidian-upload 进程...
 taskkill /IM Obsidian-upload.exe /F >nul 2>&1
 echo [1/3] 删除 dist 旧 EXE...
 if exist "dist\Obsidian-upload.exe" del /F /Q "dist\Obsidian-upload.exe" >nul 2>&1
-echo [2/3] 开始打包（PyInstaller）...
+echo [2/3] 开始打包（PyInstaller onefile）...
 
 pyinstaller --noconfirm --clean ^
   --onefile ^
@@ -36,9 +47,32 @@ pyinstaller --noconfirm --clean ^
   --icon app.ico ^
   --paths . ^
   --upx-dir "C:\Users\leokou\AppData\Local\upx\upx-5.2.0-win64" ^
+  --upx-exclude "System.*.dll" ^
+  --upx-exclude "Microsoft.*.dll" ^
+  --upx-exclude "netstandard.dll" ^
+  --upx-exclude "Python.Runtime.dll" ^
   --exclude-module numpy ^
   --exclude-module cryptography ^
   --exclude-module PIL._avif ^
+  --exclude-module tkinter ^
+  --exclude-module PIL._imagingtk ^
+  --exclude-module PIL.ImageTk ^
+  --exclude-module PIL.ImageQt ^
+  --exclude-module PIL._tkinter_finder ^
+  --exclude-module pystray._gtk ^
+  --exclude-module pystray._cocoa ^
+  --exclude-module pystray._appkit ^
+  --exclude-module pystray._qt ^
+  --exclude-module pystray._dummy ^
+  --exclude-module gi ^
+  --exclude-module PyQt5 ^
+  --exclude-module PyQt6 ^
+  --exclude-module PySide2 ^
+  --exclude-module PySide6 ^
+  --exclude-module cefpython3 ^
+  --exclude-module pytest ^
+  --exclude-module tests ^
+  --exclude-module test ^
   --paths tools\to-do ^
   --hidden-import=pystray ^
   --hidden-import=webview ^
@@ -77,7 +111,7 @@ pyinstaller --noconfirm --clean ^
   --hidden-import=lib.modules.canvas_server ^
   --hidden-import=lib.modules.todo_window ^
   --hidden-import=msal ^
-  --collect-submodules=pystray ^
+  --hidden-import=pystray._win32 ^
   --collect-submodules=lib ^
   --add-data "frontend;frontend" ^
   --add-data "tools\drawnix;tools\drawnix" ^
@@ -101,5 +135,6 @@ if exist Obsidian-upload.spec move /Y Obsidian-upload.spec spec\ >nul 2>&1
 
 echo.
 echo [3/3] dist\Obsidian-upload.exe generated successfully
-echo Tip: config.json is embedded, copy beside EXE to customize.
+echo        (输出位置: %~dp0dist\Obsidian-upload.exe )
+echo Tip: config.json 已内嵌，复制到 exe 同目录可自定义。
 pause

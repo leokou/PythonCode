@@ -1,0 +1,30 @@
+/* 窗口主题 —— 苹果 visionOS 玻璃（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="apple-visionos"] {
+  --bg-main: #EDEEF2;  /* 窗口主背景 */
+  --bg-editor: #FBFCFE;  /* 编辑区背景 */
+  --bg-preview: #FDFDFF;  /* 预览区背景 */
+  --bg-2: #E4E7EE;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #D9DDE7;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #E9ECF3;  /* 悬浮背景 */
+  --text-color: #22242B;  /* 普通正文 */
+  --title-color: #0F1116;  /* 标题文字 */
+  --h1-color: #0F1116;  /* 一级标题 */
+  --text-dim: #7C8296;  /* 辅助文字 */
+  --border-color: #CBD1DE;  /* 边框 */
+  --quote-color: #B8C0D2;  /* 引用竖线 */
+  --scroll-thumb: #B4BCCC;  /* 滚动条 */
+  --accent: #2C7BE5;  /* 强调色 */
+  --accent-strong: #1B5FBF;  /* 强调色加深 */
+  --accent-soft: rgba(44,123,229,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(44,123,229,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(0,0,0,.06);  /* 图标按钮悬浮 */
+  --success: #1F8A54;  /* 成功色 */
+  --error: #D93F42;  /* 错误色 */
+  --code-bg: #E8EBF2;  /* 代码块背景 */
+  --code-text: #2A2D36;  /* 代码块文字 */
+  --toast-bg: #22242B;  /* Toast 背景 */
+  --shadow: 0 10px 40px rgba(30,40,70,.16);  /* 阴影 */
+  --glass-bg: rgba(228,231,238,.55);  /* 玻璃面板背景 */
+  --glass-border: rgba(203,209,222,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 0 10px 40px rgba(30,40,70,.16);  /* 玻璃面板阴影 */
+}

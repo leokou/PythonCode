@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Rothko Crimson（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="rothko-crimson"] {
+  --cm-bg: #1A0F0E;
+  --cm-fg: #E8D5C4;
+  --cm-gutter-bg: #1A0F0E;
+  --cm-gutter-fg: #A08376;
+  --cm-gutter-border: #3D2320;
+  --cm-active-line: rgba(255,255,255,.045);
+  --cm-active-line-gutter: rgba(255,255,255,.075);
+  --cm-cursor: #E08A3C;
+  --cm-selection: rgba(196,59,46,.32);
+  --cm-search-match: rgba(74,36,24,.75);
+  --cm-fold-bg: #2A1917;
+  --cm-fold-border: #3D2320;
+  --cm-fold-fg: #A08376;
+  --cm-heading1-color: #E0563F;
+  --cm-heading2-color: #C43B2E;
+  --cm-heading3-color: #E08A3C;
+  --cm-heading4-color: #D9A05B;
+  --cm-heading5-color: #E8D5C4;
+  --cm-heading6-color: #A08376;
+  --cm-strong-color: #F2764F;
+  --cm-emphasis-color: #D9A05B;
+  --cm-strikethrough-color: #A08376;
+  --cm-highlight-bg: #4A2418;
+  --cm-highlight-color: #E8D5C4;
+  --cm-inline-code-bg: #2A1917;
+  --cm-inline-code-color: #F0A17A;
+  --cm-codeblock-bg: #2A1917;
+  --cm-codeblock-border: #3D2320;
+  --cm-codeblock-color: #E8D5C4;
+  --cm-link-color: #E8A87C;
+  --cm-url-color: #E8A87C;
+  --cm-wikilink-color: #E8A87C;
+  --cm-wikilink-bg: rgba(232,168,124,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #8A9A5B;
+  --cm-blockquote-color: #A08376;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #3D2320;
+  --cm-list-marker-color: #C43B2E;
+  --cm-task-done-color: #8A9A5B;
+  --cm-task-undone-color: #A08376;
+  --cm-table-border: #3D2320;
+  --cm-table-header-bg: #2A1917;
+  --cm-hr-color: #3D2320;
+  --cm-yaml-bg: #2A1917;
+  --cm-yaml-border: #3D2320;
+  --cm-yaml-key-color: #C43B2E;
+  --cm-yaml-value-color: #E8A87C;
+  --cm-formatting-color: #A87C6A;
+}

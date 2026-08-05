@@ -96,3 +96,88 @@ def save_microsoft_config(client_id=None, tenant=None):
         return True
     except Exception:
         return False
+
+
+# 显示缩放（编辑区 / 预览区），百分比整数，范围与缺省如下
+ZOOM_MIN, ZOOM_MAX = 50, 300
+DEFAULT_ZOOM = {"editor": 100, "preview": 100}
+
+
+def _clamp_zoom(v):
+    """将任意值钳制为 [ZOOM_MIN, ZOOM_MAX] 范围内的整数百分比，非法返回 100。"""
+    try:
+        v = int(v)
+    except (TypeError, ValueError):
+        return 100
+    if v < ZOOM_MIN:
+        return ZOOM_MIN
+    if v > ZOOM_MAX:
+        return ZOOM_MAX
+    return v
+
+
+def get_zoom():
+    """读取显示缩放设置，返回 {editor, preview}（百分比整数，缺省 100）。
+
+    数据存于 settings.json 的 zoom 字段：{"editor": int, "preview": int}。
+    """
+    z = load_settings().get("zoom")
+    if not isinstance(z, dict):
+        return dict(DEFAULT_ZOOM)
+    return {
+        "editor": _clamp_zoom(z.get("editor", 100)),
+        "preview": _clamp_zoom(z.get("preview", 100)),
+    }
+
+
+def save_zoom(editor_zoom, preview_zoom):
+    """写入显示缩放到 settings.json（保留其他字段），返回是否成功。"""
+    try:
+        os.makedirs(os.path.dirname(settings_path()), exist_ok=True)
+        data = load_settings()
+        data["zoom"] = {
+            "editor": _clamp_zoom(editor_zoom),
+            "preview": _clamp_zoom(preview_zoom),
+        }
+        with open(settings_path(), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+# 预览区工具栏按钮自定义顺序（拖拽排序后保存，重启保持）
+PREVIEW_ORDER_MAX = 32  # 防御异常数据，上限 32 个条目
+
+
+def get_preview_toolbar_order():
+    """读取预览区工具栏按钮顺序，返回 id 字符串列表；无设置返回空列表。"""
+    raw = load_settings().get("preview_toolbar_order")
+    if not isinstance(raw, list):
+        return []
+    out = []
+    for x in raw:
+        if isinstance(x, str) and x:
+            out.append(x)
+            if len(out) >= PREVIEW_ORDER_MAX:
+                break
+    return out
+
+
+def save_preview_toolbar_order(order):
+    """写入预览区工具栏顺序到 settings.json（保留其他字段），返回是否成功。
+
+    order: id 字符串列表（含按钮 id 与分隔线占位 __sep__N）。
+    """
+    try:
+        if not isinstance(order, list):
+            return False
+        cleaned = [x for x in order if isinstance(x, str) and x][:PREVIEW_ORDER_MAX]
+        os.makedirs(os.path.dirname(settings_path()), exist_ok=True)
+        data = load_settings()
+        data["preview_toolbar_order"] = cleaned
+        with open(settings_path(), "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False

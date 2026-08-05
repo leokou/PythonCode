@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Monet Water（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="monet-water"] {
+  --cm-bg: #F4F7F4;
+  --cm-fg: #33413F;
+  --cm-gutter-bg: #F4F7F4;
+  --cm-gutter-fg: #8CA098;
+  --cm-gutter-border: #CFDDD4;
+  --cm-active-line: rgba(51,65,63,.05);
+  --cm-active-line-gutter: rgba(51,65,63,.09);
+  --cm-cursor: #5B87C7;
+  --cm-selection: rgba(124,107,175,.25);
+  --cm-search-match: rgba(232,228,168,.75);
+  --cm-fold-bg: #E7EEE9;
+  --cm-fold-border: #CFDDD4;
+  --cm-fold-fg: #8CA098;
+  --cm-heading1-color: #5B87C7;
+  --cm-heading2-color: #4E8D7C;
+  --cm-heading3-color: #B06A8A;
+  --cm-heading4-color: #7C6BAF;
+  --cm-heading5-color: #33413F;
+  --cm-heading6-color: #8CA098;
+  --cm-strong-color: #C4577F;
+  --cm-emphasis-color: #7C6BAF;
+  --cm-strikethrough-color: #8CA098;
+  --cm-highlight-bg: #E8E4A8;
+  --cm-highlight-color: #33413F;
+  --cm-inline-code-bg: #E7EEE9;
+  --cm-inline-code-color: #A85B7A;
+  --cm-codeblock-bg: #E7EEE9;
+  --cm-codeblock-border: #CFDDD4;
+  --cm-codeblock-color: #33413F;
+  --cm-link-color: #3F72B8;
+  --cm-url-color: #3F72B8;
+  --cm-wikilink-color: #3F72B8;
+  --cm-wikilink-bg: rgba(63,114,184,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #5E9E4E;
+  --cm-blockquote-color: #8CA098;
+  --cm-blockquote-bg: rgba(51,65,63,.035);
+  --cm-blockquote-border: #CFDDD4;
+  --cm-list-marker-color: #8A7BC0;
+  --cm-task-done-color: #5E9E4E;
+  --cm-task-undone-color: #8CA098;
+  --cm-table-border: #CFDDD4;
+  --cm-table-header-bg: #E7EEE9;
+  --cm-hr-color: #CFDDD4;
+  --cm-yaml-bg: #E7EEE9;
+  --cm-yaml-border: #CFDDD4;
+  --cm-yaml-key-color: #8A7BC0;
+  --cm-yaml-value-color: #3F72B8;
+  --cm-formatting-color: #A9BCB2;
+}

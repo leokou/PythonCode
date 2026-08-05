@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Vignelli Subway（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="vignelli-subway"] {
+  --cm-bg: #F7F7F5;
+  --cm-fg: #000000;
+  --cm-gutter-bg: #F7F7F5;
+  --cm-gutter-fg: #7B7B75;
+  --cm-gutter-border: #D8D8D2;
+  --cm-active-line: rgba(0,0,0,.05);
+  --cm-active-line-gutter: rgba(0,0,0,.09);
+  --cm-cursor: #EE352E;
+  --cm-selection: rgba(0,57,166,.25);
+  --cm-search-match: rgba(252,233,168,.75);
+  --cm-fold-bg: #EDEDEA;
+  --cm-fold-border: #D8D8D2;
+  --cm-fold-fg: #7B7B75;
+  --cm-heading1-color: #EE352E;
+  --cm-heading2-color: #0039A6;
+  --cm-heading3-color: #00933C;
+  --cm-heading4-color: #B933AD;
+  --cm-heading5-color: #000000;
+  --cm-heading6-color: #7B7B75;
+  --cm-strong-color: #B8221C;
+  --cm-emphasis-color: #B933AD;
+  --cm-strikethrough-color: #7B7B75;
+  --cm-highlight-bg: #FCE9A8;
+  --cm-highlight-color: #000000;
+  --cm-inline-code-bg: #EDEDEA;
+  --cm-inline-code-color: #CE8E00;
+  --cm-codeblock-bg: #EDEDEA;
+  --cm-codeblock-border: #D8D8D2;
+  --cm-codeblock-color: #000000;
+  --cm-link-color: #00A1DE;
+  --cm-url-color: #00A1DE;
+  --cm-wikilink-color: #00A1DE;
+  --cm-wikilink-bg: rgba(0,161,222,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.5);
+  --cm-image-color: #00933C;
+  --cm-blockquote-color: #7B7B75;
+  --cm-blockquote-bg: rgba(0,0,0,.035);
+  --cm-blockquote-border: #D8D8D2;
+  --cm-list-marker-color: #FF6319;
+  --cm-task-done-color: #00933C;
+  --cm-task-undone-color: #7B7B75;
+  --cm-table-border: #D8D8D2;
+  --cm-table-header-bg: #EDEDEA;
+  --cm-hr-color: #D8D8D2;
+  --cm-yaml-bg: #EDEDEA;
+  --cm-yaml-border: #D8D8D2;
+  --cm-yaml-key-color: #FF6319;
+  --cm-yaml-value-color: #00A1DE;
+  --cm-formatting-color: #A5A5A0;
+}

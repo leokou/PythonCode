@@ -813,6 +813,16 @@ THEMES = {
     },
 }
 
+# 合并「设计师 / 艺术家配色」系列（数据在独立文件 themes_data_designer.py）
+try:
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import themes_data_designer
+
+    THEMES.update(themes_data_designer.build_all())
+except Exception as e:  # 数据文件缺失不阻断原有 40 套生成
+    print("[warn] designer themes skipped:", e)
+
 TEMPLATE = """/* 编辑器主题 —— {name}（仅颜色变量）
  * 三层架构：Layout → Syntax → Color Theme
  * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理

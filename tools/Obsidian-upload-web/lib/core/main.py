@@ -9,7 +9,7 @@
 日志：app.log（全链路）+ shortcut_error.log（热键异常）
 
 打包：
-    pyinstaller --onefile --windowed --add-data "frontend;frontend" \
+    pyinstaller --onedir --windowed --add-data "frontend;frontend" \
         --add-data "config/config.json;config" --add-data "commands;commands" \
         --add-data "tools;tools" --add-data "app.ico;." lib/core/main.py
 """
@@ -225,6 +225,61 @@ def _safe_show_window(win):
             return True
         except Exception:
             return False
+
+
+def _ensure_canvas():
+    """懒创建画布窗口 + 启动本地 HTTP 服务（首次 open_canvas / import_markdown_to_canvas 时触发）。
+
+    原设计在启动时预创建 hidden 画布窗口，会立即加载重型 Drawnix(React) 应用，
+    拖慢启动并常驻一个 WebView2 渲染进程。改为首次使用时按需创建，启动更快、
+    空闲内存更低。关闭画布仅 hide，复用同一窗口；退出由 _shutdown_ui 统一销毁。
+    """
+    global _canvas_window, _canvas_server
+    if _canvas_window is not None:
+        return True
+    try:
+        try:
+            webview.settings["ALLOW_DOWNLOADS"] = True
+        except Exception as e:
+            log_warn("设置允许下载失败: %s" % e)
+        canvas_root = os.path.abspath(resource_path(os.path.join("tools", "drawnix")))
+        if not os.path.isdir(canvas_root):
+            log_error("找不到画布构建产物: %s" % canvas_root)
+            return False
+        if _canvas_server is None:
+            _canvas_server = canvas_server.CanvasServer(canvas_root)
+            canvas_url = _canvas_server.start()
+        else:
+            canvas_url = _canvas_server.url
+        cwx, cwy = get_center_position(1400, 900)
+        canvas_win = webview.create_window(
+            "Drawnix 画布",
+            url=canvas_url,
+            width=1400,
+            height=900,
+            x=cwx,
+            y=cwy,
+            min_size=(800, 600),
+            hidden=True,
+        )
+
+        def on_canvas_closing(*_args):
+            if _state["quitting"]:
+                return True
+            try:
+                _canvas_window.hide()
+                log_info("画布窗口已隐藏（X按钮）")
+            except Exception as e:
+                log_error("隐藏画布窗口异常: %s" % e)
+            return False
+
+        canvas_win.events.closing += on_canvas_closing
+        _canvas_window = canvas_win
+        log_info("画布窗口创建成功（懒加载）")
+        return True
+    except Exception as e:
+        log_error("创建画布窗口失败: %s" % e)
+        return False
 
 
 def make_tray_icon():
@@ -499,52 +554,14 @@ def main():
         show_error_box(APP_TITLE, "创建设置窗口失败：\n%s" % e)
         return 1
 
-    # ---- 画布窗口（Drawnix 白板，hidden 预创建） ----
-    # Drawnix 是 Vite/React 构建的 ES Module 应用，file:// 直开会被浏览器 CORS
-    # 拦截白屏，必须先启动本地 HTTP 服务（lib/modules/canvas_server.py）承载构建产物。
-    # 同时放开浏览器下载（默认 False 会拦截 Drawnix 的导出 PNG/JSON）。
-    try:
-        webview.settings["ALLOW_DOWNLOADS"] = True
-    except Exception as e:
-        log_warn("设置允许下载失败: %s" % e)
-    try:
-        canvas_root = os.path.abspath(resource_path(os.path.join("tools", "drawnix")))
-        if not os.path.isdir(canvas_root):
-            log_error("找不到画布构建产物: %s" % canvas_root)
-            raise OSError("找不到画布构建产物: %s" % canvas_root)
-        _canvas_server = canvas_server.CanvasServer(canvas_root)
-        canvas_url = _canvas_server.start()
-        cwx, cwy = get_center_position(1400, 900)
-        canvas_win = webview.create_window(
-            "Drawnix 画布",
-            url=canvas_url,
-            width=1400,
-            height=900,
-            x=cwx,
-            y=cwy,
-            min_size=(800, 600),
-            hidden=True,
-        )
+    # ---- 画布窗口（Drawnix 白板）：懒创建 ----
+    # 不在启动时预创建，改为首次 open_canvas / import_markdown_to_canvas 时由
+    # _ensure_canvas() 按需创建（避免启动即加载重型 React 应用 + 常驻渲染进程）。
+    # HTTP 服务与窗口均在首次使用时启动；退出由 _shutdown_ui 统一销毁。
 
-        def on_canvas_closing(*_args):
-            if _state["quitting"]:
-                return True
-            try:
-                _canvas_window.hide()
-                log_info("画布窗口已隐藏（X按钮）")
-            except Exception as e:
-                log_error("隐藏画布窗口异常: %s" % e)
-            return False
-
-        canvas_win.events.closing += on_canvas_closing
-        _canvas_window = canvas_win
-        log_info("画布窗口创建成功")
-    except Exception as e:
-        log_error("创建画布窗口失败: %s" % e)
-        # 画布创建失败不阻塞主流程
-
-    # ---- To Do 窗口（复用 tools/to-do 模块，hidden 预创建，失败不阻塞） ----
-    todo_window.create()
+    # ---- To Do 窗口（复用 tools/to-do 模块）：懒创建 ----
+    # 不在启动时预创建，首次 open_todo 时由 todo_window.show() 按需创建，
+    # 避免启动即加载 msal/数据库。登录状态持久化在文件，不受懒加载影响。
 
     # ---- 热键回调：呼出对应窗口并置顶 + 聚焦编辑器 ----
     _perf_mark("windows_created")

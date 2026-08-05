@@ -1,0 +1,30 @@
+/* 窗口主题 —— 新拟态 Neumorphism（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="neumorph-soft"] {
+  --bg-main: #E0E5EC;  /* 窗口主背景 */
+  --bg-editor: #E6EBF2;  /* 编辑区背景 */
+  --bg-preview: #EDF1F7;  /* 预览区背景 */
+  --bg-2: #DAE0E8;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #CFD6E0;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #E6EBF2;  /* 悬浮背景 */
+  --text-color: #3C4759;  /* 普通正文 */
+  --title-color: #26303F;  /* 标题文字 */
+  --h1-color: #26303F;  /* 一级标题 */
+  --text-dim: #8A94A6;  /* 辅助文字 */
+  --border-color: #C8D0DC;  /* 边框 */
+  --quote-color: #B3BDCC;  /* 引用竖线 */
+  --scroll-thumb: #BAC4D2;  /* 滚动条 */
+  --accent: #5B7CFA;  /* 强调色 */
+  --accent-strong: #3F5FD8;  /* 强调色加深 */
+  --accent-soft: rgba(91,124,250,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(91,124,250,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(0,0,0,.06);  /* 图标按钮悬浮 */
+  --success: #3EA47A;  /* 成功色 */
+  --error: #D95C6A;  /* 错误色 */
+  --code-bg: #DCE2EA;  /* 代码块背景 */
+  --code-text: #3C4759;  /* 代码块文字 */
+  --toast-bg: #3C4759;  /* Toast 背景 */
+  --shadow: 6px 6px 16px rgba(163,177,198,.55), -6px -6px 16px rgba(255,255,255,.85);  /* 阴影 */
+  --glass-bg: rgba(218,224,232,.74);  /* 玻璃面板背景 */
+  --glass-border: rgba(200,208,220,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 6px 6px 18px rgba(163,177,198,.50), -6px -6px 18px rgba(255,255,255,.90);  /* 玻璃面板阴影 */
+}

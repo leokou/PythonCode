@@ -846,8 +846,11 @@ function _scrollPreviewCursorIntoView() {
   } else {
     const pr = previewEl.getBoundingClientRect();
     const br = block.getBoundingClientRect();
-    const relTop = br.top - pr.top;       /* 块顶相对预览区视口（含已滚动偏移） */
-    const relBottom = br.bottom - pr.top; /* 块底相对预览区视口 */
+    /* 预览区启用 CSS zoom 时，getBoundingClientRect 返回视口像素，而 scrollTop / clientHeight
+     * 是元素局部像素，两者差一个缩放因子。除以缩放比换算回局部坐标系；100% 时 z=1，行为与原先完全一致。 */
+    const z = (_previewZoom || 100) / 100;
+    const relTop = (br.top - pr.top) / z;       /* 块顶相对预览区视口（含已滚动偏移） */
+    const relBottom = (br.bottom - pr.top) / z; /* 块底相对预览区视口 */
     let delta = 0;
     if (relTop < 10) {
       delta = relTop - 10;                /* 块在视口上方：向上滚 */
@@ -2090,6 +2093,7 @@ const editorExtensions = [
   highlightSelectionMatches(),
   wikilinkPlugin,
   cursorFollowPlugin,
+  sectionIndentPlugin,
   /* 内置滚动（编辑器聚焦时）预留边距，与光标跟随滚动体验一致 */
   EditorView.scrollMargins.of(() => ({ top: _CURSOR_MARGIN_TOP, bottom: _CURSOR_MARGIN_BOTTOM })),
   keymap.of([
@@ -2800,6 +2804,121 @@ function goToLineDialog() {
   setTimeout(() => { input.focus(); input.select(); }, 50);
 }
 
+/* ============ 显示缩放：编辑区 / 预览区 ============ */
+let _editorZoom = 100;     /* 当前编辑区缩放（百分比） */
+let _previewZoom = 100;    /* 当前预览区缩放（百分比） */
+let _savedZoom = { editor: 100, preview: 100 };  /* 最近一次已保存值，用于取消回滚 */
+
+const EDITOR_BASE_FONT = 13;  /* 与 editor-layout.css 中 #editor .cm-scroller 的 font-size 保持一致 */
+
+/* 应用缩放。两个区域用不同机制，原因：
+ * 1) 编辑区改 .cm-scroller 的 font-size（不用 CSS zoom）。CM6 内部混用 scrollTop/clientHeight(局部像素)
+ *    与 getBoundingClientRect(视口像素)，对元素加 zoom 会让两套坐标系差一个缩放因子，破坏虚拟滚动与
+ *    光标定位。字号缩放是 CM6 原生支持的路径，标题/代码块均为 em 单位会等比跟随，requestMeasure 后重算。
+ * 2) 预览区用 CSS zoom（h1~h6 等均为固定 px，字号缩放无法生效）。#preview 仍是滚动容器，
+ *    offsetTop / scrollTop / clientHeight 同属局部坐标系不受影响；唯一混用 rect 的
+ *    _scrollPreviewCursorIntoView 已按 _previewZoom 做换算补偿。 */
+function applyZoom(editorZoom, previewZoom) {
+  _editorZoom = editorZoom;
+  _previewZoom = previewZoom;
+
+  const ed = document.getElementById("editor");
+  if (ed) {
+    const scroller = ed.querySelector(".cm-scroller");
+    if (scroller) scroller.style.fontSize = (EDITOR_BASE_FONT * editorZoom / 100).toFixed(2) + "px";
+    try { if (typeof view !== "undefined" && view) view.requestMeasure(); } catch (e) { /* ignore */ }
+  }
+
+  const pv = document.getElementById("preview");
+  if (pv) pv.style.zoom = String(previewZoom / 100);
+}
+
+/* 缩放设置弹窗：双滑块分别设置编辑区/预览区，拖动实时预览，保存后持久化到 settings.json */
+function openZoomDialog() {
+  if (document.getElementById("zoom-overlay")) return;  /* 防止重复打开 */
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "zoom-overlay";
+  overlay.innerHTML =
+    `<div class="modal-card zoom-card">` +
+      `<div class="modal-title">🔍 显示缩放</div>` +
+      `<div class="modal-msg">分别设置编辑区与预览区的显示比例，保存后长期生效。</div>` +
+      `<div class="zoom-row">` +
+        `<div class="zoom-row-head"><span class="zoom-name">编辑区</span><span class="zoom-val" id="zoom-editor-val">${_editorZoom}%</span></div>` +
+        `<input type="range" class="zoom-slider" id="zoom-editor-slider" min="50" max="300" step="5" value="${_editorZoom}">` +
+      `</div>` +
+      `<div class="zoom-row">` +
+        `<div class="zoom-row-head"><span class="zoom-name">预览区</span><span class="zoom-val" id="zoom-preview-val">${_previewZoom}%</span></div>` +
+        `<input type="range" class="zoom-slider" id="zoom-preview-slider" min="50" max="300" step="5" value="${_previewZoom}">` +
+      `</div>` +
+      `<div class="zoom-hint">范围 50% – 300%，默认 100%。</div>` +
+      `<div class="modal-btns">` +
+        `<button class="btn-modal neutral" data-act="cancel">取消</button>` +
+        `<button class="btn-modal accent" data-act="reset">重置 100%</button>` +
+        `<button class="btn-modal success" data-act="save">保存</button>` +
+      `</div>` +
+    `</div>`;
+  document.body.appendChild(overlay);
+
+  const edSlider = overlay.querySelector("#zoom-editor-slider");
+  const pvSlider = overlay.querySelector("#zoom-preview-slider");
+  const edVal = overlay.querySelector("#zoom-editor-val");
+  const pvVal = overlay.querySelector("#zoom-preview-val");
+
+  /* 实时预览：拖动即更新视图，不落盘 */
+  const onInput = () => {
+    const e = parseInt(edSlider.value, 10);
+    const p = parseInt(pvSlider.value, 10);
+    edVal.textContent = e + "%";
+    pvVal.textContent = p + "%";
+    applyZoom(e, p);
+  };
+  edSlider.addEventListener("input", onInput);
+  pvSlider.addEventListener("input", onInput);
+
+  /* Esc 关闭（回滚）。绑在 document 上，避免焦点不在弹窗内时收不到按键；关闭时解绑 */
+  const onKey = (e) => {
+    if (e.key === "Escape") { e.stopPropagation(); closeAndRevert(); }
+  };
+  document.addEventListener("keydown", onKey, true);
+
+  /* 关闭并回滚到最近保存值 */
+  const closeAndRevert = () => {
+    document.removeEventListener("keydown", onKey, true);
+    applyZoom(_savedZoom.editor, _savedZoom.preview);
+    overlay.remove();
+  };
+  overlay.addEventListener("mousedown", (e) => {
+    if (e.target === overlay) closeAndRevert();
+  });
+  overlay.querySelector('[data-act="cancel"]').addEventListener("click", closeAndRevert);
+
+  /* 重置为 100%（仅实时预览，需点保存才落盘） */
+  overlay.querySelector('[data-act="reset"]').addEventListener("click", () => {
+    edSlider.value = 100;
+    pvSlider.value = 100;
+    onInput();
+  });
+
+  /* 保存并持久化到 settings.json（重启仍生效） */
+  overlay.querySelector('[data-act="save"]').addEventListener("click", async () => {
+    const e = parseInt(edSlider.value, 10);
+    const p = parseInt(pvSlider.value, 10);
+    applyZoom(e, p);
+    _savedZoom = { editor: e, preview: p };
+    try {
+      if (typeof pywebview !== "undefined" && pywebview.api && pywebview.api.save_zoom) {
+        await pywebview.api.save_zoom(e, p);
+      }
+    } catch (err) { /* 持久化失败不阻塞本会话缩放 */ }
+    document.removeEventListener("keydown", onKey, true);
+    overlay.remove();
+    toast("显示缩放已保存（编辑区 " + e + "% / 预览区 " + p + "%）", "ok");
+  });
+
+  setTimeout(() => { edSlider.focus(); }, 50);
+}
+
 /* Python 端（ToolApi.run_tool）通过 evaluate_js 调用的统一入口 */
 window.__runTool = function (toolId) {
   if (toolId === "clean_empty_lines") {
@@ -3053,6 +3172,18 @@ async function handleStartupRestore() {
   } catch (err) {
     /* 非 WebView2 环境（如浏览器直开）时使用默认配置 */
   }
+  /* 显示缩放：应用上次保存的编辑区/预览区比例（持久化在 settings.json） */
+  try {
+    const z = (CFG && CFG.zoom && typeof CFG.zoom === "object") ? CFG.zoom : { editor: 100, preview: 100 };
+    _savedZoom = { editor: z.editor || 100, preview: z.preview || 100 };
+    applyZoom(_savedZoom.editor, _savedZoom.preview);
+  } catch (err) { /* 缩放应用失败不影响启动 */ }
+  /* 预览区工具栏自定义顺序：应用上次保存的按钮排列（持久化在 settings.json） */
+  try {
+    if (window.Toolbar && Toolbar.setPreviewOrder && Array.isArray(CFG.previewToolbarOrder)) {
+      Toolbar.setPreviewOrder(CFG.previewToolbarOrder);
+    }
+  } catch (err) { /* 顺序应用失败不影响启动 */ }
   /* FlashNote / Inbox / 日志 页签状态统一灰色 */
   if (CFG.windowType === "flash" || CFG.windowType === "inbox" || CFG.windowType === "log") {
     TabManager.setAlwaysGray(true);
@@ -3106,6 +3237,11 @@ async function handleStartupRestore() {
       renderPreview: renderPreview,
       capturePreviewRange: _toolbarCapturePreviewRange,
       applyPreviewRangeToEditor: _toolbarApplyPreviewRange,
+      openZoomDialog: openZoomDialog,
+      savePreviewToolbarOrder: (order) => {
+        try { return pywebview.api.save_preview_toolbar_order(order); }
+        catch (err) { return { ok: false, msg: String(err) }; }
+      },
     });
   }
 

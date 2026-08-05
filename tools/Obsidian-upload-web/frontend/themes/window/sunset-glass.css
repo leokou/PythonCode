@@ -1,0 +1,30 @@
+/* 窗口主题 —— 暮色玻璃 Sunset Glass（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="sunset-glass"] {
+  --bg-main: #FDF0EC;  /* 窗口主背景 */
+  --bg-editor: #FFFBF9;  /* 编辑区背景 */
+  --bg-preview: #FFFFFF;  /* 预览区背景 */
+  --bg-2: #FAE3DC;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #F6D2C7;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #FBE8E2;  /* 悬浮背景 */
+  --text-color: #3E2A29;  /* 普通正文 */
+  --title-color: #26120F;  /* 标题文字 */
+  --h1-color: #26120F;  /* 一级标题 */
+  --text-dim: #9A7A72;  /* 辅助文字 */
+  --border-color: #EFC9BC;  /* 边框 */
+  --quote-color: #E0A996;  /* 引用竖线 */
+  --scroll-thumb: #E5B4A4;  /* 滚动条 */
+  --accent: #E8622C;  /* 强调色 */
+  --accent-strong: #C44A1B;  /* 强调色加深 */
+  --accent-soft: rgba(232,98,44,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(232,98,44,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(0,0,0,.06);  /* 图标按钮悬浮 */
+  --success: #3E8E62;  /* 成功色 */
+  --error: #C9304A;  /* 错误色 */
+  --code-bg: #FAE7E0;  /* 代码块背景 */
+  --code-text: #3E2A29;  /* 代码块文字 */
+  --toast-bg: #5A2A1E;  /* Toast 背景 */
+  --shadow: 0 10px 36px rgba(150,60,30,.18);  /* 阴影 */
+  --glass-bg: rgba(250,227,220,.52);  /* 玻璃面板背景 */
+  --glass-border: rgba(239,201,188,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 0 10px 36px rgba(150,60,30,.18);  /* 玻璃面板阴影 */
+}

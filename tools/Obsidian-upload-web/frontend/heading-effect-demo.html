@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>标题字号优化 · 前后对比</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; background:#f6f7f9; color:#222; margin:0; padding:24px; }
+  h2.page { font-size:18px; margin:0 0 4px; }
+  .sub { color:#888; font-size:13px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:980px; }
+  .col { background:#fff; border:1px solid #e6e6e6; border-radius:10px; padding:18px; }
+  .col h3 { margin:0 0 14px; font-size:15px; color:#555; border-bottom:1px solid #eee; padding-bottom:8px; }
+  .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:#eee; color:#666; margin-bottom:10px; }
+  /* 编辑器区（CodeMirror 标题：仅字号/字重/颜色，无下边框） */
+  .ed p { font-size:16px; color:#333; margin:6px 0 10px; line-height:1.6; }
+  .ed h1 { font-size:28.8px; font-weight:800; color:#0550AE; margin:6px 0; line-height:1.25; }
+  .ed h2 { font-size:24px;   font-weight:700; color:#0969DA; margin:6px 0; line-height:1.25; }
+  .ed h3 { font-size:20px;   font-weight:600; color:#1F2328; margin:6px 0; line-height:1.25; }
+  .ed h4 { font-size:17.6px; font-weight:600; color:#24292F; margin:6px 0; line-height:1.25; }
+  .ed.new p { font-size:14px; }
+  .ed.new h1 { font-size:18.9px; }
+  .ed.new h2 { font-size:16.8px; }
+  .ed.new h3 { font-size:15.4px; }
+  .ed.new h4 { font-size:14.7px; }
+  /* 预览区（markdown 渲染：带下边框） */
+  .pv h1 { font-size:26px; font-weight:700; color:#333; border-bottom:1px solid #ddd; padding-bottom:5px; margin:12px 0 8px; }
+  .pv h2 { font-size:22px; font-weight:700; color:#333; border-bottom:1px solid #ddd; padding-bottom:5px; margin:12px 0 8px; }
+  .pv h3 { font-size:19px; font-weight:600; color:#333; border-bottom:1px solid #ddd; padding-bottom:5px; margin:12px 0 8px; }
+  .pv h4 { font-size:16px; font-weight:600; color:#333; margin:10px 0 6px; }
+  .pv.new h1 { font-size:18.9px; }
+  .pv.new h2 { font-size:16.8px; }
+  .pv.new h3 { font-size:15.4px; }
+  .pv.new h4 { font-size:14.7px; }
+  .note { max-width:980px; margin-top:18px; font-size:12px; color:#999; line-height:1.6; }
+</style>
+</head>
+<body>
+  <h2 class="page">标题字号优化 · 前后对比（H1–H4 各减小一号）</h2>
+  <div class="sub">左：修改前　右：修改后　·　上为编辑区（CodeMirror）　下为预览区（markdown 渲染）</div>
+
+  <div class="grid">
+    <div class="col">
+      <h3>编辑区 · 修改前</h3>
+      <span class="tag">theme.css 变量原值</span>
+      <div class="ed">
+        <h1># 一级标题 1.8em</h1>
+        <h2>## 二级标题 1.5em</h2>
+        <h3>### 三级标题 1.25em</h3>
+        <h4>#### 四级标题 1.1em</h4>
+        <p>这是正文示例：标题外的内容整体缩小两号。</p>
+      </div>
+    </div>
+    <div class="col">
+      <h3>编辑区 · 修改后</h3>
+      <span class="tag">theme.css 加大一号</span>
+      <div class="ed new">
+        <h1># 一级标题 1.35em</h1>
+        <h2>## 二级标题 1.2em</h2>
+        <h3>### 三级标题 1.1em</h3>
+        <h4>#### 四级标题 1.05em</h4>
+        <p>这是正文示例（基准 13→14px，加大一号）。</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>预览区 · 修改前</h3>
+      <span class="tag">style.css 基础值</span>
+      <div class="pv">
+        <h1>一级标题 26px</h1>
+        <h2>二级标题 22px</h2>
+        <h3>三级标题 19px</h3>
+        <h4>四级标题 16px（默认）</h4>
+      </div>
+    </div>
+    <div class="col">
+      <h3>预览区 · 修改后</h3>
+      <span class="tag">!important 与编辑区统一</span>
+      <div class="pv new">
+        <h1>一级标题 18.9px</h1>
+        <h2>二级标题 16.8px</h2>
+        <h3>三级标题 15.4px</h3>
+        <h4>四级标题 14.7px</h4>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    说明：编辑区与预览区现已统一大小规则。编辑区基准 <code>.cm-scroller</code> 14px，标题 em 1.35/1.2/1.1/1.05；
+    预览区基准 <code>.preview-body</code> 由 16→14px（与编辑区对齐），标题 <code>!important</code> 覆盖改为
+    18.9/16.8/15.4/14.7px，与编辑区标题绝对字号完全一致。两栏 H1–H4 现逐级别等宽。
+    微调入口：编辑区改 <code>theme.css</code> 的 <code>--cm-headingN-size</code>；预览区改 <code>style.css</code> 末尾的
+    <code>.preview-body hN</code> 覆盖值（需与编辑区保持同步）。
+  </div>
+</body>
+</html>

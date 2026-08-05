@@ -1,0 +1,30 @@
+/* 窗口主题 —— IBM Carbon Gray 100（由 gen_window_themes.py 生成，勿手改） */
+body[data-window-theme="ibm-carbon-g100"] {
+  --bg-main: #161616;  /* 窗口主背景 */
+  --bg-editor: #161616;  /* 编辑区背景 */
+  --bg-preview: #121212;  /* 预览区背景 */
+  --bg-2: #262626;  /* 顶栏/底栏/面板标题背景 */
+  --bg-3: #393939;  /* 标签页/滚动条/下拉背景 */
+  --hover-bg: #353535;  /* 悬浮背景 */
+  --text-color: #F4F4F4;  /* 普通正文 */
+  --title-color: #FFFFFF;  /* 标题文字 */
+  --h1-color: #FFFFFF;  /* 一级标题 */
+  --text-dim: #8D8D8D;  /* 辅助文字 */
+  --border-color: #393939;  /* 边框 */
+  --quote-color: #525252;  /* 引用竖线 */
+  --scroll-thumb: #6F6F6F;  /* 滚动条 */
+  --accent: #4589FF;  /* 强调色 */
+  --accent-strong: #78A9FF;  /* 强调色加深 */
+  --accent-soft: rgba(69,137,255,.12);  /* 当前行高亮 */
+  --accent-gutter: rgba(69,137,255,.18);  /* 当前行行号高亮 */
+  --hover-overlay: rgba(255,255,255,.07);  /* 图标按钮悬浮 */
+  --success: #42BE65;  /* 成功色 */
+  --error: #FA4D56;  /* 错误色 */
+  --code-bg: #262626;  /* 代码块背景 */
+  --code-text: #F4F4F4;  /* 代码块文字 */
+  --toast-bg: #393939;  /* Toast 背景 */
+  --shadow: 0 10px 32px rgba(0,0,0,.50);  /* 阴影 */
+  --glass-bg: rgba(38,38,38,.84);  /* 玻璃面板背景 */
+  --glass-border: rgba(57,57,57,.70);  /* 玻璃面板边框 */
+  --glass-shadow: 0 10px 32px rgba(0,0,0,.50);  /* 玻璃面板阴影 */
+}

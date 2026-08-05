@@ -1,0 +1,56 @@
+/* 编辑器主题 —— Yves Klein Ikb（仅颜色变量）
+ * 三层架构：Layout → Syntax → Color Theme
+ * 本文件仅定义颜色变量，布局和语法由 editor-layout.css + editor-syntax.css 统一管理
+ */
+body[data-editor-theme="yves-klein-ikb"] {
+  --cm-bg: #0A0F2C;
+  --cm-fg: #DCE1F5;
+  --cm-gutter-bg: #0A0F2C;
+  --cm-gutter-fg: #8A93BF;
+  --cm-gutter-border: #1F2A5C;
+  --cm-active-line: rgba(255,255,255,.045);
+  --cm-active-line-gutter: rgba(255,255,255,.075);
+  --cm-cursor: #5C6BFF;
+  --cm-selection: rgba(62,74,255,.32);
+  --cm-search-match: rgba(42,42,92,.75);
+  --cm-fold-bg: #131A40;
+  --cm-fold-border: #1F2A5C;
+  --cm-fold-fg: #8A93BF;
+  --cm-heading1-color: #5C6BFF;
+  --cm-heading2-color: #8A97FF;
+  --cm-heading3-color: #E0B24C;
+  --cm-heading4-color: #A88CFF;
+  --cm-heading5-color: #DCE1F5;
+  --cm-heading6-color: #8A93BF;
+  --cm-strong-color: #FF6B8A;
+  --cm-emphasis-color: #A88CFF;
+  --cm-strikethrough-color: #8A93BF;
+  --cm-highlight-bg: #2A2A5C;
+  --cm-highlight-color: #DCE1F5;
+  --cm-inline-code-bg: #131A40;
+  --cm-inline-code-color: #F2C46B;
+  --cm-codeblock-bg: #131A40;
+  --cm-codeblock-border: #1F2A5C;
+  --cm-codeblock-color: #DCE1F5;
+  --cm-link-color: #6BC8FF;
+  --cm-url-color: #6BC8FF;
+  --cm-wikilink-color: #6BC8FF;
+  --cm-wikilink-bg: rgba(107,200,255,.12);
+  --cm-wikilink-unfinished-bg: rgba(255,200,0,.12);
+  --cm-wikilink-unfinished-border: rgba(255,200,0,.4);
+  --cm-image-color: #4FD69C;
+  --cm-blockquote-color: #8A93BF;
+  --cm-blockquote-bg: rgba(255,255,255,.03);
+  --cm-blockquote-border: #1F2A5C;
+  --cm-list-marker-color: #5C6BFF;
+  --cm-task-done-color: #4FD69C;
+  --cm-task-undone-color: #8A93BF;
+  --cm-table-border: #1F2A5C;
+  --cm-table-header-bg: #131A40;
+  --cm-hr-color: #1F2A5C;
+  --cm-yaml-bg: #131A40;
+  --cm-yaml-border: #1F2A5C;
+  --cm-yaml-key-color: #5C6BFF;
+  --cm-yaml-value-color: #6BC8FF;
+  --cm-formatting-color: #8A93C8;
+}

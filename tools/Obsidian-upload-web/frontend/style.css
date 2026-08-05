@@ -581,7 +581,7 @@ body.resizing { cursor: col-resize; user-select: none; }
   background: var(--bg-preview);
   color: var(--text-color);
   line-height: 1.6;
-  font-size: 16px;
+  font-size: 14px;
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
@@ -695,6 +695,11 @@ body.resizing { cursor: col-resize; user-select: none; }
 .preview-body h2 { font-size: 22px; }
 .preview-body h3 { font-size: 19px; }
 .preview-body h4, .preview-body h5, .preview-body h6 { margin: 12px 0 6px; color: var(--title-color); }
+/* [显示优化] 预览区 H1-H4 统一减小一号（!important 覆盖各预览主题硬编码字号，便于统一调校；如需保留主题差异可改为逐主题缩放） */
+.preview-body h1 { font-size: 18.9px !important; }
+.preview-body h2 { font-size: 16.8px !important; }
+.preview-body h3 { font-size: 15.4px !important; }
+.preview-body h4 { font-size: 14.7px !important; }
 .preview-body a { color: var(--accent); }
 /* 预览区任务列表 checkbox（- [ ] / - [x]） */
 .preview-body input[type="checkbox"].md-task-checkbox {
@@ -952,6 +957,16 @@ body.resizing { cursor: col-resize; user-select: none; }
 .btn-modal.danger { background: var(--error); }
 .btn-modal.success { background: var(--success); }
 .btn-modal.neutral { background: #8A857A; }
+.btn-modal.accent { background: var(--accent); }
+
+/* ---- 显示缩放弹窗（编辑区 / 预览区） ---- */
+.zoom-card { width: 420px; }
+.zoom-row { display: flex; flex-direction: column; gap: 8px; }
+.zoom-row-head { display: flex; justify-content: space-between; align-items: baseline; }
+.zoom-name { font-size: 14px; font-weight: 600; color: var(--text-color); }
+.zoom-val { font-size: 13px; font-weight: 600; color: var(--accent-strong); font-variant-numeric: tabular-nums; }
+.zoom-slider { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.zoom-hint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 
 /* ---- 搜索面板：帮助按钮（圆形） ---- */
 .cm-search .cm-search-help {
