@@ -1,5 +1,9 @@
 # projects/ — 正式项目目录
 
+| 项目 | 说明 |
+|------|------|
+| `obsidian-exe-launcher` | Obsidian 插件，左侧栏面板快速启动 `D:\Python\dist` 下的 exe（11 个按钮 + 一键同步） |
+| `Obsidian-upload-web` | Obsidian 文件合并上传 Web 工具 |
 
 ---
 

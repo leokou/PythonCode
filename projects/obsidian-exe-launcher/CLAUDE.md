@@ -55,6 +55,33 @@ npm run build
 - **注意**：vault 仓库中 `.obsidian/` 被 gitignore，部署文件不进 vault git；
   git 同步仅针对源仓库 `D:\Python`（改完 `npm run build` 后提交 `main.js` + `src/main.ts`）。
 
+## 插件依赖的 exe 打包（强制）
+
+插件 11 个按钮调用的 exe 全部来自 `tools\` 下 4 个目录的 `build-exe.bat`。**修改对应工具脚本后必须重新打包，否则插件调用的是旧 exe。**
+
+| 插件按钮（exeName） | 来源工具目录 | build-exe.bat |
+|---------------------|--------------|---------------|
+| index-updater.exe / home-to-mulu-sync.exe / mulu-to-home-sync.exe / rename-check.exe | `tools\Obsidian-scripts` | `D:\Python\tools\Obsidian-scripts\build-exe.bat` |
+| leodiary-backup.exe / claude-skill-backup.exe | `tools\backup-code` | `D:\Python\tools\backup-code\build-exe.bat` |
+| skill-sync-GitHub.exe / skill-sync-agentcode.exe / python-code-sync-GitHub.exe / python-local-backup.exe | `tools\sync-GitHub` | `D:\Python\tools\sync-GitHub\build-exe.bat` |
+| md_merger.exe | `tools\Merge-file` | `D:\Python\tools\Merge-file\build-exe.bat` |
+
+**快速打包命令**：
+
+```bat
+:: 一键打包全部工具（覆盖插件全部 11 个 exe，推荐）
+D:\Python\build-all-exe.bat
+
+:: 或指定 python
+set PY=你的python.exe
+D:\Python\build-all-exe.bat
+
+:: 只打包单个工具目录（如只改动了 Obsidian-scripts）
+D:\Python\tools\Obsidian-scripts\build-exe.bat
+```
+
+打包产物统一输出到 `D:\Python\dist`，打包后核对 11 个 exe 齐全（与 `EXE_CONFIGS` 逐一对应），必要时在 Obsidian 中重载插件。
+
 ---
 
 通用 AI 开发执行规则

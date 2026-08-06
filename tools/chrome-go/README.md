@@ -29,6 +29,10 @@ python "ChromeGo - 节点爬取脚本 @ 代理节点下载.py"
 pip install requests
 ```
 
+## 打包 EXE
+
+运行 `build-exe.bat` 打包为 `chrome-go.exe`，输出到 `D:\Python\dist`。
+
 ---
 
 通用 AI 开发执行规则

@@ -1,4 +1,16 @@
 # projects/ — 项目目录 AI 规则
+
+## 项目清单
+
+| 项目 | 定位 |
+|------|------|
+| `obsidian-exe-launcher` | Obsidian 插件：左侧栏面板启动 `D:\Python\dist` 下 exe（11 个按钮 + 一键同步）。依赖 tools 打包的 exe，见根 `D:\Python\CLAUDE.md` 第 2.5 节 |
+| `Obsidian-upload-web` | Obsidian 文件合并上传 Web 工具 |
+
+各项目独立维护 CLAUDE.md / README.md，改动前先读对应项目规则。
+
+---
+
 通用 AI 开发执行规则
 ## 1. 开发基本原则
 **必须遵守：**

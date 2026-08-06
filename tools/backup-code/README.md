@@ -35,17 +35,13 @@ python claude-skill-backup.py --remark "添加新Skill后"
 python leodiary-backup.py -r "周备份"
 ```
 
-## 打包 EXE（可选）
+## 打包 EXE
 
-在脚本目录下运行：
+运行 `build-exe.bat` 将 2 个脚本打包为独立 exe 到 `D:\Python\dist`：
+- `claude-skill-backup.exe`
+- `leodiary-backup.exe`
 
-```bash
-pip install pyinstaller
-pyinstaller -F claude-skill-backup.py
-pyinstaller -F leodiary-backup.py
-```
-
-EXE 输出到 `dist/`。
+这两个 exe 均被 Obsidian 插件 `obsidian-exe-launcher` 引用，修改脚本后必须重新打包。
 
 ---
 

@@ -83,21 +83,15 @@ python md_merger.py
 https://raw.githubusercontent.com/leokou/leoshow/refs/heads/main/merged_output.md
 ```
 
-## 📦 打包成 EXE（可选）
+## 📦 打包成 EXE
 
-如果想打包成独立的 `.exe` 给别人用：
+运行目录下 `build-exe.bat` 一键打包为 `md_merger.exe`（单文件、无控制台窗口），输出到 `D:\Python\dist`：
 
 ```bash
-pip install pyinstaller
-
-# 单文件、无控制台窗口
-pyinstaller -F -w md_merger.py
-
-# 加图标（可选）
-pyinstaller -F -w -i icon.ico md_merger.py
+D:\Python\tools\Merge-file\build-exe.bat
 ```
 
-打包完成后，exe 在 `dist/` 目录下。
+> 该 exe 被 Obsidian 插件 `obsidian-exe-launcher` 引用（按钮「文件合并上传GitHub」），修改脚本后必须重新打包。
 
 ## ❓ 常见问题
 

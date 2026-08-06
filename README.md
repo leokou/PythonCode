@@ -1,116 +1,80 @@
-# Python Personal Engineering Workspace
+# D:\Python — Python 工具与项目仓库
 
-**D:\Python** 是个人软件工程母体 workspace，不是项目。------------
-
-## 职责边界
-
-| 层次 | 职责 | 入口 |
-|------|------|------|
-| workspace | 项目容器、AI 规则入口、全局配置 | `D:\Python\CLAUDE.md` |
-| project | 业务代码、独立 CI/CD、独立 Git | `projects/*/CLAUDE.md` |
-| tool | 独立工具脚本，不绑定项目 | `tools/*/` |
+本仓库集中管理日常 Python 小工具（`tools\`）、打包产物（`dist\`）与正式项目（`projects\`）。
 
 ## 目录结构
 
 ```
-D:\Python/
-├── README.md              # 本文件
-├── CLAUDE.md              # 工作区 AI 规则（入口）
-├── .gitignore             # 根忽略规则
-├── .github-pat            # GitHub PAT（敏感，已 gitignore）
-├── .mimocode/             # AI agent 配置
-├── opencode.jsonc         # OpenCode 配置
-│
-├── projects/              # ⭐ 正式项目
-│   ├── leodiarycode/      # LeoDiary 工具链（Python）
-│   │   ├── src/           #   库模块
-│   │   ├── scripts/       #   CLI 入口
-│   │   ├── lib/           #   子包（leo-os-tools）
-│   │   ├── tests/         #   测试
-│   │   ├── docs/          #   文档
-│   │   ├── README.md
-│   │   ├── CLAUDE.md
-│   │   └── .git/
-│   │
-│   └── obsidian-exe-launcher/  # Obsidian EXE Launcher 插件（TypeScript）
-│       ├── src/
-│       ├── manifest.json
-│       ├── package.json
-│       ├── README.md
-│       ├── CLAUDE.md
-│       └── .git/
-│
-├── tools/                 # 独立工具（不绑定项目）
-│   ├── sync-GitHub/       # Skill 同步/备份
-│   ├── chrome-go/         # 代理节点爬取
-│   └── logseq-cleanup/    # Logseq 附件清理
-│
-├── experiments/           # 实验验证
-├── archive/               # 历史归档
-└── tmp/                   # 临时目录
+D:\Python
+├── tools\           # 小工具目录（每个工具一个子目录）
+│   ├── Obsidian-scripts\  # Obsidian 知识库结构维护脚本（obsidian_common + 4 入口）
+│   ├── backup-code\       # Claude Skills / LeoDiary 本地备份
+│   ├── chrome-go\         # ChromeGo 代理节点下载
+│   ├── clash-clear\       # Clash 代理环境一键清除
+│   ├── git-scripts\       # cnb.cool Git 快捷脚本（.bat/.ps1，无需打包，已移至 projects\Obsidian-upload-web\git-scripts）
+│   ├── logseq-cleanup\    # Logseq 无用附件清理
+│   ├── Merge-file\        # 文件合并桌面工具（md/txt/docx）
+│   └── sync-GitHub\       # Skills / 代码 GitHub 同步与本地备份
+├── dist\           # exe 打包统一输出目录
+├── projects\       # 正式项目（obsidian-exe-launcher / Obsidian-upload-web）
+├── build-all-exe.bat  # 一键打包所有小工具 exe 的总入口
+├── README.md
+└── CLAUDE.md
 ```
 
-## 核心约定
+## 打包规范（统一约定）
 
-- **`projects/`** 是唯一放业务代码的地方，每个项目独立 Git
-- **`tools/`** 放独立工具，不绑定项目，不分语言
-- **`experiments/`** 放实验性代码，随时可删
-- **`archive/`** 放历史脚本，参考用，不再维护
-- **`tmp/`** 放临时文件，不得在根目录乱建文件
+- **每个含 Python 脚本的工具目录** 内都有一个 `build-exe.bat`，一键把该目录下的入口脚本打包为独立 exe。
+- **exe 统一输出到 `D:\Python\dist`**。
+- 依赖 PyInstaller（各脚本用到的 python 需已安装）：
+  ```bash
+  pip install pyinstaller
+  ```
+- 需指定 python 时设置环境变量：`set PY=你的python.exe` 后运行 `build-exe.bat`。
+- `git-scripts\` 已移至 `projects\Obsidian-upload-web\git-scripts\`（纯 `.bat/.ps1`，不打包 exe）。
+- 源码文件（.py/.md/.bat）一律 UTF-8 编码；`build-exe.bat` 必须保持 ASCII（中文注释会破坏 cmd 解析）。
 
-## CLAUDE.md 三层体系
+### 一键打包所有工具
 
+根目录 `build-all-exe.bat` 会自动遍历 `tools\` 下所有含 `build-exe.bat` 的目录并逐个打包，产物统一输出到 `D:\Python\dist`：
+
+```bat
+build-all-exe.bat                      :: 默认用 python
+set PY=你的python.exe && build-all-exe.bat   :: 指定 python
 ```
-D:\Python/CLAUDE.md                 工作区规则（项目容器、命名、编码）
-    └── projects/leodiarycode/CLAUDE.md   项目规则（技术栈、import、运行方式）
-        └── projects/xxx/CLAUDE.md        目录规则
-```
 
-## Git 策略
+- 跳过无 `build-exe.bat` 的目录（如已移出的 `git-scripts\`）。
+- 某个工具打包失败会标记并在最后汇总报告，不中断其他工具。
+- 首次使用前需安装 PyInstaller：`pip install pyinstaller`。
 
-- 根目录 **无** `.git`（已删除）
-- 每个项目独立 Git：
-  - `projects/leodiarycode/.git` — 推送到 `leokou/PythonCode`
-  - `projects/obsidian-exe-launcher/.git` — 单独管理
+### 各工具打包产物
 
-## 运行命令速查
+| 工具目录 | 入口脚本 | 产物 exe |
+|----------|----------|----------|
+| Obsidian-scripts | home-to-mulu-sync.py / index-updater.py / mulu-to-home-sync.py / rename-check.py | home-to-mulu-sync.exe / index-updater.exe / mulu-to-home-sync.exe / rename-check.exe（另复制 obsidian_common.py / README.md） |
+| backup-code | claude-skill-backup.py / leodiary-backup.py | claude-skill-backup.exe / leodiary-backup.exe |
+| chrome-go | ChromeGo - 节点爬取脚本 @ 代理节点下载.py | chrome-go.exe |
+| clash-clear | 不用clash清除环境.py | clash-clear.exe |
+| logseq-cleanup | Logseq - 附件清理脚本 @ 清理无用文件.py | logseq-cleanup.exe |
+| Merge-file | md_merger.py | md_merger.exe |
+| sync-GitHub | skill-sync-GitHub.py / skill-sync-agentcode.py / python-code-sync-GitHub.py / python-local-backup.py | 对应同名 exe |
 
-### leodiarycode 工具链
+## 使用方式
 
-```bash
-# 从项目根运行
-cd D:\Python\projects\leodiarycode
+每个工具目录下的 README 有详细说明，含 Python 脚本的工具优先使用打包后的 exe（`D:\Python\dist\*.exe`）。
 
-# AI 检索 - Router 分类
-python scripts/ai_index_builder_v2.py router "查询内容"
+## Obsidian 插件 exe 依赖
 
-# AI 检索 - 缓存读取
-python scripts/ai_index_builder_v2.py cache-read "查询内容"
+`projects\obsidian-exe-launcher` 插件面板的 11 个按钮对应 `D:\Python\dist` 下 11 个 exe，全部来自 `tools\` 下 4 个工具目录的 `build-exe.bat`：
 
-# AI 检索 - 领域索引读取
-python scripts/ai_index_builder_v2.py domain-read ai
+| 插件按钮 exe | 来源工具目录 |
+|--------------|--------------|
+| index-updater.exe / home-to-mulu-sync.exe / mulu-to-home-sync.exe / rename-check.exe | `tools\Obsidian-scripts` |
+| leodiary-backup.exe / claude-skill-backup.exe | `tools\backup-code` |
+| skill-sync-GitHub.exe / skill-sync-agentcode.exe / python-code-sync-GitHub.exe / python-local-backup.exe | `tools\sync-GitHub` |
+| md_merger.exe | `tools\Merge-file` |
 
-# AI 检索 - 搜索
-python scripts/ai_index_builder_v2.py search "查询内容" --top 5
-
-# AI 检索 - 批量测试（25 查询）
-python scripts/batch_skill_test.py
-
-# AI 检索 - 全链路健康检查（58 项）
-python scripts/ai_retrieval_healthcheck.py
-
-# Skill 一致性检查
-python -m src.obsidian_skill_utils skill-health-check "C:\Users\leokou\.claude\skills\Obsidian" "D:\Obsidian\LeoDiary"
-
-# 元数据校验
-python -m src.obsidian_skill_utils validate-metadata "D:\Obsidian\LeoDiary" --quiet
-
-# 内容健康检查
-python -m src.obsidian_skill_utils lint-content "D:\Obsidian\LeoDiary"
-
-# 知识库统计
-python -m src.obsidian_skill_utils kb-stats "D:\Obsidian\LeoDiary"
-```
+**快速打包**：根目录 `build-all-exe.bat` 一键打包全部工具（含插件所需 11 个 exe）；单个工具可进对应目录跑 `build-exe.bat`。详见根目录 `CLAUDE.md`。
 
 ---
 
@@ -152,9 +116,9 @@ python -m src.obsidian_skill_utils kb-stats "D:\Obsidian\LeoDiary"
 - ✅ 打包/构建流程正常
 ---
 ## 3. 模块化设计
-**原则**  
+**原则**
 一个模块只负责一个主要职责，功能边界清晰。
-**禁止事项**  
+**禁止事项**
 - ❌ 单文件持续堆积业务逻辑
 - ❌ UI、业务、数据混合在同一层
 - ❌ 复制粘贴重复代码（必须抽离）
@@ -173,17 +137,17 @@ python -m src.obsidian_skill_utils kb-stats "D:\Obsidian\LeoDiary"
 | **UI 层** | 展示与交互 | 页面布局、表单输入、按钮点击、视图更新 |
 | **业务层** | 流程与规则 | 业务逻辑编排、数据处理、状态管理 |
 | **数据层** | 持久化存储 | 文件读写、数据库操作、远程 API 调用 |
-**禁止行为**  
+**禁止行为**
 按钮点击事件中直接编写核心业务逻辑（如计算、数据库查询等）——必须委托给业务层处理。
 ---
 ## 5. 配置管理
-**核心要求**  
+**核心要求**
 所有可变内容必须配置化，**严禁硬编码**。
-❌ **错误示例**  
+❌ **错误示例**
 ```python
-PATH = "D:\data"
+PATH = "D:\\data"
 ```
-✅ **正确做法**  
+✅ **正确做法**
 统一使用 `config.json`（或 `yaml`/`env`）管理：
 - 文件路径、目录
 - 运行参数（超时、重试次数、阈值）
@@ -203,7 +167,7 @@ PATH = "D:\data"
 - 捕获具体异常类型（避免笼统的 `Exception`）
 - 写入日志（包含上下文信息）
 - 向调用方返回明确结果（成功/失败 + 错误码或描述）
-**禁止**  
+**禁止**
 - ❌ 静默失败（吞掉异常且不记录）
 - ❌ 空 `except:` 块
 ---
@@ -225,7 +189,7 @@ PATH = "D:\data"
 - **保留恢复能力**：提供回滚或撤销机制
 - **明确影响范围**：在操作前向用户展示受影响的数据条数/文件列表
 - **操作确认**：删除等危险操作需二次确认
-**绝对禁止**  
+**绝对禁止**
 未经用户确认擅自删除或批量覆盖用户数据。
 ---
 ## 9. 测试要求
@@ -265,7 +229,7 @@ PATH = "D:\data"
 - 添加未经说明或未经用户确认的功能
 ---
 ## 12. 最终目标与开发节奏
-**最终目标**  
+**最终目标**
 每个项目都应达到：
 - ✅ 模块清晰，边界明确
 - ✅ 低耦合，高内聚

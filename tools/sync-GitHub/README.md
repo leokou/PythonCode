@@ -51,7 +51,16 @@ python python-local-backup.py
 
 - **GitHub 同步走本地代理**（Clash 7897），请保持 Clash 开启；Git 凭据已通过 `git config credential.helper=store` 保存
 - Git 全局已配置 `http.proxy` / `https.proxy` → `127.0.0.1:7897`
-- `skill-sync-agentcode.spec` 为 PyInstaller 打包配置，打包 EXE 时使用
+
+## 打包 EXE
+
+运行 `build-exe.bat` 将 4 个脚本打包为独立 exe 到 `D:\Python\dist`：
+- `skill-sync-GitHub.exe`
+- `skill-sync-agentcode.exe`
+- `python-code-sync-GitHub.exe`
+- `python-local-backup.exe`
+
+这 4 个 exe 均被 Obsidian 插件 `obsidian-exe-launcher` 引用，修改脚本后必须重新打包。
 
 ---
 

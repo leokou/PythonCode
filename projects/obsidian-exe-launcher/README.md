@@ -49,6 +49,27 @@ main.ts: launchExe(config) / runSyncAll(remark)
 
 **py 源码位置**：见 [D:\Python\CLAUDE.md](file:///D:/Python/CLAUDE.md) 第 2 节三方对照表
 
+## 插件依赖的 exe 打包
+
+插件 11 个按钮的 exe 全部来自 `D:\Python\tools\` 下 4 个目录的 `build-exe.bat`，产物统一输出到 `D:\Python\dist`：
+
+| 插件按钮 exe | 来源工具目录 |
+|--------------|--------------|
+| index-updater.exe / home-to-mulu-sync.exe / mulu-to-home-sync.exe / rename-check.exe | `tools\Obsidian-scripts` |
+| leodiary-backup.exe / claude-skill-backup.exe | `tools\backup-code` |
+| skill-sync-GitHub.exe / skill-sync-agentcode.exe / python-code-sync-GitHub.exe / python-local-backup.exe | `tools\sync-GitHub` |
+| md_merger.exe | `tools\Merge-file` |
+
+快速打包：
+
+```bat
+D:\Python\build-all-exe.bat                      :: 一键打包全部工具（覆盖插件 11 个 exe）
+set PY=你的python.exe && D:\Python\build-all-exe.bat
+D:\Python\tools\Obsidian-scripts\build-exe.bat   :: 只打包单个工具目录
+```
+
+> **修改工具脚本后必须重新打包**，否则插件调用的是旧 exe；打包后核对 `D:\Python\dist` 11 个 exe 齐全，必要时重载插件。
+
 ## 安装
 
 1. 复制 `main.js` + `manifest.json` + `styles.css` 到：

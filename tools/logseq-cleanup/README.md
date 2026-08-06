@@ -21,6 +21,10 @@ python "Logseq - 附件清理脚本 @ 清理无用文件.py"
 - 清理后请先在 `to_delete` 目录人工确认，确认无用后再手动删除
 - `.edn` 为 Logseq 系统文件，脚本自动跳过
 
+## 打包 EXE
+
+运行 `build-exe.bat` 打包为 `logseq-cleanup.exe`，输出到 `D:\Python\dist`。
+
 ---
 
 通用 AI 开发执行规则
