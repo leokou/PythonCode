@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import shutil
 import argparse
 import stat
@@ -17,6 +18,33 @@ BACKUP_ROOT = r"D:\project\python备份"
 MAX_BACKUPS = 50
 
 TASK_NAME = "Python代码本地备份"
+
+# Windows 保留设备名，不能作为文件名/目录名（nul/con/prn/aux/com1-9/lpt1-9）。
+# 复制时创建这些名字会抛 WinError 87，必须跳过，否则整盘备份中断。
+_WIN_RESERVED = re.compile(r'^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$', re.IGNORECASE)
+_IGNORE_PATTERNS = shutil.ignore_patterns(
+    '__pycache__', '*.pyc', '.git', 'node_modules', 'dist', 'build'
+)
+
+def _is_reserved(name):
+    return bool(_WIN_RESERVED.match(name))
+
+def _ignore(src, names):
+    """在原有忽略规则基础上，额外跳过 Windows 保留设备名。"""
+    ignored = set(_IGNORE_PATTERNS(src, names))
+    for n in names:
+        if _is_reserved(n):
+            ignored.add(n)
+    return ignored
+
+def _safe_copy(src, dst, *, follow_symlinks=True):
+    """单文件复制容错：失败仅跳过并告警，不中断整盘备份。"""
+    try:
+        return shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+    except Exception as e:
+        print(f"  ⚠️ 跳过（无法复制，已忽略）: {src}")
+        print(f"     └─ {e}")
+        return None
 
 def on_rmtree_error(func, path, exc_info):
     os.chmod(path, stat.S_IWRITE)
@@ -66,7 +94,8 @@ def main():
     try:
         shutil.copytree(
             SOURCE, backup_dir,
-            ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.git', 'node_modules', 'dist', 'build'),
+            ignore=_ignore,
+            copy_function=_safe_copy,
             symlinks=True
         )
     except Exception as e:
